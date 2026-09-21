@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Espacio personal — Equipar para Equipar</title>
+    <link rel="icon" href="../assets/img/logo-epe.png" />
+
+    <script src="../js/core/theme-boot.js"></script>
+
+    <link rel="stylesheet" href="../css/base/reset.css" />
+    <link rel="stylesheet" href="../css/base/tokens.css" />
+    <link rel="stylesheet" href="../css/base/theme.css" />
+    <link rel="stylesheet" href="../css/base/typography.css" />
+    <link rel="stylesheet" href="../css/components/buttons.css" />
+    <link rel="stylesheet" href="../css/components/modal.css" />
+    <link rel="stylesheet" href="../css/components/catalogo-tienda.css" />
+    <link rel="stylesheet" href="../css/components/tercero-detalle.css" />
+    <link rel="stylesheet" href="../css/layout/shell.css" />
+    <link rel="stylesheet" href="../css/features/perfil/dashboard.css" />
+    <link rel="stylesheet" href="../css/features/perfil/caso-card.css" />
+    <link rel="stylesheet" href="../css/features/perfil/catalogo-picker.css" />
+  </head>
+  <body>
+    <div class="epe-shell">
+      <header class="epe-header">
+        <div class="epe-brand">
+          <a href="../index.html"><img src="../assets/img/logo-epe.png" alt="Equipar para Equipar" /></a>
+        </div>
+        <div class="epe-header-actions">
+          <span class="epe-dash-header-meta" data-sesion-email></span>
+          <button
+            class="epe-theme-toggle"
+            type="button"
+            id="theme-toggle"
+            aria-pressed="false"
+            aria-label="Cambiar a modo oscuro"
+          >
+            <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="4" />
+              <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+            </svg>
+            <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" />
+            </svg>
+          </button>
+          <button class="epe-btn-ghost" type="button" data-logout>Salir</button>
+        </div>
+      </header>
+
+      <div class="epe-dash-body">
+        <div class="epe-intro" style="padding-left: 0; padding-right: 0;">
+          <p class="eyebrow">dis+capacidad</p>
+          <h1>Tu espacio personal</h1>
+        </div>
+
+        <nav class="epe-tabs" role="tablist" aria-label="Secciones del espacio personal">
+          <button class="epe-tab is-active" type="button" data-tab="perfil" role="tab" aria-selected="true">Perfil</button>
+          <button class="epe-tab" type="button" data-tab="casos" role="tab" aria-selected="false">Gestión de casos</button>
+          <button class="epe-tab" type="button" data-tab="dispositivos" role="tab" aria-selected="false">Mis dispositivos</button>
+        </nav>
+
+        <!-- ── Perfil ── -->
+        <section class="epe-panel" data-panel="perfil">
+          <h2>Perfil</h2>
+          <p class="epe-panel-sub">Estos datos van a identificarte en los casos que compartas.</p>
+
+          <form class="epe-form-grid" data-perfil-form>
+            <div class="epe-field">
+              <label for="perfil-nombre">Nombre</label>
+              <input type="text" id="perfil-nombre" name="nombre" />
+            </div>
+            <div class="epe-field">
+              <label for="perfil-profesion">Profesión</label>
+              <input type="text" id="perfil-profesion" name="profesion" />
+            </div>
+            <div class="epe-field">
+              <label for="perfil-institucion">Institución</label>
+              <input type="text" id="perfil-institucion" name="institucion" />
+            </div>
+            <div>
+              <button class="epe-btn-acc" type="submit">Guardar</button>
+              <span class="epe-form-status" data-perfil-status></span>
+            </div>
+          </form>
+        </section>
+
+        <!-- ── Gestión de casos ── -->
+        <section class="epe-panel" data-panel="casos" hidden>
+          <h2>Gestión de casos</h2>
+          <p class="epe-panel-sub">
+            Un caso es cualquier entrada que quieras organizar a tu manera — no
+            necesariamente identifica a una persona.
+          </p>
+
+          <div class="epe-casos-layout">
+            <div>
+              <div class="epe-casos-col-header">
+                <h3>Tus casos</h3>
+                <button class="epe-btn-ghost epe-btn-sm" type="button" data-caso-nuevo>+ Nuevo</button>
+              </div>
+              <ul class="epe-casos-lista" data-casos-lista></ul>
+              <p class="epe-vacio" data-casos-vacio>Todavía no creaste ningún caso.</p>
+            </div>
+
+            <div>
+              <p class="epe-detalle-vacio" data-detalle-vacio>Elegí un caso de la lista, o creá uno nuevo.</p>
+
+              <div class="epe-detalle" data-detalle hidden>
+                <h3 data-detalle-nombre></h3>
+
+                <nav class="epe-subtabs" role="tablist" aria-label="Secciones del caso">
+                  <button class="epe-subtab is-active" type="button" data-subtab="actividades" role="tab" aria-selected="true">Actividades</button>
+                  <button class="epe-subtab" type="button" data-subtab="entradas" role="tab" aria-selected="false">Notas, evaluaciones y sesiones</button>
+                  <button class="epe-subtab" type="button" data-subtab="compartir" role="tab" aria-selected="false">Compartir</button>
+                </nav>
+
+                <div class="epe-subpanel" data-subpanel="actividades">
+                  <div class="epe-actividades-grid" data-actividades-lista></div>
+                  <button class="epe-btn-acc epe-btn-sm" type="button" data-actividad-agregar>
+                    + Agregar actividad
+                  </button>
+                </div>
+
+                <div class="epe-subpanel" data-subpanel="entradas" hidden>
+                  <ul class="epe-entradas-lista" data-entradas-lista></ul>
+                  <form class="epe-inline-form" data-entrada-form>
+                    <select name="tipo">
+                      <option value="nota">Nota</option>
+                      <option value="evaluacion">Evaluación</option>
+                      <option value="sesion">Sesión</option>
+                    </select>
+                    <textarea name="contenido" placeholder="Contenido" required></textarea>
+                    <button class="epe-btn-ghost epe-btn-sm" type="submit">Agregar</button>
+                  </form>
+                </div>
+
+                <div class="epe-subpanel" data-subpanel="compartir" hidden>
+                  <div class="epe-shares">
+                    <label class="epe-share-row">
+                      <input type="checkbox" data-share-toggle value="institucion" />
+                      Institución
+                    </label>
+                    <label class="epe-share-row">
+                      <input type="checkbox" data-share-toggle value="colega" />
+                      Colega
+                    </label>
+                    <label class="epe-share-row">
+                      <input type="checkbox" data-share-toggle value="dismascapacidad" />
+                      dis+capacidad
+                    </label>
+                  </div>
+                  <p class="epe-share-nota">
+                    Todavía no conectado: el estado se guarda en tu navegador
+                    para probar la interfaz, pero nadie del otro lado lo ve
+                    todavía. Eso llega con Supabase.
+                  </p>
+
+                  <div class="epe-detalle-seccion">
+                    <h4>Comentarios</h4>
+                    <p class="epe-vacio" data-comentarios-vacio>
+                      Sin comentarios todavía. Van a aparecer acá los que dejen
+                      las personas con las que compartas este caso — disponible
+                      cuando conectemos Supabase.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── Mis dispositivos ── -->
+        <section class="epe-panel" data-panel="dispositivos" hidden>
+          <h2>Mis dispositivos</h2>
+          <p class="epe-panel-sub">Actualizaciones de firmware, manuales y material de consulta por dispositivo.</p>
+          <p class="epe-placeholder">Próximamente. Todavía no definimos cómo se vincula un dispositivo a tu perfil.</p>
+        </section>
+      </div>
+    </div>
+
+    <script src="../js/core/theme.js"></script>
+    <script src="../js/core/modal.js"></script>
+    <script src="../js/core/tercero-detalle.js"></script>
+    <script src="../js/data/catalogo-actividades.js"></script>
+    <script src="../js/features/perfil/auth-mock.js"></script>
+    <script src="../js/features/perfil/data/schema.js"></script>
+    <script src="../js/features/perfil/data/store.js"></script>
+    <script src="../js/features/perfil/perfil.js"></script>
+    <script src="../js/features/perfil/casos.js"></script>
+    <script src="../js/features/perfil/dispositivos.js"></script>
+    <script src="../js/features/perfil/dashboard.js"></script>
+  </body>
+</html>

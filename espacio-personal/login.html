@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ingresar — Equipar para Equipar</title>
+    <link rel="icon" href="../assets/img/logo-epe.png" />
+
+    <script src="../js/core/theme-boot.js"></script>
+
+    <link rel="stylesheet" href="../css/base/reset.css" />
+    <link rel="stylesheet" href="../css/base/tokens.css" />
+    <link rel="stylesheet" href="../css/base/theme.css" />
+    <link rel="stylesheet" href="../css/base/typography.css" />
+    <link rel="stylesheet" href="../css/components/buttons.css" />
+    <link rel="stylesheet" href="../css/features/perfil/login.css" />
+  </head>
+  <body>
+    <div class="epe-login-shell">
+      <div class="epe-login-card">
+        <img src="../assets/img/logo-epe.png" alt="Equipar para Equipar" />
+        <h1>Espacio personal</h1>
+        <p class="epe-login-sub">Ingresá para gestionar tu perfil y tus casos.</p>
+
+        <form class="epe-login-form" data-login-form>
+          <div class="epe-field">
+            <label for="login-email">Email</label>
+            <input type="email" id="login-email" name="email" required autocomplete="email" />
+          </div>
+          <div class="epe-field">
+            <label for="login-password">Contraseña</label>
+            <input type="password" id="login-password" name="password" required autocomplete="current-password" />
+          </div>
+          <button class="epe-btn-acc" type="submit">Ingresar</button>
+        </form>
+
+        <p class="epe-login-note">
+          Login de prueba: no valida contraseña todavía, cualquier dato
+          entra. Se reemplaza por autenticación real (Supabase) más
+          adelante.
+        </p>
+
+        <a class="epe-login-back" href="../index.html">← Volver al inicio</a>
+      </div>
+    </div>
+
+    <script src="../js/core/theme.js"></script>
+    <script src="../js/features/perfil/auth-mock.js"></script>
+    <script src="../js/features/perfil/login.js"></script>
+  </body>
+</html>

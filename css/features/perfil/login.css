@@ -1,0 +1,96 @@
+/*
+  login.css
+  Pantalla de acceso al espacio personal. Login MOCK (ver
+  js/features/perfil/auth-mock.js): la estética ya es la real, la
+  autenticación todavía no.
+*/
+
+.epe-login-shell {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--shell-bg);
+  background: radial-gradient(120% 140% at 15% -10%, var(--shell-bg-2) 0%, var(--shell-bg) 55%, var(--shell-bg) 100%);
+}
+
+.epe-login-card {
+  width: 100%;
+  max-width: 360px;
+  background: var(--tile-bg);
+  border: 1px solid var(--tile-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--tile-shadow);
+  padding: clamp(24px, 5vw, 36px);
+}
+
+.epe-login-card img {
+  height: 26px;
+  margin-bottom: 20px;
+}
+
+.epe-login-card h1 {
+  font-size: 19px;
+  color: var(--text-strong);
+}
+
+.epe-login-card p.epe-login-sub {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.epe-login-form {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.epe-field label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+
+.epe-field input {
+  width: 100%;
+  border: 1px solid var(--tile-border);
+  background: var(--shell-bg);
+  color: var(--text-strong);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 14px;
+}
+
+.epe-field input:focus-visible {
+  border-color: var(--tile-border-hover);
+}
+
+.epe-login-form .epe-btn-acc {
+  justify-content: center;
+  padding: 10px 16px;
+  margin-top: 4px;
+}
+
+.epe-login-note {
+  margin-top: 18px;
+  font-size: 11.5px;
+  color: var(--text-faint);
+  line-height: 1.5;
+}
+
+.epe-login-back {
+  display: inline-block;
+  margin-top: 16px;
+  font-size: 12.5px;
+  color: var(--text-dim);
+}
+
+.epe-login-back:hover {
+  color: var(--text-strong);
+}

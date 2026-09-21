@@ -1,0 +1,100 @@
+/*
+  shell.css
+  Layout principal: pantalla de inicio tipo "central multimedia" — grilla de
+  botones grandes que ocupan la pantalla completa. El fondo (claro por
+  defecto, oscuro con el toggle) sale de los tokens de rol en theme.css,
+  nunca hardcodeado acá.
+  Mobile-first; el grid pasa de 1 a 4 columnas según el ancho.
+*/
+
+.epe-shell {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--shell-bg);
+  background: radial-gradient(120% 140% at 15% -10%, var(--shell-bg-2) 0%, var(--shell-bg) 55%, var(--shell-bg) 100%);
+  display: flex;
+  flex-direction: column;
+  transition: background-color 0.2s var(--ease);
+}
+
+/* ── Header ── */
+.epe-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px clamp(16px, 4vw, 40px);
+  flex-shrink: 0;
+}
+
+.epe-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.epe-brand img {
+  height: 28px;
+  width: auto;
+}
+
+.epe-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ── Intro ── */
+.epe-intro {
+  padding: 8px clamp(16px, 4vw, 40px) 4px;
+  flex-shrink: 0;
+}
+
+.epe-intro .eyebrow {
+  color: var(--teal-600);
+}
+
+[data-theme="dark"] .epe-intro .eyebrow {
+  color: var(--teal-500);
+}
+
+.epe-intro h1 {
+  font-size: clamp(22px, 3vw, 30px);
+  color: var(--text-strong);
+  margin-top: 6px;
+}
+
+.epe-intro p {
+  color: var(--text-dim);
+  font-size: 14px;
+  margin-top: 6px;
+  max-width: 60ch;
+}
+
+/* ── Grilla de tiles ── */
+.epe-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(10px, 1.6vw, 16px);
+  padding: 20px clamp(16px, 4vw, 40px) clamp(20px, 4vw, 40px);
+  align-content: start;
+}
+
+@media (min-width: 480px) {
+  .epe-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 720px) {
+  .epe-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1080px) {
+  .epe-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}

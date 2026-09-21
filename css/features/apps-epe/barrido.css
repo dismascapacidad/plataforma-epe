@@ -1,0 +1,335 @@
+/*
+  barrido.css
+  Entrenador de barrido: grilla de letras + panel de control. Resaltado de
+  alto contraste (el elemento activo debe notarse de un vistazo, incluso
+  para alguien con baja visión) y botones grandes para las acciones de
+  pulsador (avanzar/activar), pensados para mouse o switch-mouse.
+*/
+
+/* Altura fija a la pantalla, sin scroll: todo lo que sigue (header, panel,
+   grilla de letras) tiene que repartirse ese alto exacto, no crecer más
+   allá — por eso tantos flex:1 + min-height:0 en cascada. */
+.epe-barrido-shell {
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--shell-bg);
+}
+
+.epe-barrido-header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px clamp(16px, 4vw, 40px);
+}
+
+.epe-barrido-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  padding: 0 clamp(16px, 4vw, 40px) clamp(16px, 3vw, 28px);
+}
+
+@media (min-width: 900px) {
+  .epe-barrido-body {
+    grid-template-columns: 260px 1fr;
+  }
+}
+
+/* ── Panel de control ──
+   Si en una pantalla muy baja no entran todos los controles, este panel
+   scrollea solo — la grilla de letras (lo que pidió no tener scroll)
+   nunca se ve afectada por eso. */
+.epe-barrido-panel {
+  min-height: 0;
+  overflow-y: auto;
+  background: var(--tile-bg);
+  border: 1px solid var(--tile-border);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.epe-barrido-panel h2 {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+}
+
+.epe-barrido-modo-opciones {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-strong);
+}
+
+.epe-barrido-modo-opciones label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.epe-barrido-velocidad label {
+  display: block;
+  font-size: 12.5px;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+
+.epe-barrido-velocidad input[type="range"] {
+  width: 100%;
+}
+
+.epe-barrido-velocidad-escala {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10.5px;
+  color: var(--text-faint);
+  margin-top: 2px;
+}
+
+.epe-barrido-panel select,
+.epe-barrido-panel input[type="text"] {
+  width: 100%;
+  border: 1px solid var(--tile-border);
+  background: var(--shell-bg);
+  color: var(--text-strong);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-size: 13px;
+  margin-top: 6px;
+}
+
+.epe-barrido-palabra-nueva-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.epe-barrido-palabra-nueva-row input {
+  flex: 1;
+  margin-top: 0;
+}
+
+.epe-barrido-acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── Área de juego ── */
+.epe-barrido-juego {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.epe-barrido-panel-texto {
+  flex: 0 0 auto;
+  background: var(--tile-bg);
+  border: 1px solid var(--tile-border);
+  border-radius: var(--radius-lg);
+  padding: 12px 20px;
+}
+
+.epe-barrido-objetivo-label,
+.epe-barrido-escrito-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-faint);
+}
+
+.epe-barrido-objetivo {
+  display: flex;
+  gap: 6px;
+  margin: 6px 0 14px;
+}
+
+/* ── Teclas explícitas del modo activo ──
+   renderTeclas() en JS arma esta lista según el modo de barrido y la
+   opción de reproducción elegidos — para que siempre esté claro qué
+   tecla hace qué, sin tener que adivinar. */
+.epe-barrido-teclas-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-faint);
+}
+
+.epe-barrido-teclas {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 6px 0 14px;
+}
+
+.epe-barrido-tecla-fila {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--text-dim);
+}
+
+.epe-barrido-tecla-badge {
+  flex-shrink: 0;
+  min-width: 22px;
+  text-align: center;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-strong);
+  border: 1px solid var(--tile-border);
+  border-radius: 6px;
+  padding: 2px 6px;
+  background: var(--shell-bg);
+}
+
+.epe-barrido-letra-objetivo {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--tile-border);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text-dim);
+}
+
+.epe-barrido-letra-objetivo.is-correcta {
+  border-color: var(--grn);
+  color: var(--grn);
+  background: var(--grn-dim);
+}
+
+.epe-barrido-letra-objetivo.is-incorrecta {
+  border-color: var(--red);
+  color: var(--red);
+  background: var(--red-dim);
+}
+
+[data-theme="dark"] .epe-barrido-letra-objetivo.is-correcta,
+[data-theme="dark"] .epe-barrido-letra-objetivo.is-incorrecta {
+  background: transparent;
+}
+
+.epe-barrido-escrito-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.epe-barrido-escrito {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text-strong);
+  min-height: 1.3em;
+}
+
+.epe-barrido-escrito-escuchar {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--teal-600);
+  color: #fff;
+  transition: background 0.15s ease, opacity 0.15s ease;
+}
+
+.epe-barrido-escrito-escuchar svg {
+  width: 16px;
+  height: 16px;
+  margin-left: 1px; /* centra ópticamente el triángulo de play */
+}
+
+.epe-barrido-escrito-escuchar:hover {
+  background: var(--teal-700);
+}
+
+.epe-barrido-escrito-escuchar:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  background: var(--text-faint);
+}
+
+.epe-barrido-estado {
+  margin-top: 8px;
+  font-size: 13px;
+  min-height: 1.3em;
+  color: var(--text-dim);
+}
+
+.epe-barrido-estado.is-exito {
+  color: var(--grn);
+  font-weight: 700;
+}
+
+/* ── Grilla de letras ──
+   Todas las celdas tienen que verse enteras sin scroll: en vez de un
+   tamaño fijo por celda (que podía desbordar el alto disponible), la
+   grilla ocupa exactamente el espacio que le queda (flex:1) y cada fila
+   se reparte ese alto en partes iguales (flex:1 también) — el tamaño de
+   cada celda sale de cuánto espacio hay, no al revés. */
+.epe-barrido-grilla {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.epe-barrido-fila {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  gap: 6px;
+}
+
+.epe-barrido-celda {
+  /* Ancho fijo a 1/7 de la fila (7 columnas), no flex:1 — si no, la
+     última fila (que tiene una sola celda, "BORRAR") se estiraría a todo
+     el ancho en vez de quedar del mismo tamaño que el resto. La altura sí
+     es flexible (la da .epe-barrido-fila con flex:1). */
+  flex: 0 0 calc((100% - 36px) / 7);
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(13px, 2.4vw, 22px);
+  font-weight: 700;
+  color: var(--text-strong);
+  background: var(--tile-bg);
+  border: 2px solid var(--tile-border);
+  border-radius: var(--radius-sm);
+  transition: background 0.1s ease, border-color 0.1s ease, transform 0.1s ease;
+}
+
+.epe-barrido-celda.is-fila-activa {
+  border-color: color-mix(in srgb, var(--teal-600) 45%, var(--tile-border));
+  background: color-mix(in srgb, var(--teal-600) 8%, var(--tile-bg));
+}
+
+.epe-barrido-celda.is-resaltada {
+  border-color: var(--teal-600);
+  background: color-mix(in srgb, var(--teal-600) 26%, var(--tile-bg));
+  transform: scale(1.05);
+}

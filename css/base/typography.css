@@ -1,0 +1,31 @@
+/*
+  typography.css
+  Fuente: DM Sans (misma que ya usa el configurador, por continuidad de marca).
+*/
+
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap");
+
+body {
+  font-family: var(--font-display);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text-strong);
+  background: var(--shell-bg);
+  transition: background-color 0.2s var(--ease), color 0.2s var(--ease);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: inherit;
+}
+
+.eyebrow {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}

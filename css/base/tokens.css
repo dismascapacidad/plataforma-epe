@@ -1,0 +1,65 @@
+/*
+  tokens.css
+  Variables de diseño de la Plataforma Equipar para Equipar.
+  Paleta derivada de la identidad EpE (logo): azul marino + teal.
+  El azul marino (--navy-800) reutiliza el mismo tono que ya usa el header
+  del configurador (--hdr: #1A1F2E) a propósito, para que cuando se
+  reemplace su paleta genérica más adelante, el empalme sea directo.
+  No tocar estos valores desde otros archivos: todo color/tamaño nuevo
+  se agrega acá, nunca hardcodeado en un componente.
+*/
+
+:root {
+  /* ── Marca: azul marino ── */
+  --navy-900: #12151f;
+  --navy-800: #1a1f2e; /* mismo tono que --hdr del configurador */
+  --navy-700: #252b3b; /* mismo tono que --hdr2 del configurador */
+  --navy-600: #333a4d;
+
+  /* ── Marca: teal (acento primario) ── */
+  --teal-700: #0b7d73;
+  --teal-600: #0d9488; /* acento principal */
+  --teal-500: #14b8a6;
+  --teal-100: #ccfbf1;
+  --teal-050: #f0fdfa;
+
+  /* ── Superficies y fondo ── */
+  --bg: #f4f5f7;
+  --surf: #ffffff;
+  --surf-2: #eceef2;
+  --bdr: #d8dae2;
+  --bdr-hi: var(--teal-600);
+
+  /* ── Texto sobre superficies claras ── */
+  --txt: #1c1917;
+  --txt-2: #6b6560;
+  --txt-3: #a09890;
+
+  /* ── Texto sobre superficies oscuras (navy) ── */
+  --txt-on-navy: rgba(255, 255, 255, 0.92);
+  --txt-on-navy-dim: rgba(255, 255, 255, 0.55);
+  --bdr-on-navy: rgba(255, 255, 255, 0.1);
+
+  /* ── Estados ── */
+  --grn: #16a34a;
+  --grn-dim: #f0fdf4;
+  --red: #dc2626;
+  --red-dim: #fef2f2;
+  --amb: #d97706;
+  --amb-dim: #fffbeb;
+
+  /* ── Forma ── */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+
+  /* ── Sombra ── */
+  --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.06), 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.22);
+
+  /* ── Tipografía ── */
+  --font-display: "DM Sans", system-ui, -apple-system, sans-serif;
+
+  /* ── Transiciones ── */
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+}

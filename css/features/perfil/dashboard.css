@@ -1,0 +1,260 @@
+/*
+  dashboard.css
+  Layout del espacio personal: header propio (con la sesión y logout) +
+  navegación por pestañas + panel de contenido. Reutiliza .epe-shell,
+  .epe-header, etc. de css/layout/shell.css para no duplicar el chrome
+  general del sitio; esto solo agrega lo específico del dashboard.
+*/
+
+.epe-dash-header-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12.5px;
+  color: var(--text-dim);
+}
+
+.epe-dash-body {
+  flex: 1;
+  padding: 4px clamp(16px, 4vw, 40px) clamp(24px, 4vw, 40px);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* ── Pestañas ── */
+.epe-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--tile-border);
+}
+
+.epe-tab {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-dim);
+  padding: 10px 14px;
+  border-bottom: 2px solid transparent;
+  transform: translateY(1px);
+}
+
+.epe-tab:hover {
+  color: var(--text-strong);
+}
+
+.epe-tab.is-active {
+  color: var(--teal-600);
+  border-bottom-color: var(--teal-600);
+}
+
+[data-theme="dark"] .epe-tab.is-active {
+  color: var(--teal-500);
+  border-bottom-color: var(--teal-500);
+}
+
+/* ── Panel genérico ── */
+.epe-panel {
+  background: var(--tile-bg);
+  border: 1px solid var(--tile-border);
+  border-radius: var(--radius-lg);
+  padding: clamp(18px, 3vw, 28px);
+}
+
+.epe-panel h2 {
+  font-size: 16px;
+  color: var(--text-strong);
+}
+
+.epe-panel .epe-panel-sub {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+/* ── Perfil: formulario simple ── */
+.epe-form-grid {
+  margin-top: 20px;
+  display: grid;
+  gap: 14px;
+  max-width: 420px;
+}
+
+.epe-form-status {
+  font-size: 12.5px;
+  color: var(--teal-600);
+  min-height: 1.4em;
+}
+
+/* ── Placeholder (Mis dispositivos) ── */
+.epe-placeholder {
+  margin-top: 16px;
+  padding: 28px;
+  border: 1px dashed var(--tile-border);
+  border-radius: var(--radius-md);
+  text-align: center;
+  color: var(--text-faint);
+  font-size: 13px;
+}
+
+/* ── Gestión de casos: layout de dos columnas ── */
+.epe-casos-layout {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+
+@media (min-width: 860px) {
+  .epe-casos-layout {
+    grid-template-columns: 260px 1fr;
+    align-items: start;
+  }
+}
+
+.epe-casos-col-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.epe-casos-col-header h3 {
+  font-size: 13px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.epe-casos-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.epe-vacio {
+  font-size: 12.5px;
+  color: var(--text-faint);
+  padding: 10px 2px;
+}
+
+.epe-detalle-vacio {
+  padding: 40px 12px;
+  text-align: center;
+  color: var(--text-faint);
+  font-size: 13px;
+  border: 1px dashed var(--tile-border);
+  border-radius: var(--radius-md);
+}
+
+.epe-detalle h3 {
+  font-size: 16px;
+  color: var(--text-strong);
+}
+
+/* ── Sub-pestañas dentro del detalle de un caso ──
+   Un nivel más chico que .epe-tabs (pastilla, no subrayado) para que se
+   note que son subsecciones de un caso y no secciones del dashboard. */
+.epe-subtabs {
+  margin-top: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.epe-subtab {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-dim);
+  padding: 7px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--tile-border);
+}
+
+.epe-subtab:hover {
+  color: var(--text-strong);
+  background: var(--tile-bg-hover);
+}
+
+.epe-subtab.is-active {
+  color: #fff;
+  background: var(--teal-600);
+  border-color: var(--teal-600);
+}
+
+.epe-subpanel {
+  margin-top: 16px;
+}
+
+.epe-detalle-seccion {
+  margin-top: 22px;
+}
+
+.epe-detalle-seccion h4 {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 10px;
+}
+
+.epe-inline-form {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.epe-inline-form input,
+.epe-inline-form textarea,
+.epe-inline-form select {
+  border: 1px solid var(--tile-border);
+  background: var(--shell-bg);
+  color: var(--text-strong);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+.epe-inline-form input {
+  flex: 1;
+  min-width: 140px;
+}
+
+.epe-inline-form textarea {
+  flex-basis: 100%;
+  min-height: 56px;
+  resize: vertical;
+}
+
+.epe-btn-sm {
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+/* ── Compartir (mock): toggles con aviso ── */
+.epe-shares {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.epe-share-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-strong);
+}
+
+.epe-share-row input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+}
+
+.epe-share-nota {
+  margin-top: 8px;
+  font-size: 11.5px;
+  color: var(--text-faint);
+  line-height: 1.5;
+}

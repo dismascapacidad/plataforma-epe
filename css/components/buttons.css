@@ -1,0 +1,78 @@
+/*
+  buttons.css
+  Botones reutilizables en toda la plataforma. Usan tokens de rol
+  (theme.css), así que se adaptan solos a claro/oscuro.
+*/
+
+.epe-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--btn-ghost-text);
+  border: 1px solid var(--btn-ghost-border);
+  border-radius: var(--radius-sm);
+  padding: 8px 16px;
+  transition: all 0.15s var(--ease);
+}
+
+.epe-btn-ghost:hover {
+  color: var(--btn-ghost-text-hover);
+  border-color: var(--tile-border-hover);
+  background: var(--btn-ghost-bg-hover);
+}
+
+.epe-btn-acc {
+  display: inline-flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--teal-600);
+  border-radius: var(--radius-sm);
+  padding: 8px 16px;
+  transition: all 0.15s var(--ease);
+}
+
+.epe-btn-acc:hover {
+  background: var(--teal-700);
+}
+
+/* ── Toggle de tema ── */
+.epe-theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--btn-ghost-border);
+  color: var(--header-icon);
+  transition: all 0.15s var(--ease);
+}
+
+.epe-theme-toggle:hover {
+  color: var(--btn-ghost-text-hover);
+  background: var(--btn-ghost-bg-hover);
+  border-color: var(--tile-border-hover);
+}
+
+.epe-theme-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Un solo ícono visible por vez, según el tema activo */
+.epe-theme-toggle .icon-sun {
+  display: none;
+}
+.epe-theme-toggle .icon-moon {
+  display: block;
+}
+
+[data-theme="dark"] .epe-theme-toggle .icon-sun {
+  display: block;
+}
+[data-theme="dark"] .epe-theme-toggle .icon-moon {
+  display: none;
+}

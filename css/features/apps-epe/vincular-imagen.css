@@ -1,0 +1,121 @@
+/*
+  vincular-imagen.css
+  Cada casillero es a la vez su zona de juego (la imagen, grande, es el
+  botón) y su zona de edición (controles chicos debajo). --vi-columnas y
+  --vi-filas las fija actualizarLayout() en JS según cuántos casilleros
+  hay y el tamaño de pantalla, para que todos entren en el alto y el
+  ancho disponibles sin scroll — por eso la grilla usa fracciones de
+  alto (grid-template-rows) en vez de que cada card mida lo que necesite.
+*/
+
+.epe-vi-shell {
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--shell-bg);
+}
+
+.epe-vi-header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px clamp(16px, 4vw, 40px);
+}
+
+.epe-vi-config {
+  flex: 0 0 auto;
+  padding: 0 clamp(16px, 4vw, 40px) 6px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.epe-vi-config select {
+  border: 1px solid var(--tile-border);
+  background: var(--tile-bg);
+  color: var(--text-strong);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+.epe-vi-grilla {
+  --vi-columnas: 4;
+  --vi-filas: 2;
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(var(--vi-columnas), 1fr);
+  grid-template-rows: repeat(var(--vi-filas), 1fr);
+  gap: 14px;
+  padding: 12px clamp(16px, 4vw, 40px) clamp(16px, 3vw, 28px);
+}
+
+.epe-vi-card {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--tile-bg);
+  border: 1px solid var(--tile-border);
+  border-radius: var(--radius-lg);
+  padding: 10px;
+}
+
+.epe-vi-play {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  background: var(--shell-bg-2);
+  border: 2px solid transparent;
+  overflow: hidden;
+  transition: border-color 0.12s ease, transform 0.1s ease;
+}
+
+.epe-vi-play img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.epe-vi-vacio {
+  font-size: 12.5px;
+  color: var(--text-faint);
+}
+
+.epe-vi-card.is-activa .epe-vi-play {
+  border-color: var(--teal-600);
+  transform: scale(1.03);
+}
+
+.epe-vi-controles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.epe-vi-file-input {
+  display: none;
+}
+
+.epe-vi-texto-input {
+  flex: 1 1 100%;
+  border: 1px solid var(--tile-border);
+  background: var(--shell-bg);
+  color: var(--text-strong);
+  border-radius: var(--radius-sm);
+  padding: 6px 9px;
+  font-size: 12.5px;
+}
+
+.epe-vi-tecla-btn {
+  flex: 1;
+}

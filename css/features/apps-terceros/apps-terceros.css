@@ -1,0 +1,17 @@
+/*
+  apps-terceros.css
+  Layout propio de la página pública "Apps y recursos de terceros": nada
+  más que separar la grilla de la tienda (componente compartido, ver
+  css/components/catalogo-tienda.css) del resto del shell.
+*/
+
+[data-tienda-grid] {
+  margin-top: 8px;
+  padding-bottom: 40px;
+}
+
+[data-tienda-vacio] {
+  font-size: 13px;
+  color: var(--text-faint);
+  padding: 24px 2px;
+}

@@ -1,0 +1,72 @@
+/*
+  theme.css
+  Tokens de "rol" (semánticos): a diferencia de tokens.css, que define la
+  paleta cruda de marca y no cambia, estos sí cambian según el tema activo.
+  Todo componente que deba verse distinto en claro/oscuro usa estas
+  variables (por ejemplo --tile-bg), nunca los tokens de marca crudos
+  (por ejemplo --navy-800 o --teal-600) directamente.
+
+  Tema claro = default (:root). Tema oscuro = [data-theme="dark"] en <html>.
+  El atributo lo pone js/core/theme-boot.js antes de que pinte la página,
+  para no parpadear; el toggle lo maneja js/core/theme.js.
+*/
+
+:root {
+  color-scheme: light;
+
+  --shell-bg: var(--bg);
+  --shell-bg-2: var(--surf-2);
+
+  --tile-bg: var(--surf);
+  --tile-bg-hover: var(--surf);
+  --tile-border: var(--bdr);
+  --tile-border-hover: color-mix(in srgb, var(--teal-600) 35%, var(--bdr));
+  --tile-shadow: 0 1px 2px rgba(23, 26, 33, 0.04), 0 1px 3px rgba(23, 26, 33, 0.06);
+  --tile-shadow-hover: 0 4px 10px rgba(23, 26, 33, 0.06), 0 12px 28px rgba(23, 26, 33, 0.09);
+  --tile-glow-opacity: 0;
+
+  --text-strong: var(--txt);
+  --text-dim: var(--txt-2);
+  --text-faint: var(--txt-3);
+
+  --badge-bg: var(--surf-2);
+  --badge-border: var(--bdr);
+  --badge-text: var(--txt-3);
+
+  --btn-ghost-border: var(--bdr);
+  --btn-ghost-text: var(--txt-2);
+  --btn-ghost-text-hover: var(--txt);
+  --btn-ghost-bg-hover: var(--surf-2);
+
+  --header-icon: var(--txt-2);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --shell-bg: var(--navy-800);
+  --shell-bg-2: var(--navy-700);
+
+  --tile-bg: rgba(255, 255, 255, 0.04);
+  --tile-bg-hover: rgba(255, 255, 255, 0.07);
+  --tile-border: rgba(255, 255, 255, 0.07);
+  --tile-border-hover: rgba(255, 255, 255, 0.16);
+  --tile-shadow: none;
+  --tile-shadow-hover: 0 12px 32px rgba(0, 0, 0, 0.35);
+  --tile-glow-opacity: 0.16;
+
+  --text-strong: var(--txt-on-navy);
+  --text-dim: var(--txt-on-navy-dim);
+  --text-faint: var(--txt-on-navy-dim);
+
+  --badge-bg: transparent;
+  --badge-border: var(--bdr-on-navy);
+  --badge-text: var(--txt-on-navy-dim);
+
+  --btn-ghost-border: var(--bdr-on-navy);
+  --btn-ghost-text: var(--txt-on-navy-dim);
+  --btn-ghost-text-hover: var(--txt-on-navy);
+  --btn-ghost-bg-hover: rgba(255, 255, 255, 0.04);
+
+  --header-icon: var(--txt-on-navy-dim);
+}

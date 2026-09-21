@@ -1,0 +1,43 @@
+/*
+  tercero-detalle.css
+  El modal de detalle de una app de terceros (js/core/tercero-detalle.js):
+  descripción, bloques de indicaciones/configuración, y el footer de
+  acciones. Componente compartido — lo usa tanto apps-terceros/index.html
+  (público, sin sesión) como el picker de actividades del espacio
+  personal (casos.js).
+*/
+
+.epe-tercero-detalle-desc {
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+.epe-tercero-detalle-bloque {
+  margin-top: 16px;
+}
+
+.epe-tercero-detalle-bloque h4 {
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+  margin-bottom: 5px;
+}
+
+.epe-tercero-detalle-bloque p {
+  font-size: 13px;
+  color: var(--text-strong);
+  line-height: 1.55;
+  white-space: pre-line;
+}
+
+.epe-tercero-detalle-acciones {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--tile-border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

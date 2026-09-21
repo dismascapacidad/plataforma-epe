@@ -1,0 +1,190 @@
+/*
+  caso-card.css
+  La tarjeta de un caso en la lista, y los ítems de actividad/entrada
+  dentro del detalle. Separado de dashboard.css porque son componentes
+  reutilizables chicos, no layout de página (mismo criterio que
+  css/components/ para el resto del sitio).
+*/
+
+.epe-caso-card {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+}
+
+.epe-caso-card-btn {
+  flex: 1;
+  text-align: left;
+  padding: 9px 10px;
+  font-size: 13.5px;
+  color: var(--text-dim);
+  border-radius: var(--radius-sm);
+}
+
+.epe-caso-card-btn:hover {
+  background: var(--tile-bg-hover);
+  color: var(--text-strong);
+}
+
+.epe-caso-card.is-active .epe-caso-card-btn {
+  background: color-mix(in srgb, var(--teal-600) 12%, transparent);
+  color: var(--text-strong);
+  font-weight: 600;
+}
+
+.epe-caso-card-del {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  color: var(--text-faint);
+  font-size: 16px;
+  line-height: 1;
+}
+
+.epe-caso-card-del:hover {
+  color: var(--red);
+  background: var(--red-dim);
+}
+
+[data-theme="dark"] .epe-caso-card-del:hover {
+  background: rgba(220, 38, 38, 0.15);
+}
+
+/* ── Actividades: grilla de cards cuadradas ──
+   Cada card es un link guardado a una app del catálogo (EpeCatalogo) —
+   nunca la app instanciada acá; "Abrir" la lleva a su propia página en
+   una pestaña nueva (ver casos.js). */
+.epe-actividades-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.epe-actividad-card {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+  padding: 14px 10px;
+  border: 1px solid var(--tile-border);
+  border-radius: var(--radius-md);
+  background: var(--shell-bg-2);
+  font-size: 13px;
+}
+
+.epe-actividad-card-icono {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--teal-600) 16%, transparent);
+  color: var(--teal-600);
+}
+
+[data-theme="dark"] .epe-actividad-card-icono {
+  color: var(--teal-500);
+}
+
+.epe-actividad-card-icono svg {
+  width: 19px;
+  height: 19px;
+}
+
+.epe-actividad-card strong {
+  color: var(--text-strong);
+  font-size: 13px;
+  line-height: 1.25;
+}
+
+.epe-actividad-card-autor {
+  font-size: 10.5px;
+  color: var(--text-faint);
+}
+
+/* Apps de terceros creadas por el usuario para ESTE caso puntual: nunca
+   van al catálogo público, así que se marcan distinto de "App EpE" / "De
+   terceros: <autor>" para que quede claro que solo este caso las ve. */
+.epe-actividad-card-autor-privada {
+  color: var(--amb);
+  font-weight: 600;
+}
+
+.epe-actividad-card-acciones {
+  margin-top: auto;
+  padding-top: 6px;
+  display: flex;
+  gap: 6px;
+}
+
+.epe-actividad-card-acciones .epe-btn-acc:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.epe-actividad-card-acciones .epe-btn-acc:disabled:hover {
+  background: var(--teal-600);
+}
+
+/* El picker del catálogo (grilla de la tienda, detalle de terceros,
+   formulario de crear app propia del caso) vive en
+   css/features/perfil/catalogo-picker.css — separado porque es sobre el
+   flujo de "elegir/crear qué vincular", no sobre las cards ya vinculadas
+   de arriba. */
+
+/* ── Entradas (nota / evaluación / sesión) ── */
+.epe-entrada-item {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--tile-border);
+  font-size: 13px;
+}
+
+.epe-entrada-item:last-child {
+  border-bottom: none;
+}
+
+.epe-entrada-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.epe-entrada-tipo {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
+  border-radius: 20px;
+  background: var(--badge-bg);
+  border: 1px solid var(--badge-border);
+  color: var(--badge-text);
+}
+
+.epe-entrada-tipo-evaluacion {
+  color: var(--teal-600);
+  border-color: color-mix(in srgb, var(--teal-600) 40%, var(--badge-border));
+}
+
+[data-theme="dark"] .epe-entrada-tipo-evaluacion {
+  color: var(--teal-500);
+}
+
+.epe-entrada-fecha {
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.epe-entrada-item p {
+  color: var(--text-dim);
+  line-height: 1.5;
+}

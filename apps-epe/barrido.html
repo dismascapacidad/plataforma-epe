@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Barrido — Apps EpE</title>
+    <link rel="icon" href="../assets/img/logo-epe.png" />
+
+    <script src="../js/core/theme-boot.js"></script>
+
+    <link rel="stylesheet" href="../css/base/reset.css" />
+    <link rel="stylesheet" href="../css/base/tokens.css" />
+    <link rel="stylesheet" href="../css/base/theme.css" />
+    <link rel="stylesheet" href="../css/base/typography.css" />
+    <link rel="stylesheet" href="../css/components/buttons.css" />
+    <link rel="stylesheet" href="../css/components/app-nav.css" />
+    <link rel="stylesheet" href="../css/features/apps-epe/barrido.css" />
+  </head>
+  <body>
+    <div class="epe-barrido-shell">
+      <header class="epe-barrido-header">
+        <div class="epe-app-header-left">
+          <a class="epe-app-back" href="index.html">← Apps EpE</a>
+          <a href="../index.html"><img src="../assets/img/logo-epe.png" alt="Equipar para Equipar" height="26" /></a>
+        </div>
+        <button
+          class="epe-theme-toggle"
+          type="button"
+          id="theme-toggle"
+          aria-pressed="false"
+          aria-label="Cambiar a modo oscuro"
+        >
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4" />
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+          </svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" />
+          </svg>
+        </button>
+      </header>
+
+      <div class="epe-barrido-body">
+        <aside class="epe-barrido-panel">
+          <div>
+            <h2>Disposición de la grilla</h2>
+            <select data-barrido-disposicion>
+              <option value="abecedario">Abecedario</option>
+              <option value="qwerty">QWERTY</option>
+            </select>
+          </div>
+
+          <div>
+            <h2>Modo de barrido</h2>
+            <div class="epe-barrido-modo-opciones">
+              <label>
+                <input type="radio" name="barrido-modo" value="tiempo" checked />
+                Por tiempo (1 pulsador)
+              </label>
+              <label>
+                <input type="radio" name="barrido-modo" value="manual-lineal" />
+                Manual, celda por celda (2 pulsadores)
+              </label>
+              <label>
+                <input type="radio" name="barrido-modo" value="manual-filacol" />
+                Manual, fila y columna (2 pulsadores)
+              </label>
+            </div>
+          </div>
+
+          <div>
+            <p class="epe-barrido-teclas-label">Teclas de este modo</p>
+            <div class="epe-barrido-teclas" data-barrido-teclas></div>
+          </div>
+
+          <div class="epe-barrido-velocidad" data-barrido-velocidad-wrap>
+            <label for="barrido-velocidad">Velocidad del barrido automático</label>
+            <input type="range" id="barrido-velocidad" data-barrido-velocidad min="400" max="2000" step="100" value="1500" />
+            <div class="epe-barrido-velocidad-escala">
+              <span>Lento</span>
+              <span>Rápido</span>
+            </div>
+          </div>
+
+          <div class="epe-barrido-palabra">
+            <h2>Palabra a copiar</h2>
+            <select data-barrido-palabra-select></select>
+            <div class="epe-barrido-palabra-nueva-row">
+              <input type="text" data-barrido-palabra-nueva placeholder="Agregar palabra propia" />
+              <button class="epe-btn-ghost epe-btn-sm" type="button" data-barrido-palabra-agregar>+</button>
+            </div>
+          </div>
+
+          <div>
+            <h2>Reproducir la palabra</h2>
+            <div class="epe-barrido-modo-opciones">
+              <label>
+                <input type="radio" name="barrido-reproduccion" value="auto" checked />
+                Automática, al completarla
+              </label>
+              <label>
+                <input type="radio" name="barrido-reproduccion" value="tecla" />
+                Con tecla dedicada (P)
+              </label>
+            </div>
+          </div>
+
+          <div class="epe-barrido-acciones">
+            <button class="epe-btn-ghost epe-btn-sm" type="button" data-barrido-reiniciar>Borrar todo</button>
+          </div>
+        </aside>
+
+        <div class="epe-barrido-juego">
+          <div class="epe-barrido-panel-texto">
+            <p class="epe-barrido-objetivo-label">Copiá esta palabra</p>
+            <div class="epe-barrido-objetivo" data-barrido-objetivo></div>
+
+            <p class="epe-barrido-escrito-label">Escribiste</p>
+            <div class="epe-barrido-escrito-row">
+              <p class="epe-barrido-escrito" data-barrido-escrito></p>
+              <button
+                class="epe-barrido-escrito-escuchar"
+                type="button"
+                data-barrido-escrito-escuchar
+                disabled
+                aria-label="Escuchar lo escrito"
+                title="Escuchar lo escrito"
+              >
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              </button>
+            </div>
+            <p class="epe-barrido-estado" data-barrido-estado></p>
+          </div>
+
+          <div class="epe-barrido-grilla" data-barrido-grilla></div>
+        </div>
+      </div>
+    </div>
+
+    <script src="../js/core/theme.js"></script>
+    <script src="../js/features/apps-epe/barrido/barrido.js"></script>
+    <script>
+      EpeTheme.initThemeToggle(document.getElementById("theme-toggle"));
+      EpeBarrido.init(document.querySelector(".epe-barrido-shell"));
+    </script>
+  </body>
+</html>

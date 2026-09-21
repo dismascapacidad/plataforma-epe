@@ -1,0 +1,27 @@
+/*
+  app-nav.css
+  Navegación chica de "volver" que usan las páginas de una app EpE (para
+  volver al índice de Apps EpE) y el índice de Apps EpE (para volver al
+  inicio de la plataforma). Un solo lugar para no repetir este estilo en
+  cada css de app.
+*/
+
+.epe-app-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.epe-app-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.epe-app-back:hover {
+  color: var(--text-strong);
+}

@@ -1,0 +1,72 @@
+/*
+  modal.css
+  Overlay + panel del modal genérico (js/core/modal.js). Un solo lugar
+  para este patrón, para no reinventarlo cada vez que algo necesite un
+  diálogo (hoy: el picker de actividades del catálogo).
+*/
+
+.epe-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 20, 20, 0.55);
+}
+
+/* El atributo hidden por sí solo pierde contra display:flex de arriba
+   (misma especificidad, esta clase gana por orden): lo reforzamos. */
+.epe-modal-overlay[hidden] {
+  display: none;
+}
+
+.epe-modal {
+  width: min(640px, 100%);
+  max-height: min(560px, 90vh);
+  display: flex;
+  flex-direction: column;
+  background: var(--tile-bg);
+  border: 1px solid var(--tile-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--tile-shadow-hover);
+  overflow: hidden;
+}
+
+.epe-modal-header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--tile-border);
+}
+
+.epe-modal-header h3 {
+  font-size: 14.5px;
+  color: var(--text-strong);
+}
+
+.epe-modal-cerrar {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  font-size: 18px;
+  line-height: 1;
+  color: var(--text-faint);
+}
+
+.epe-modal-cerrar:hover {
+  color: var(--text-strong);
+  background: var(--tile-bg-hover);
+}
+
+.epe-modal-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px;
+}

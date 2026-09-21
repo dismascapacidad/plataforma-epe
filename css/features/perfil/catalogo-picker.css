@@ -1,0 +1,59 @@
+/*
+  catalogo-picker.css
+  Lo que pasa DENTRO del modal de "Agregar actividad" que no es genérico:
+  las pestañas Apps EpE / De terceros y el formulario para crear una app
+  de terceros propia de un caso. La grilla de la tienda en sí
+  (.epe-catalogo-grid/.epe-catalogo-item) vive en
+  css/components/catalogo-tienda.css, y el detalle de una app de terceros
+  en css/components/tercero-detalle.css — ambos compartidos con la página
+  pública apps-terceros/index.html. Separado de caso-card.css porque
+  caso-card.css es sobre las cards YA vinculadas en el dashboard, esto es
+  sobre el flujo de elegir/crear qué vincular.
+*/
+
+.epe-picker-tabs {
+  margin-top: 0;
+}
+
+.epe-picker-seccion {
+  margin-top: 16px;
+}
+
+.epe-picker-crear {
+  margin-top: 12px;
+}
+
+/* ── Formulario "crear app de terceros para este caso" ── */
+.epe-picker-form {
+  margin-top: 14px;
+  max-width: none;
+}
+
+.epe-picker-form textarea {
+  min-height: 64px;
+  resize: vertical;
+}
+
+.epe-picker-form .epe-field input,
+.epe-picker-form .epe-field textarea {
+  width: 100%;
+  border: 1px solid var(--tile-border);
+  background: var(--shell-bg);
+  color: var(--text-strong);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+.epe-picker-form .epe-field label {
+  display: block;
+  font-size: 12.5px;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+}
+
+.epe-picker-form > div:last-child {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}

@@ -1,0 +1,13 @@
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Si en algún momento se suma tooling con Node (no hace falta hoy: la
+# plataforma es HTML/CSS/JS sin build step)
+node_modules/
+.env
+.env.local

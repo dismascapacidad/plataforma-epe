@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Apps y recursos de terceros — Equipar para Equipar</title>
+    <meta
+      name="description"
+      content="Recursos externos (MakeyMakey, AsTeRICS, Cboard, etc.) curados por dis+capacidad, con indicaciones de uso y de configuración de dispositivo."
+    />
+    <link rel="icon" href="../assets/img/logo-epe.png" />
+
+    <script src="../js/core/theme-boot.js"></script>
+
+    <link rel="stylesheet" href="../css/base/reset.css" />
+    <link rel="stylesheet" href="../css/base/tokens.css" />
+    <link rel="stylesheet" href="../css/base/theme.css" />
+    <link rel="stylesheet" href="../css/base/typography.css" />
+    <link rel="stylesheet" href="../css/components/buttons.css" />
+    <link rel="stylesheet" href="../css/components/modal.css" />
+    <link rel="stylesheet" href="../css/components/catalogo-tienda.css" />
+    <link rel="stylesheet" href="../css/components/tercero-detalle.css" />
+    <link rel="stylesheet" href="../css/components/app-nav.css" />
+    <link rel="stylesheet" href="../css/layout/shell.css" />
+    <link rel="stylesheet" href="../css/features/apps-terceros/apps-terceros.css" />
+  </head>
+  <body>
+    <div class="epe-shell">
+      <header class="epe-header">
+        <div class="epe-app-header-left">
+          <a class="epe-app-back" href="../index.html">← Inicio</a>
+          <a href="../index.html"><img src="../assets/img/logo-epe.png" alt="Equipar para Equipar" height="28" /></a>
+        </div>
+        <div class="epe-header-actions">
+          <button
+            class="epe-theme-toggle"
+            type="button"
+            id="theme-toggle"
+            aria-pressed="false"
+            aria-label="Cambiar a modo oscuro"
+          >
+            <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="4" />
+              <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+            </svg>
+            <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" />
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="epe-intro">
+        <p class="eyebrow">dis+capacidad</p>
+        <h1>Apps y recursos de terceros</h1>
+        <p>
+          Herramientas que no son de dis+capacidad (MakeyMakey, AsTeRICS,
+          Cboard y otras), curadas acá con indicaciones de uso y de
+          configuración de dispositivo antes de abrirlas.
+        </p>
+      </div>
+
+      <div class="epe-catalogo-grid" data-tienda-grid></div>
+      <p class="epe-vacio" data-tienda-vacio hidden>Todavía no hay recursos cargados en esta sección.</p>
+    </div>
+
+    <script src="../js/core/theme.js"></script>
+    <script src="../js/core/modal.js"></script>
+    <script src="../js/core/tercero-detalle.js"></script>
+    <script src="../js/data/catalogo-actividades.js"></script>
+    <script src="../js/features/apps-terceros/apps-terceros.js"></script>
+    <script>
+      EpeTheme.initThemeToggle(document.getElementById("theme-toggle"));
+      EpeAppsTerceros.init();
+    </script>
+  </body>
+</html>
