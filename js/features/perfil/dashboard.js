@@ -29,7 +29,7 @@
 
       initTabs();
 
-      EpePerfil.init(document.querySelector("[data-panel='perfil']"));
+      EpePerfil.init(document.querySelector("[data-panel='perfil']"), session.user.email);
       EpeCasos.init(document.querySelector("[data-panel='casos']"));
       EpeDispositivos.init(document.querySelector("[data-panel='dispositivos']"));
 

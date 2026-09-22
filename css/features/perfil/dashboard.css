@@ -71,6 +71,53 @@
   margin-top: 4px;
 }
 
+/* ── Perfil: card de resumen (avatar + nombre/profesión/institución) ── */
+.epe-perfil-resumen {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--tile-border);
+}
+
+.epe-avatar {
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, var(--teal-600), var(--teal-500));
+}
+
+.epe-perfil-resumen-texto {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.epe-perfil-resumen-texto strong {
+  font-size: 15.5px;
+  color: var(--text-strong);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.epe-perfil-resumen-texto span {
+  font-size: 12.5px;
+  color: var(--text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* ── Perfil: formulario simple ── */
 .epe-form-grid {
   margin-top: 20px;
@@ -232,29 +279,120 @@
   font-size: 12px;
 }
 
-/* ── Compartir (mock): toggles con aviso ── */
-.epe-shares {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+/* ── Compartir: lista de "quién tiene acceso" + switches ── */
+.epe-compartir-titulo {
+  font-size: 13px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
-.epe-share-row {
+.epe-compartir-lista {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.epe-compartir-item {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 10px;
+  padding: 9px 12px;
+  border: 1px solid var(--tile-border);
+  border-radius: var(--radius-sm);
+  background: var(--shell-bg-2);
   font-size: 13px;
   color: var(--text-strong);
 }
 
-.epe-share-row input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
+[data-colega-agregar] {
+  margin-top: 10px;
+  margin-bottom: 22px;
 }
 
-.epe-share-nota {
-  margin-top: 8px;
-  font-size: 11.5px;
+.epe-compartir-grupo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 0;
+  border-top: 1px solid var(--tile-border);
+}
+
+.epe-compartir-grupo-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.epe-compartir-grupo-info strong {
+  font-size: 13.5px;
+  color: var(--text-strong);
+}
+
+.epe-compartir-grupo-info span {
+  font-size: 12px;
   color: var(--text-faint);
-  line-height: 1.5;
+  line-height: 1.4;
+}
+
+/* Switch tipo pastilla, más claro que un checkbox para "esto está
+   activo/no activo" en un contexto de permisos. */
+.epe-switch {
+  position: relative;
+  flex-shrink: 0;
+  display: inline-block;
+  width: 38px;
+  height: 22px;
+}
+
+.epe-switch input {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  cursor: pointer;
+}
+
+.epe-switch-track {
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  background: var(--tile-border);
+  transition: background-color 0.15s ease;
+}
+
+.epe-switch-track::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  transition: transform 0.15s ease;
+}
+
+.epe-switch input:checked + .epe-switch-track {
+  background: var(--teal-600);
+}
+
+.epe-switch input:checked + .epe-switch-track::before {
+  transform: translateX(16px);
+}
+
+.epe-switch input:disabled + .epe-switch-track {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.epe-switch input:focus-visible + .epe-switch-track {
+  outline: 2px solid var(--teal-600);
+  outline-offset: 2px;
 }

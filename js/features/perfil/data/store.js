@@ -257,13 +257,15 @@ var EpeStore = (function () {
   }
 
   // ── Compartir ───────────────────────────────────────────────────────
-  // El toggle ya se guarda de verdad en la base (antes solo en
-  // localStorage). Sigue sin ser funcional de punta a punta: falta la
-  // parte de que la otra persona (institución/colega/dis+capacidad)
-  // realmente pueda ver el caso — esa lógica de RLS queda para una
-  // iteración posterior (ver supabase/001_schema_inicial.sql).
-  // compartido_con_user_id queda siempre null acá; el día que se conecte
-  // de verdad "colega", ahí se completa con el uuid del colega elegido.
+  // Funcional de punta a punta desde supabase/003_compartir.sql: la RLS
+  // de casos/caso_actividades/caso_apps_terceros/caso_entradas ahora
+  // también deja ver (solo lectura, nunca editar) a quien tenga un share
+  // que lo alcance — ver public.puede_ver_caso() en ese archivo.
+  //
+  // "institucion" y "dismascapacidad" son toggles simples (una fila por
+  // tipo, sin destinatario puntual). "colega" es distinto: puede haber
+  // varios, cada uno con su propio compartido_con_user_id — por eso tiene
+  // sus funciones propias en vez de reusar setShare().
 
   function getShares(casoId) {
     return EpeSupabase.from("caso_shares")
@@ -294,6 +296,54 @@ var EpeStore = (function () {
       });
   }
 
+  // Promise<uuid|null>. null significa "nadie con ese email tiene cuenta
+  // en la plataforma todavía" — no es un error, es un resultado válido
+  // que quien llama tiene que manejar (ver casos.js).
+  function findUserIdByEmail(email) {
+    return EpeSupabase.rpc("find_user_id_by_email", { p_email: email }).then(function (res) {
+      lanzarSiError(res);
+      return res.data || null;
+    });
+  }
+
+  // Promise<fila del share creado | null>. null si el email no
+  // corresponde a ninguna cuenta.
+  function addShareColega(casoId, email) {
+    return findUserIdByEmail(email).then(function (uid) {
+      if (!uid) return null;
+      return EpeSupabase.from("caso_shares")
+        .insert({ caso_id: casoId, tipo: "colega", compartido_con_user_id: uid })
+        .select("*")
+        .single()
+        .then(function (res) {
+          lanzarSiError(res);
+          return res.data;
+        });
+    });
+  }
+
+  // Borra un share puntual por su id (se usa para sacar a un colega de la
+  // lista — institución/dis+capacidad usan setShare(..., false) en vez de
+  // esto porque no tienen un id particular que el usuario haya elegido).
+  function removeShare(shareId) {
+    return EpeSupabase.from("caso_shares")
+      .delete()
+      .eq("id", shareId)
+      .then(function (res) {
+        lanzarSiError(res);
+      });
+  }
+
+  // Promise<string>. Nombre o email de la persona para mostrar en la
+  // lista de "compartido con" — nunca se expone su perfil completo (ver
+  // etiqueta_colega() en supabase/003_compartir.sql).
+  function getColegaLabel(userId) {
+    return EpeSupabase.rpc("etiqueta_colega", { p_user_id: userId }).then(function (res) {
+      lanzarSiError(res);
+      return res.data || "Usuario";
+    });
+  }
+
   return {
     getProfile: getProfile,
     saveProfile: saveProfile,
@@ -314,5 +364,9 @@ var EpeStore = (function () {
     removeEntrada: removeEntrada,
     getShares: getShares,
     setShare: setShare,
+    findUserIdByEmail: findUserIdByEmail,
+    addShareColega: addShareColega,
+    removeShare: removeShare,
+    getColegaLabel: getColegaLabel,
   };
 })();

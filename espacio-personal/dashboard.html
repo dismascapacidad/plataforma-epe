@@ -62,7 +62,15 @@
 
         <!-- ── Perfil ── -->
         <section class="epe-panel" data-panel="perfil">
-          <h2>Perfil</h2>
+          <div class="epe-perfil-resumen">
+            <div class="epe-avatar" data-perfil-avatar aria-hidden="true">?</div>
+            <div class="epe-perfil-resumen-texto">
+              <strong data-perfil-resumen-nombre>Tu perfil</strong>
+              <span data-perfil-resumen-detalle>Completá tus datos abajo.</span>
+            </div>
+          </div>
+
+          <h2>Editar perfil</h2>
           <p class="epe-panel-sub">Estos datos van a identificarte en los casos que compartas.</p>
 
           <form class="epe-form-grid" data-perfil-form>
@@ -136,32 +144,44 @@
                 </div>
 
                 <div class="epe-subpanel" data-subpanel="compartir" hidden>
-                  <div class="epe-shares">
-                    <label class="epe-share-row">
+                  <h4 class="epe-compartir-titulo">Personas con acceso</h4>
+                  <p class="epe-panel-sub">
+                    Pueden ver este caso, pero nunca editarlo ni borrarlo —
+                    eso queda siempre para vos.
+                  </p>
+
+                  <ul class="epe-compartir-lista" data-colegas-lista></ul>
+                  <button class="epe-btn-ghost epe-btn-sm" type="button" data-colega-agregar>
+                    + Compartir con un colega
+                  </button>
+
+                  <div class="epe-compartir-grupo">
+                    <div class="epe-compartir-grupo-info">
+                      <strong>Tu institución</strong>
+                      <span data-institucion-hint></span>
+                    </div>
+                    <label class="epe-switch">
                       <input type="checkbox" data-share-toggle value="institucion" />
-                      Institución
-                    </label>
-                    <label class="epe-share-row">
-                      <input type="checkbox" data-share-toggle value="colega" />
-                      Colega
-                    </label>
-                    <label class="epe-share-row">
-                      <input type="checkbox" data-share-toggle value="dismascapacidad" />
-                      dis+capacidad
+                      <span class="epe-switch-track"></span>
                     </label>
                   </div>
-                  <p class="epe-share-nota">
-                    El toggle ya se guarda, pero compartir de verdad (que la
-                    otra persona pueda ver este caso) todavía no está
-                    conectado — eso es una iteración posterior.
-                  </p>
+
+                  <div class="epe-compartir-grupo">
+                    <div class="epe-compartir-grupo-info">
+                      <strong>dis+capacidad</strong>
+                      <span>Para que el equipo de soporte pueda ayudarte con este caso si hace falta.</span>
+                    </div>
+                    <label class="epe-switch">
+                      <input type="checkbox" data-share-toggle value="dismascapacidad" />
+                      <span class="epe-switch-track"></span>
+                    </label>
+                  </div>
 
                   <div class="epe-detalle-seccion">
                     <h4>Comentarios</h4>
                     <p class="epe-vacio" data-comentarios-vacio>
                       Sin comentarios todavía. Van a aparecer acá los que dejen
-                      las personas con las que compartas este caso — disponible
-                      cuando conectemos Supabase.
+                      las personas con las que compartas este caso.
                     </p>
                   </div>
                 </div>

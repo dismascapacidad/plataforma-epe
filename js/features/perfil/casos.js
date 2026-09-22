@@ -1,11 +1,12 @@
 /**
  * casos.js
  * Sección "Gestión de casos": listar/crear/borrar casos, ver el detalle de
- * uno (actividades vinculadas + entradas de nota/evaluación/sesión) y los
- * toggles de compartir — estos últimos YA se guardan de verdad en Supabase
- * (ver data/store.js), pero seguir sin ser funcionales de punta a punta:
- * falta la parte de que la otra persona pueda ver el caso compartido, eso
- * queda para una iteración posterior.
+ * uno (actividades vinculadas + entradas de nota/evaluación/sesión) y
+ * compartir — funcional de punta a punta desde supabase/003_compartir.sql:
+ * un colega puntual (por email, solo si ya tiene cuenta), tu institución
+ * (comparando el campo de texto libre del perfil) o dis+capacidad (cuenta
+ * marcada como admin) pueden VER el caso, nunca editarlo ni borrarlo — eso
+ * sigue siendo solo del dueño.
  *
  * MIGRADO a Supabase: todo lo que antes era EpeStore.algo() síncrono ahora
  * devuelve una Promise. El patrón en todo este archivo es el mismo: pedir
@@ -28,6 +29,7 @@ var EpeCasos = (function () {
     root.querySelector("[data-caso-nuevo]").addEventListener("click", onCrearCaso);
     root.querySelector("[data-actividad-agregar]").addEventListener("click", abrirCatalogo);
     root.querySelector("[data-entrada-form]").addEventListener("submit", onAgregarEntrada);
+    root.querySelector("[data-colega-agregar]").addEventListener("click", abrirFormCompartirColega);
 
     root.querySelectorAll("[data-share-toggle]").forEach(function (toggle) {
       toggle.addEventListener("change", onToggleShare);
@@ -72,9 +74,9 @@ var EpeCasos = (function () {
     });
   }
 
-  function mensajeVacio(elemento, texto) {
+  function mensajeVacio(elemento, texto, tag) {
     elemento.innerHTML = "";
-    var p = document.createElement("p");
+    var p = document.createElement(tag || "p");
     p.className = "epe-vacio";
     p.textContent = texto;
     elemento.appendChild(p);
@@ -650,22 +652,86 @@ var EpeCasos = (function () {
   }
 
   // ── Compartir ───────────────────────────────────────────────────────
+  // Tres formas de dar acceso (solo lectura) a un caso: colegas puntuales
+  // (lista dinámica, uno o varios) e institución/dis+capacidad (toggles
+  // simples, ya están fijos en el HTML — ver dashboard.html). La lista de
+  // colegas se reconstruye en cada render; los dos toggles solo se
+  // actualizan (checked/disabled), no se recrean.
 
   function renderShares(casoId) {
-    EpeStore.getShares(casoId)
-      .then(function (shares) {
+    var listaColegas = root.querySelector("[data-colegas-lista]");
+    var toggleInstitucion = root.querySelector('[data-share-toggle][value="institucion"]');
+    var toggleDismascapacidad = root.querySelector('[data-share-toggle][value="dismascapacidad"]');
+    var hintInstitucion = root.querySelector("[data-institucion-hint]");
+
+    mensajeVacio(listaColegas, "Cargando…");
+
+    Promise.all([EpeStore.getShares(casoId), EpeStore.getProfile()])
+      .then(function (resultados) {
         if (casoId !== casoSeleccionadoId) return;
-        var activos = shares.map(function (s) {
-          return s.tipo;
+        var shares = resultados[0];
+        var miPerfil = resultados[1];
+
+        var colegas = shares.filter(function (s) {
+          return s.tipo === "colega";
         });
-        root.querySelectorAll("[data-share-toggle]").forEach(function (toggle) {
-          toggle.checked = activos.indexOf(toggle.value) !== -1;
+        toggleInstitucion.checked = shares.some(function (s) {
+          return s.tipo === "institucion";
         });
+        toggleDismascapacidad.checked = shares.some(function (s) {
+          return s.tipo === "dismascapacidad";
+        });
+
+        var institucion = (miPerfil.institucion || "").trim();
+        toggleInstitucion.disabled = !institucion;
+        hintInstitucion.textContent = institucion
+          ? 'Le da acceso a cualquier colega cuyo perfil diga "' + institucion + '".'
+          : "Completá tu institución en la pestaña Perfil para poder usar esto.";
+
+        listaColegas.innerHTML = "";
+        if (colegas.length === 0) {
+          mensajeVacio(listaColegas, "Todavía no compartiste este caso con ningún colega.", "li");
+        } else {
+          colegas.forEach(function (share) {
+            var li = document.createElement("li");
+            li.className = "epe-compartir-item";
+
+            var etiqueta = document.createElement("span");
+            etiqueta.textContent = "Cargando…";
+            li.appendChild(etiqueta);
+
+            var quitar = document.createElement("button");
+            quitar.type = "button";
+            quitar.className = "epe-btn-ghost epe-btn-sm";
+            quitar.textContent = "Quitar";
+            quitar.addEventListener("click", function () {
+              quitar.disabled = true;
+              EpeStore.removeShare(share.id)
+                .then(function () {
+                  renderShares(casoId);
+                })
+                .catch(function () {
+                  window.alert("No se pudo quitar. Revisá tu conexión e intentá de nuevo.");
+                  quitar.disabled = false;
+                });
+            });
+            li.appendChild(quitar);
+            listaColegas.appendChild(li);
+
+            EpeStore.getColegaLabel(share.compartido_con_user_id)
+              .then(function (label) {
+                if (casoId !== casoSeleccionadoId) return;
+                etiqueta.textContent = label;
+              })
+              .catch(function () {
+                etiqueta.textContent = "Colega";
+              });
+          });
+        }
       })
       .catch(function () {
-        // No crítico: si falla, los toggles quedan en su último estado
-        // conocido en vez de mostrar un error para algo que ni siquiera es
-        // funcional de punta a punta todavía.
+        if (casoId !== casoSeleccionadoId) return;
+        mensajeVacio(listaColegas, "No se pudo cargar. Revisá tu conexión.", "li");
       });
   }
 
@@ -685,6 +751,73 @@ var EpeCasos = (function () {
       .finally(function () {
         toggle.disabled = false;
       });
+  }
+
+  function abrirFormCompartirColega() {
+    if (!casoSeleccionadoId) return;
+    var casoId = casoSeleccionadoId;
+
+    var contenido = document.createElement("div");
+
+    var intro = document.createElement("p");
+    intro.className = "epe-panel-sub";
+    intro.textContent = "Solo se puede compartir con alguien que ya tenga cuenta en la plataforma.";
+    contenido.appendChild(intro);
+
+    var form = document.createElement("form");
+    form.className = "epe-form-grid";
+
+    var wrap = document.createElement("div");
+    wrap.className = "epe-field";
+    var lbl = document.createElement("label");
+    lbl.textContent = "Email del colega";
+    var input = document.createElement("input");
+    input.type = "email";
+    input.name = "email";
+    input.required = true;
+    wrap.appendChild(lbl);
+    wrap.appendChild(input);
+    form.appendChild(wrap);
+
+    var status = document.createElement("p");
+    status.className = "epe-form-status";
+    form.appendChild(status);
+
+    var guardar = document.createElement("button");
+    guardar.type = "submit";
+    guardar.className = "epe-btn-acc epe-btn-sm";
+    guardar.textContent = "Compartir";
+    form.appendChild(guardar);
+
+    form.addEventListener("submit", function (ev) {
+      ev.preventDefault();
+      var email = input.value.trim();
+      if (!email) return;
+      guardar.disabled = true;
+      status.textContent = "Buscando…";
+
+      EpeStore.addShareColega(casoId, email)
+        .then(function (resultado) {
+          if (!resultado) {
+            status.textContent = "Esa persona todavía no tiene cuenta en la plataforma.";
+            guardar.disabled = false;
+            return;
+          }
+          renderShares(casoId);
+          EpeModal.close();
+        })
+        .catch(function () {
+          status.textContent = "No se pudo compartir. Revisá tu conexión e intentá de nuevo.";
+          guardar.disabled = false;
+        });
+    });
+
+    contenido.appendChild(form);
+
+    EpeModal.open({
+      titulo: "Compartir con un colega",
+      contenido: contenido,
+    });
   }
 
   return { init: init };
