@@ -17,6 +17,7 @@
   document.addEventListener("DOMContentLoaded", function () {
     var form = document.querySelector("[data-login-form]");
     var toggle = document.querySelector("[data-login-toggle]");
+    var olvide = document.querySelector("[data-login-olvide]");
     var status = document.querySelector("[data-login-status]");
     var submitBtn = form.querySelector("button[type=submit]");
     var modo = "login";
@@ -35,6 +36,24 @@
     toggle.addEventListener("click", function (ev) {
       ev.preventDefault();
       setModo(modo === "login" ? "signup" : "login");
+    });
+
+    olvide.addEventListener("click", function (ev) {
+      ev.preventDefault();
+      var email = form.elements.email.value.trim();
+      if (!email) {
+        status.textContent = "Escribí tu email arriba y volvé a tocar el link.";
+        return;
+      }
+      status.textContent = "Enviando mail de recuperación…";
+      var redirectTo = window.location.origin + window.location.pathname.replace("login.html", "resetear-password.html");
+      EpeAuth.resetPasswordForEmail(email, redirectTo)
+        .then(function () {
+          status.textContent = "Listo, revisá tu email para poner una contraseña nueva.";
+        })
+        .catch(function (err) {
+          status.textContent = traducirError(err);
+        });
     });
 
     form.addEventListener("submit", function (ev) {

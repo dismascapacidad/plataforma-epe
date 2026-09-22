@@ -48,6 +48,39 @@ var EpeAuth = (function () {
     });
   }
 
+  // Dispara el mail de "recuperar contraseña". redirectTo tiene que estar
+  // cargado en Supabase → Authentication → URL Configuration → Redirect
+  // URLs, si no Supabase rechaza el link por seguridad (no manda a
+  // cualquier URL que le pidan). Promise<void>.
+  function resetPasswordForEmail(email, redirectTo) {
+    return EpeSupabase.auth.resetPasswordForEmail(email, { redirectTo: redirectTo }).then(function (res) {
+      if (res.error) throw res.error;
+    });
+  }
+
+  // Para usar DESPUÉS de entrar por el link de recuperación (ver
+  // resetear-password.js): la sesión temporal de recuperación ya viene
+  // armada por el SDK al detectar el token en la URL, esto solo cambia el
+  // password de esa sesión. Promise<void>.
+  function updatePassword(nuevaPassword) {
+    return EpeSupabase.auth.updateUser({ password: nuevaPassword }).then(function (res) {
+      if (res.error) throw res.error;
+    });
+  }
+
+  // Se dispara con "PASSWORD_RECOVERY" cuando la persona llega desde el
+  // link del mail de recuperación (el SDK detecta el token solo, ver
+  // supabase-client.js — detectSessionInUrl viene en true por defecto).
+  // Devuelve una función para des-suscribirse si hiciera falta.
+  function onPasswordRecovery(callback) {
+    var sub = EpeSupabase.auth.onAuthStateChange(function (event) {
+      if (event === "PASSWORD_RECOVERY") callback();
+    });
+    return function () {
+      sub.data.subscription.unsubscribe();
+    };
+  }
+
   // Llamar al principio de dashboard.html: si no hay sesión, manda a
   // login.html. Promise<session|null> (null solo cuando ya redirigió).
   function requireSession() {
@@ -66,5 +99,8 @@ var EpeAuth = (function () {
     signUp: signUp,
     signOut: signOut,
     requireSession: requireSession,
+    resetPasswordForEmail: resetPasswordForEmail,
+    updatePassword: updatePassword,
+    onPasswordRecovery: onPasswordRecovery,
   };
 })();
