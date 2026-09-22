@@ -32,20 +32,21 @@
             <input type="password" id="login-password" name="password" required autocomplete="current-password" />
           </div>
           <button class="epe-btn-acc" type="submit">Ingresar</button>
+          <p class="epe-form-status" data-login-status></p>
         </form>
 
         <p class="epe-login-note">
-          Login de prueba: no valida contraseña todavía, cualquier dato
-          entra. Se reemplaza por autenticación real (Supabase) más
-          adelante.
+          <a href="#" data-login-toggle>¿No tenés cuenta? Creá una</a>
         </p>
 
         <a class="epe-login-back" href="../index.html">← Volver al inicio</a>
       </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="../js/core/supabase-client.js"></script>
     <script src="../js/core/theme.js"></script>
-    <script src="../js/features/perfil/auth-mock.js"></script>
+    <script src="../js/features/perfil/auth.js"></script>
     <script src="../js/features/perfil/login.js"></script>
   </body>
 </html>

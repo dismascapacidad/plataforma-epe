@@ -1,310 +1,297 @@
 /**
  * store.js
- * Capa de datos del espacio personal. HOY guarda todo en localStorage;
- * mañana esto se reemplaza por llamadas a Supabase. Por eso la regla de
- * este archivo es estricta: nada fuera de acá debe leer o escribir
- * localStorage directamente para casos/actividades/entradas/shares, y
- * cada función expone la firma que va a tener su equivalente en Supabase
- * (ver plataforma-epe/README.md). El día de la migración, este archivo se
- * reescribe entero y el resto de la app (casos.js, perfil.js, dashboard.js)
- * no debería necesitar cambios.
+ * Capa de datos del espacio personal. MIGRADO: ya no guarda en
+ * localStorage, cada función habla con Supabase (ver
+ * supabase/001_schema_inicial.sql para el esquema y RLS). Este era
+ * justamente el objetivo del diseño original — las firmas de acá abajo son
+ * casi idénticas a la versión mock, con dos diferencias sistemáticas:
  *
- * Script clásico (ver theme.js). Namespace: EpeStore.
+ * 1. Todo devuelve una Promise (antes era todo síncrono vía localStorage).
+ *    Quien llama tiene que usar .then()/.catch() o async/await.
+ * 2. Los errores de red/RLS ya no quedan en silencio (localStorage nunca
+ *    fallaba salvo cuota llena): cada función deja pasar el error de
+ *    Supabase para que quien llama decida qué mostrar (ver casos.js).
+ *
+ * RLS hace la mayor parte del trabajo de seguridad: casos.dueno_id se
+ * completa solo con auth.uid() (default en la columna, ver
+ * supabase/002_patches.sql) y las tablas hijas se filtran siempre a través
+ * del caso al que pertenecen — no hace falta duplicar esos filtros acá.
+ *
+ * Depende de que supabase-client.js ya haya corrido. Script clásico (ver
+ * theme.js). Namespace: EpeStore.
  */
 
 var EpeStore = (function () {
-  var KEYS = {
-    PROFILE: "epe-profile",
-    CASOS: "epe-casos",
-    ACTIVIDADES: "epe-actividades",
-    APPS_TERCEROS: "epe-apps-terceros",
-    ENTRADAS: "epe-entradas",
-    SHARES: "epe-shares",
-  };
-
-  function read(key) {
-    try {
-      var raw = localStorage.getItem(key);
-      return raw ? JSON.parse(raw) : null;
-    } catch (e) {
-      return null;
-    }
-  }
-
-  function write(key, value) {
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-    } catch (e) {
-      // Sin storage disponible (modo privado, cuota llena): se pierde el
-      // cambio en memoria en el próximo reload. No hay fallback local a esto.
-    }
-  }
-
-  function readList(key) {
-    var v = read(key);
-    return Array.isArray(v) ? v : [];
+  function lanzarSiError(res) {
+    if (res.error) throw res.error;
+    return res;
   }
 
   // ── Perfil ──────────────────────────────────────────────────────────
-  // Futuro Supabase: select/update sobre profiles donde id = auth.uid().
+  // profiles se crea sola (trigger on_auth_user_created) cuando alguien se
+  // registra — acá solo leemos/actualizamos la fila propia (RLS: id =
+  // auth.uid()).
 
   function getProfile() {
-    return (
-      read(KEYS.PROFILE) || {
-        nombre: "",
-        profesion: "",
-        institucion: "",
-      }
-    );
+    return EpeSupabase.auth.getUser().then(function (userRes) {
+      if (userRes.error) throw userRes.error;
+      var uid = userRes.data.user.id;
+      return EpeSupabase.from("profiles")
+        .select("nombre, profesion, institucion")
+        .eq("id", uid)
+        .maybeSingle()
+        .then(function (res) {
+          lanzarSiError(res);
+          return (
+            res.data || {
+              nombre: "",
+              profesion: "",
+              institucion: "",
+            }
+          );
+        });
+    });
   }
 
   function saveProfile(datos) {
-    var actual = getProfile();
-    var next = {
-      nombre: datos.nombre != null ? datos.nombre : actual.nombre,
-      profesion: datos.profesion != null ? datos.profesion : actual.profesion,
-      institucion: datos.institucion != null ? datos.institucion : actual.institucion,
-    };
-    write(KEYS.PROFILE, next);
-    return next;
+    return EpeSupabase.auth.getUser().then(function (userRes) {
+      if (userRes.error) throw userRes.error;
+      var uid = userRes.data.user.id;
+      return EpeSupabase.from("profiles")
+        .update({
+          nombre: datos.nombre,
+          profesion: datos.profesion,
+          institucion: datos.institucion,
+          actualizado_en: new Date().toISOString(),
+        })
+        .eq("id", uid)
+        .select("nombre, profesion, institucion")
+        .single()
+        .then(function (res) {
+          lanzarSiError(res);
+          return res.data;
+        });
+    });
   }
 
   // ── Casos ───────────────────────────────────────────────────────────
-  // Futuro Supabase: tabla casos, RLS por dueño_id = auth.uid() (+ shares).
 
   function getCasos() {
-    return readList(KEYS.CASOS).slice().sort(function (a, b) {
-      return (b.actualizado_en || "").localeCompare(a.actualizado_en || "");
-    });
+    return EpeSupabase.from("casos")
+      .select("*")
+      .order("actualizado_en", { ascending: false })
+      .then(function (res) {
+        lanzarSiError(res);
+        return res.data || [];
+      });
   }
 
   function getCaso(id) {
-    return readList(KEYS.CASOS).find(function (c) {
-      return c.id === id;
-    }) || null;
+    return EpeSupabase.from("casos")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle()
+      .then(function (res) {
+        lanzarSiError(res);
+        return res.data || null;
+      });
   }
 
   function createCaso(datos) {
-    var now = new Date().toISOString();
-    var caso = {
-      id: EpeSchema.nuevoId(),
-      nombre: (datos && datos.nombre) || "Caso sin nombre",
-      creado_en: now,
-      actualizado_en: now,
-    };
-    var casos = readList(KEYS.CASOS);
-    casos.push(caso);
-    write(KEYS.CASOS, casos);
-    return caso;
+    return EpeSupabase.from("casos")
+      .insert({ nombre: (datos && datos.nombre) || "Caso sin nombre" })
+      .select("*")
+      .single()
+      .then(function (res) {
+        lanzarSiError(res);
+        return res.data;
+      });
   }
 
   function updateCaso(id, datos) {
-    var casos = readList(KEYS.CASOS);
-    var idx = casos.findIndex(function (c) {
-      return c.id === id;
-    });
-    if (idx === -1) return null;
-    casos[idx] = Object.assign({}, casos[idx], datos, {
-      actualizado_en: new Date().toISOString(),
-    });
-    write(KEYS.CASOS, casos);
-    return casos[idx];
+    return EpeSupabase.from("casos")
+      .update(datos)
+      .eq("id", id)
+      .select("*")
+      .single()
+      .then(function (res) {
+        lanzarSiError(res);
+        return res.data;
+      });
   }
 
+  // ON DELETE CASCADE en la base se encarga de actividades, apps de
+  // terceros, entradas y shares del caso — no hace falta borrarlas a mano
+  // como en la versión con localStorage.
   function deleteCaso(id) {
-    write(
-      KEYS.CASOS,
-      readList(KEYS.CASOS).filter(function (c) {
-        return c.id !== id;
-      })
-    );
-    // Al borrar un caso se van con él sus actividades, entradas y shares:
-    // igual que un ON DELETE CASCADE en la migración real.
-    write(
-      KEYS.ACTIVIDADES,
-      readList(KEYS.ACTIVIDADES).filter(function (a) {
-        return a.caso_id !== id;
-      })
-    );
-    write(
-      KEYS.APPS_TERCEROS,
-      readList(KEYS.APPS_TERCEROS).filter(function (t) {
-        return t.caso_id !== id;
-      })
-    );
-    write(
-      KEYS.ENTRADAS,
-      readList(KEYS.ENTRADAS).filter(function (e) {
-        return e.caso_id !== id;
-      })
-    );
-    write(
-      KEYS.SHARES,
-      readList(KEYS.SHARES).filter(function (s) {
-        return s.caso_id !== id;
-      })
-    );
+    return EpeSupabase.from("casos")
+      .delete()
+      .eq("id", id)
+      .then(function (res) {
+        lanzarSiError(res);
+      });
   }
 
-  // ── Actividades vinculadas a un caso ───────────────────────────────
-  // "Vincular" una actividad NO instancia la app: guarda una referencia
-  // (catalogo_id) a una entrada de js/data/catalogo-actividades.js. En
-  // Supabase, caso_actividades sería (id, caso_id, catalogo_id,
-  // agregado_en) — catalogo_id referenciando una tabla catalogo_actividades
-  // en vez del array estático de hoy.
+  // ── Actividades vinculadas a un caso (referencia al catálogo) ──────
 
   function listActividades(casoId) {
-    return readList(KEYS.ACTIVIDADES)
-      .filter(function (a) {
-        return a.caso_id === casoId;
-      })
-      .sort(function (a, b) {
-        return (a.agregado_en || "").localeCompare(b.agregado_en || "");
+    return EpeSupabase.from("caso_actividades")
+      .select("*")
+      .eq("caso_id", casoId)
+      .order("agregado_en", { ascending: true })
+      .then(function (res) {
+        lanzarSiError(res);
+        return res.data || [];
       });
   }
 
   function hasActividad(casoId, catalogoId) {
-    return readList(KEYS.ACTIVIDADES).some(function (a) {
-      return a.caso_id === casoId && a.catalogo_id === catalogoId;
-    });
+    return EpeSupabase.from("caso_actividades")
+      .select("id", { count: "exact", head: true })
+      .eq("caso_id", casoId)
+      .eq("catalogo_id", catalogoId)
+      .then(function (res) {
+        lanzarSiError(res);
+        return (res.count || 0) > 0;
+      });
   }
 
   function addActividad(casoId, catalogoId) {
-    if (hasActividad(casoId, catalogoId)) return null; // no duplicar (ver casos.js)
-    var actividad = {
-      id: EpeSchema.nuevoId(),
-      caso_id: casoId,
-      catalogo_id: catalogoId,
-      agregado_en: new Date().toISOString(),
-    };
-    var lista = readList(KEYS.ACTIVIDADES);
-    lista.push(actividad);
-    write(KEYS.ACTIVIDADES, lista);
-    return actividad;
+    return hasActividad(casoId, catalogoId).then(function (yaExiste) {
+      if (yaExiste) return null; // no duplicar (ver casos.js)
+      return EpeSupabase.from("caso_actividades")
+        .insert({ caso_id: casoId, catalogo_id: catalogoId })
+        .select("*")
+        .single()
+        .then(function (res) {
+          lanzarSiError(res);
+          return res.data;
+        });
+    });
   }
 
   function removeActividad(actividadId) {
-    write(
-      KEYS.ACTIVIDADES,
-      readList(KEYS.ACTIVIDADES).filter(function (a) {
-        return a.id !== actividadId;
-      })
-    );
+    return EpeSupabase.from("caso_actividades")
+      .delete()
+      .eq("id", actividadId)
+      .then(function (res) {
+        lanzarSiError(res);
+      });
   }
 
   // ── Apps de terceros propias de un caso (privadas, NO van al catálogo) ─
-  // A diferencia de caso_actividades (que referencia el catálogo público
-  // EpeCatalogo), esto guarda los datos completos de la app inline: el
-  // profesional la arma para ESTE caso puntual y solo quien vea este caso
-  // la ve — nunca aparece en el picker de otro caso ni la ve nadie más.
-  // Futuro Supabase: tabla caso_apps_terceros con RLS por caso_id (mismas
-  // reglas de visibilidad que el resto del caso: dueño + shares).
 
   function listAppsTerceros(casoId) {
-    return readList(KEYS.APPS_TERCEROS)
-      .filter(function (t) {
-        return t.caso_id === casoId;
-      })
-      .sort(function (a, b) {
-        return (a.creado_en || "").localeCompare(b.creado_en || "");
+    return EpeSupabase.from("caso_apps_terceros")
+      .select("*")
+      .eq("caso_id", casoId)
+      .order("creado_en", { ascending: true })
+      .then(function (res) {
+        lanzarSiError(res);
+        return res.data || [];
       });
   }
 
   function addAppTercero(casoId, datos) {
-    var app = {
-      id: EpeSchema.nuevoId(),
-      caso_id: casoId,
-      nombre: (datos && datos.nombre) || "",
-      descripcion: (datos && datos.descripcion) || "",
-      instrucciones: (datos && datos.instrucciones) || "",
-      configuracion: (datos && datos.configuracion) || "",
-      url: (datos && datos.url) || "",
-      creado_en: new Date().toISOString(),
-    };
-    var lista = readList(KEYS.APPS_TERCEROS);
-    lista.push(app);
-    write(KEYS.APPS_TERCEROS, lista);
-    return app;
+    return EpeSupabase.from("caso_apps_terceros")
+      .insert({
+        caso_id: casoId,
+        nombre: (datos && datos.nombre) || "",
+        descripcion: (datos && datos.descripcion) || "",
+        instrucciones: (datos && datos.instrucciones) || "",
+        configuracion: (datos && datos.configuracion) || "",
+        url: (datos && datos.url) || "",
+      })
+      .select("*")
+      .single()
+      .then(function (res) {
+        lanzarSiError(res);
+        return res.data;
+      });
   }
 
   function removeAppTercero(appId) {
-    write(
-      KEYS.APPS_TERCEROS,
-      readList(KEYS.APPS_TERCEROS).filter(function (t) {
-        return t.id !== appId;
-      })
-    );
+    return EpeSupabase.from("caso_apps_terceros")
+      .delete()
+      .eq("id", appId)
+      .then(function (res) {
+        lanzarSiError(res);
+      });
   }
 
   // ── Entradas del caso: nota / evaluación / sesión, tabla unificada ──
 
   function listEntradas(casoId) {
-    return readList(KEYS.ENTRADAS)
-      .filter(function (e) {
-        return e.caso_id === casoId;
-      })
-      .sort(function (a, b) {
-        return (b.creado_en || "").localeCompare(a.creado_en || "");
+    return EpeSupabase.from("caso_entradas")
+      .select("*")
+      .eq("caso_id", casoId)
+      .order("creado_en", { ascending: false })
+      .then(function (res) {
+        lanzarSiError(res);
+        return res.data || [];
       });
   }
 
   function addEntrada(casoId, datos) {
-    var entrada = {
-      id: EpeSchema.nuevoId(),
-      caso_id: casoId,
-      tipo: (datos && datos.tipo) || EpeSchema.ENTRADA_TIPOS.NOTA,
-      contenido: (datos && datos.contenido) || "",
-      creado_en: new Date().toISOString(),
-    };
-    var lista = readList(KEYS.ENTRADAS);
-    lista.push(entrada);
-    write(KEYS.ENTRADAS, lista);
-    return entrada;
+    return EpeSupabase.from("caso_entradas")
+      .insert({
+        caso_id: casoId,
+        tipo: (datos && datos.tipo) || EpeSchema.ENTRADA_TIPOS.NOTA,
+        contenido: (datos && datos.contenido) || "",
+      })
+      .select("*")
+      .single()
+      .then(function (res) {
+        lanzarSiError(res);
+        return res.data;
+      });
   }
 
   function removeEntrada(entradaId) {
-    write(
-      KEYS.ENTRADAS,
-      readList(KEYS.ENTRADAS).filter(function (e) {
-        return e.id !== entradaId;
-      })
-    );
+    return EpeSupabase.from("caso_entradas")
+      .delete()
+      .eq("id", entradaId)
+      .then(function (res) {
+        lanzarSiError(res);
+      });
   }
 
-  // ── Compartir (MOCK, no funcional) ─────────────────────────────────
-  // Sin backend no hay a quién compartírselo de verdad: esto solo guarda
-  // el estado del toggle en el propio navegador, para poder probar la UI.
-  // compartido_con_user_id queda siempre null acá; en Supabase sería el
-  // uuid del colega para tipo "colega" (para "institucion" y
-  // "dismascapacidad" no apunta a un usuario puntual, es un flag de
-  // visibilidad — ver el modelo en el README).
+  // ── Compartir ───────────────────────────────────────────────────────
+  // El toggle ya se guarda de verdad en la base (antes solo en
+  // localStorage). Sigue sin ser funcional de punta a punta: falta la
+  // parte de que la otra persona (institución/colega/dis+capacidad)
+  // realmente pueda ver el caso — esa lógica de RLS queda para una
+  // iteración posterior (ver supabase/001_schema_inicial.sql).
+  // compartido_con_user_id queda siempre null acá; el día que se conecte
+  // de verdad "colega", ahí se completa con el uuid del colega elegido.
 
   function getShares(casoId) {
-    return readList(KEYS.SHARES).filter(function (s) {
-      return s.caso_id === casoId;
-    });
+    return EpeSupabase.from("caso_shares")
+      .select("*")
+      .eq("caso_id", casoId)
+      .then(function (res) {
+        lanzarSiError(res);
+        return res.data || [];
+      });
   }
 
   function setShare(casoId, tipo, activo) {
-    var shares = readList(KEYS.SHARES);
-    var existente = shares.find(function (s) {
-      return s.caso_id === casoId && s.tipo === tipo;
-    });
-    if (activo && !existente) {
-      shares.push({
-        id: EpeSchema.nuevoId(),
-        caso_id: casoId,
-        tipo: tipo,
-        compartido_con_user_id: null,
-        creado_en: new Date().toISOString(),
-      });
-    } else if (!activo && existente) {
-      shares = shares.filter(function (s) {
-        return s !== existente;
-      });
+    if (activo) {
+      return EpeSupabase.from("caso_shares")
+        .insert({ caso_id: casoId, tipo: tipo })
+        .then(function (res) {
+          lanzarSiError(res);
+          return getShares(casoId);
+        });
     }
-    write(KEYS.SHARES, shares);
-    return getShares(casoId);
+    return EpeSupabase.from("caso_shares")
+      .delete()
+      .eq("caso_id", casoId)
+      .eq("tipo", tipo)
+      .then(function (res) {
+        lanzarSiError(res);
+        return getShares(casoId);
+      });
   }
 
   return {

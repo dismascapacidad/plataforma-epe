@@ -1,8 +1,8 @@
 /*
   login.css
-  Pantalla de acceso al espacio personal. Login MOCK (ver
-  js/features/perfil/auth-mock.js): la estética ya es la real, la
-  autenticación todavía no.
+  Pantalla de acceso al espacio personal. Autenticación real vía Supabase
+  Auth (ver js/features/perfil/auth.js) — el mismo formulario sirve para
+  ingresar y para crear cuenta (ver data-login-toggle).
 */
 
 .epe-login-shell {
@@ -79,9 +79,25 @@
 
 .epe-login-note {
   margin-top: 18px;
-  font-size: 11.5px;
-  color: var(--text-faint);
+  font-size: 12.5px;
+  color: var(--text-dim);
   line-height: 1.5;
+}
+
+.epe-login-note a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.epe-login-note a:hover {
+  color: var(--text-strong);
+}
+
+.epe-form-status {
+  margin-top: 6px;
+  font-size: 12.5px;
+  color: var(--text-dim);
+  min-height: 1.2em;
 }
 
 .epe-login-back {

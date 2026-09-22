@@ -1,35 +1,40 @@
 /**
  * dashboard.js
- * Orquesta el dashboard del espacio personal: exige sesión (mock), maneja
- * el cambio entre las tres pestañas (Perfil / Gestión de casos / Mis
- * dispositivos) e inicializa cada sección. Punto de entrada de
+ * Orquesta el dashboard del espacio personal: exige sesión REAL (Supabase
+ * Auth), maneja el cambio entre las tres pestañas (Perfil / Gestión de
+ * casos / Mis dispositivos) e inicializa cada sección. Punto de entrada de
  * dashboard.html, cargado último.
+ *
+ * requireSession() ahora es async (habla con Supabase) — todo el arranque
+ * queda adentro de ese .then().
  *
  * Script clásico, sin type="module" (ver theme.js).
  */
 
 (function () {
-  var session = EpeAuthMock.requireSession();
-  if (!session) return; // requireSession ya redirigió a login.html
-
   document.addEventListener("DOMContentLoaded", function () {
-    var emailEl = document.querySelector("[data-sesion-email]");
-    if (emailEl) emailEl.textContent = session.email;
+    EpeAuth.requireSession().then(function (session) {
+      if (!session) return; // requireSession ya redirigió a login.html
 
-    EpeTheme.initThemeToggle(document.getElementById("theme-toggle"));
+      var emailEl = document.querySelector("[data-sesion-email]");
+      if (emailEl) emailEl.textContent = session.user.email;
 
-    document.querySelector("[data-logout]").addEventListener("click", function () {
-      EpeAuthMock.logout();
-      window.location.href = "login.html";
+      EpeTheme.initThemeToggle(document.getElementById("theme-toggle"));
+
+      document.querySelector("[data-logout]").addEventListener("click", function () {
+        EpeAuth.signOut().then(function () {
+          window.location.href = "login.html";
+        });
+      });
+
+      initTabs();
+
+      EpePerfil.init(document.querySelector("[data-panel='perfil']"));
+      EpeCasos.init(document.querySelector("[data-panel='casos']"));
+      EpeDispositivos.init(document.querySelector("[data-panel='dispositivos']"));
+
+      console.info("[EpE] Espacio personal — dashboard cargado (Supabase)");
     });
-
-    initTabs();
-
-    EpePerfil.init(document.querySelector("[data-panel='perfil']"));
-    EpeCasos.init(document.querySelector("[data-panel='casos']"));
-    EpeDispositivos.init(document.querySelector("[data-panel='dispositivos']"));
-
-    console.info("[EpE] Espacio personal — dashboard cargado (datos locales, sin Supabase todavía)");
   });
 
   function initTabs() {

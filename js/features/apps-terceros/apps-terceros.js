@@ -7,6 +7,10 @@
  * caso", eso solo existe dentro del picker del espacio personal (ver
  * js/features/perfil/casos.js).
  *
+ * EpeCatalogo.getAll() ahora trae los datos de Supabase (lectura pública,
+ * sin necesitar login — ver supabase/002_patches.sql) y devuelve una
+ * Promise.
+ *
  * Script clásico (ver theme.js). Namespace: EpeAppsTerceros.
  */
 
@@ -16,16 +20,25 @@ var EpeAppsTerceros = (function () {
     var vacio = document.querySelector("[data-tienda-vacio]");
     if (!grid) return;
 
-    var apps = EpeCatalogo.getAll().filter(function (app) {
-      return app.tipo === "tercero";
-    });
+    EpeCatalogo.getAll()
+      .then(function (todas) {
+        var apps = todas.filter(function (app) {
+          return app.tipo === "tercero";
+        });
 
-    grid.innerHTML = "";
-    vacio.hidden = apps.length > 0;
+        grid.innerHTML = "";
+        vacio.hidden = apps.length > 0;
+        vacio.textContent = "Todavía no hay recursos cargados en esta sección.";
 
-    apps.forEach(function (app) {
-      grid.appendChild(construirItem(app));
-    });
+        apps.forEach(function (app) {
+          grid.appendChild(construirItem(app));
+        });
+      })
+      .catch(function () {
+        grid.innerHTML = "";
+        vacio.hidden = false;
+        vacio.textContent = "No se pudieron cargar los recursos. Recargá la página.";
+      });
   }
 
   function construirItem(app) {

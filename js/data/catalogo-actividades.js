@@ -23,23 +23,26 @@
  *   solo ese caso ve, ver caso_apps_terceros en data/store.js: mismo
  *   shape de datos, pero vive aparte porque no es pública.
  *
- * Las dos entradas "tercero" de abajo son EJEMPLO/placeholder para
- * prototipar la interfaz (marcadas explícitamente) — reemplazar por
- * recursos reales curados cuando se decida qué sumar al catálogo público.
+ * MIGRADO a Supabase (tabla catalogo_actividades, ver
+ * supabase/001_schema_inicial.sql): esto ya no es un array fijo, se trae
+ * por red. Por eso getAll()/getById() devuelven Promises — quien llama
+ * tiene que usar .then()/await (ver casos.js y apps-terceros.js). Se
+ * cachea en memoria después del primer fetch porque el catálogo cambia
+ * poco y varias pantallas lo piden seguido; recargar la página limpia la
+ * caché.
  *
- * HOY esto es un array fijo a mano. El día que haya Supabase, este mismo
- * archivo se reemplaza por una tabla `catalogo_actividades` (mismas
- * columnas que los objetos de abajo) con un endpoint de lectura —
- * casos.js y store.js no deberían necesitar cambios, solo este archivo.
- * Para sumar una app de terceros al catálogo público a mano mientras
- * tanto, alcanza con agregar un objeto nuevo al array ENTRADAS de abajo.
+ * Depende de que supabase-client.js ya haya corrido. Es de lectura
+ * PÚBLICA (funciona sin login: la usa apps-terceros/index.html, que no
+ * pide sesión) — ver la policy "catalogo: lectura publica" en
+ * supabase/002_patches.sql.
  *
  * Script clásico (ver theme.js). Namespace: EpeCatalogo.
  */
 
 var EpeCatalogo = (function () {
   // Mismos íconos que usa apps-epe/index.html, para que una actividad se
-  // vea igual en la tienda del caso y en la página de Apps EpE.
+  // vea igual en la tienda del caso y en la página de Apps EpE. La DB solo
+  // guarda la CLAVE (icono_key); el SVG en sí sigue viviendo acá.
   var ICONOS = {
     piano:
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" /></svg>',
@@ -53,84 +56,46 @@ var EpeCatalogo = (function () {
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><path d="M15 3h6v6" /><path d="M10 14 21 3" /></svg>',
   };
 
-  // autor: "dis+capacidad" para las Apps EpE propias; el nombre del
-  // tercero (ej. "MakeyMakey") para las entradas tipo "tercero". La UI usa
-  // este campo para distinguir "propia" de "de terceros" en el badge.
-  var ENTRADAS = [
-    {
-      id: "app-epe-piano",
-      tipo: "app-epe",
-      nombre: "Piano",
-      descripcion: "7 notas con teclado o puntero, para practicar acceso por switch.",
-      categoria: "Música y sonido",
-      autor: "dis+capacidad",
-      url: "../apps-epe/piano.html",
-      icono: ICONOS.piano,
-    },
-    {
-      id: "app-epe-barrido",
-      tipo: "app-epe",
-      nombre: "Barrido",
-      descripcion: "Entrenador de barrido por tiempo o por 2 pulsadores, copiando una palabra.",
-      categoria: "Acceso por switch",
-      autor: "dis+capacidad",
-      url: "../apps-epe/barrido.html",
-      icono: ICONOS.barrido,
-    },
-    {
-      id: "app-epe-vincular-imagen",
-      tipo: "app-epe",
-      nombre: "Vincular imagen",
-      descripcion: "De 1 a 8 casilleros con imagen propia, texto a voz y tecla asignable.",
-      categoria: "Comunicación",
-      autor: "dis+capacidad",
-      url: "../apps-epe/vincular-imagen.html",
-      icono: ICONOS["vincular-imagen"],
-    },
-    // ── Apps de terceros (catálogo público, curado) ──────────────────
-    // Las dos de abajo son EJEMPLO para prototipar el picker y el modal
-    // de detalle — reemplazar `url` por el proyecto real cuando se elija
-    // cuál sumar de verdad al catálogo.
-    {
-      id: "tercero-makeymakey-piano-frutas",
-      tipo: "tercero",
-      nombre: "Piano de frutas (MakeyMakey + Scratch)",
-      descripcion: "Ejemplo — reemplazar por el recurso real: tocar frutas conectadas al MakeyMakey suena como teclas de piano en un proyecto de Scratch.",
-      categoria: "Música y sonido",
-      autor: "MakeyMakey",
-      instrucciones:
-        "Conectá cada objeto conductor (frutas, plastilina conductora, papel aluminio) a una de las entradas de flecha o espacio del MakeyMakey con un cable caimán, y otro cable de la entrada \"EARTH\" a la mano o el cuerpo de la persona (o a una superficie que esté tocando). Al tocar el objeto conductor mientras se toca tierra, se cierra el circuito y se presiona esa tecla en el proyecto.",
-      configuracion:
-        "MakeyMakey conectado por USB, configurado como teclado (modo por defecto). No requiere ningún dispositivo dismascapacidad adicional. Conviene revisar antes que el objeto elegido conduzca electricidad razonablemente bien (fruta fresca, no seca).",
-      url: "https://makeymakey.com/",
-      icono: ICONOS.externo,
-    },
-    {
-      id: "tercero-makeymakey-comunicador",
-      tipo: "tercero",
-      nombre: "Comunicador básico (MakeyMakey + Scratch)",
-      descripcion: "Ejemplo — reemplazar por el recurso real: entradas grandes que emulan teclas de flecha/espacio para armar un comunicador simple en Scratch.",
-      categoria: "Comunicación",
-      autor: "MakeyMakey",
-      instrucciones:
-        "Cada pulsador o superficie conductora conectada a una entrada del MakeyMakey dispara una tecla del proyecto de Scratch elegido. Conviene definir antes con qué mensaje o imagen va a asociarse cada entrada disponible.",
-      configuracion:
-        "MakeyMakey como teclado (modo por defecto), USB. Si se usan pulsadores externos en vez de tocar directo el MakeyMakey, hace falta un cable caimán por pulsador hacia cada entrada usada, más el cable de tierra común.",
-      url: "https://makeymakey.com/",
-      icono: ICONOS.externo,
-    },
-  ];
+  var cache = null; // null hasta el primer fetch exitoso; después, array en memoria.
 
-  function getAll() {
-    return ENTRADAS.slice();
+  function mapRow(row) {
+    return {
+      id: row.id,
+      tipo: row.tipo,
+      nombre: row.nombre,
+      descripcion: row.descripcion,
+      categoria: row.categoria,
+      autor: row.autor,
+      instrucciones: row.instrucciones,
+      configuracion: row.configuracion,
+      url: row.url,
+      icono: ICONOS[row.icono_key] || ICONOS.generico,
+    };
   }
 
+  // Promise<array>. Copia nueva en cada llamada (igual que antes con
+  // .slice()) para que nadie mute la caché interna por accidente.
+  function getAll() {
+    if (cache) return Promise.resolve(cache.slice());
+    return EpeSupabase.from("catalogo_actividades")
+      .select("*")
+      .order("creado_en", { ascending: true })
+      .then(function (res) {
+        if (res.error) throw res.error;
+        cache = (res.data || []).map(mapRow);
+        return cache.slice();
+      });
+  }
+
+  // Promise<objeto|null>.
   function getById(id) {
-    return (
-      ENTRADAS.find(function (a) {
-        return a.id === id;
-      }) || null
-    );
+    return getAll().then(function (lista) {
+      return (
+        lista.find(function (a) {
+          return a.id === id;
+        }) || null
+      );
+    });
   }
 
   return {
