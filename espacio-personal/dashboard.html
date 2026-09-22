@@ -107,8 +107,13 @@
                 <h3>Tus casos</h3>
                 <button class="epe-btn-ghost epe-btn-sm" type="button" data-caso-nuevo>+ Nuevo</button>
               </div>
-              <ul class="epe-casos-lista" data-casos-lista></ul>
-              <p class="epe-vacio" data-casos-vacio>Todavía no creaste ningún caso.</p>
+              <ul class="epe-casos-lista" data-casos-lista-propios></ul>
+              <p class="epe-vacio" data-casos-vacio-propios hidden>Todavía no creaste ningún caso.</p>
+
+              <div class="epe-casos-col-header epe-casos-col-header-compartidos" data-casos-compartidos-header hidden>
+                <h3>Compartidos con vos</h3>
+              </div>
+              <ul class="epe-casos-lista" data-casos-lista-compartidos></ul>
             </div>
 
             <div>
@@ -116,11 +121,13 @@
 
               <div class="epe-detalle" data-detalle hidden>
                 <h3 data-detalle-nombre></h3>
+                <p class="epe-caso-banner" data-caso-banner hidden></p>
 
                 <nav class="epe-subtabs" role="tablist" aria-label="Secciones del caso">
-                  <button class="epe-subtab is-active" type="button" data-subtab="actividades" role="tab" aria-selected="true">Actividades</button>
-                  <button class="epe-subtab" type="button" data-subtab="entradas" role="tab" aria-selected="false">Notas, evaluaciones y sesiones</button>
-                  <button class="epe-subtab" type="button" data-subtab="compartir" role="tab" aria-selected="false">Compartir</button>
+                  <button class="epe-subtab is-active" type="button" data-subtab="actividades" role="tab" aria-selected="true">Recursos</button>
+                  <button class="epe-subtab" type="button" data-subtab="entradas" role="tab" aria-selected="false" data-solo-dueno>Notas personales</button>
+                  <button class="epe-subtab" type="button" data-subtab="compartido" role="tab" aria-selected="false">Espacio compartido</button>
+                  <button class="epe-subtab" type="button" data-subtab="acceso" role="tab" aria-selected="false" data-solo-dueno>Acceso</button>
                 </nav>
 
                 <div class="epe-subpanel" data-subpanel="actividades">
@@ -131,6 +138,10 @@
                 </div>
 
                 <div class="epe-subpanel" data-subpanel="entradas" hidden>
+                  <p class="epe-panel-sub">
+                    Documentación privada tuya — nadie más la ve, ni siquiera
+                    las personas con las que compartís este caso.
+                  </p>
                   <ul class="epe-entradas-lista" data-entradas-lista></ul>
                   <form class="epe-inline-form" data-entrada-form>
                     <select name="tipo">
@@ -143,11 +154,25 @@
                   </form>
                 </div>
 
-                <div class="epe-subpanel" data-subpanel="compartir" hidden>
+                <div class="epe-subpanel" data-subpanel="compartido" hidden>
+                  <p class="epe-panel-sub">
+                    Mini foro entre las personas con acceso a este caso —
+                    para consultas y acompañamiento. No reemplaza tus notas
+                    personales, que siguen siendo privadas.
+                  </p>
+                  <ul class="epe-comentarios-lista" data-comentarios-lista></ul>
+                  <form class="epe-inline-form" data-comentario-form>
+                    <textarea name="contenido" placeholder="Escribí un comentario…" required></textarea>
+                    <button class="epe-btn-ghost epe-btn-sm" type="submit">Comentar</button>
+                  </form>
+                </div>
+
+                <div class="epe-subpanel" data-subpanel="acceso" hidden>
                   <h4 class="epe-compartir-titulo">Personas con acceso</h4>
                   <p class="epe-panel-sub">
-                    Pueden ver este caso, pero nunca editarlo ni borrarlo —
-                    eso queda siempre para vos.
+                    Pueden ver Recursos y participar del Espacio compartido,
+                    pero nunca tus notas personales ni editar o borrar el
+                    caso — eso queda siempre para vos.
                   </p>
 
                   <ul class="epe-compartir-lista" data-colegas-lista></ul>
@@ -175,20 +200,6 @@
                       <input type="checkbox" data-share-toggle value="dismascapacidad" />
                       <span class="epe-switch-track"></span>
                     </label>
-                  </div>
-
-                  <div class="epe-detalle-seccion">
-                    <h4>Comentarios</h4>
-                    <p class="epe-panel-sub">
-                      Cualquiera con acceso a este caso puede dejar un mensaje
-                      acá, vos incluido — a diferencia de las notas, esto no
-                      es documentación clínica.
-                    </p>
-                    <ul class="epe-comentarios-lista" data-comentarios-lista></ul>
-                    <form class="epe-inline-form" data-comentario-form>
-                      <textarea name="contenido" placeholder="Escribí un comentario…" required></textarea>
-                      <button class="epe-btn-ghost epe-btn-sm" type="submit">Comentar</button>
-                    </form>
                   </div>
                 </div>
               </div>

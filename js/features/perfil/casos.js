@@ -1,12 +1,26 @@
 /**
  * casos.js
- * Sección "Gestión de casos": listar/crear/borrar casos, ver el detalle de
- * uno (actividades vinculadas + entradas de nota/evaluación/sesión) y
- * compartir — funcional de punta a punta desde supabase/003_compartir.sql:
- * un colega puntual (por email, solo si ya tiene cuenta), tu institución
- * (comparando el campo de texto libre del perfil) o dis+capacidad (cuenta
- * marcada como admin) pueden VER el caso, nunca editarlo ni borrarlo — eso
- * sigue siendo solo del dueño.
+ * Sección "Gestión de casos": listar/crear/borrar casos, y ver el detalle
+ * de uno en 4 pestañas:
+ *   - Recursos: actividades/apps vinculadas (EpeCatalogo).
+ *   - Notas personales: documentación privada, SOLO el dueño la ve o
+ *     escribe (ni siquiera un colega compartido — ver
+ *     supabase/005_notas_privadas.sql). Pestaña oculta para no-dueños.
+ *   - Espacio compartido: mini foro (caso_comentarios) entre todos los
+ *     que tienen acceso al caso — el único canal de colaboración visible
+ *     para un colega/institución/dis+capacidad compartidos.
+ *   - Acceso: quién puede ver el caso (colega puntual por email,
+ *     institución, dis+capacidad) — solo lectura para ellos, nunca
+ *     editar/borrar. Pestaña oculta para no-dueños (solo el dueño
+ *     administra sus propios accesos).
+ * Funcional de punta a punta desde supabase/003_compartir.sql,
+ * 004_comentarios.sql y 005_notas_privadas.sql.
+ *
+ * Un caso compartido con vos (no tuyo) se distingue en dos lugares: la
+ * lista lo agrupa aparte ("Compartidos con vos", con badge de quién lo
+ * compartió) y el detalle muestra un banner arriba de las pestañas —
+ * así la interfaz avisa qué se puede hacer ahí ANTES de que alguien
+ * choque con un 403 tratando de escribir donde no puede.
  *
  * MIGRADO a Supabase: todo lo que antes era EpeStore.algo() síncrono ahora
  * devuelve una Promise. El patrón en todo este archivo es el mismo: pedir
@@ -94,63 +108,108 @@ var EpeCasos = (function () {
   }
 
   // ── Listado de casos ────────────────────────────────────────────────
+  // Separado en dos grupos: los tuyos (con borrar) y los que alguien
+  // compartió con vos (sin borrar — eso sigue siendo solo del dueño, y ni
+  // siquiera se puede intentar: RLS lo rechazaría igual).
 
-  function renderListaCasos() {
-    var lista = root.querySelector("[data-casos-lista]");
-    var vacio = root.querySelector("[data-casos-vacio]");
+  function construirCasoCard(caso, esPropio) {
+    var item = document.createElement("li");
+    item.className = "epe-caso-card";
+    if (caso.id === casoSeleccionadoId) item.classList.add("is-active");
 
-    EpeStore.getCasos()
-      .then(function (casos) {
-        lista.innerHTML = "";
-        vacio.hidden = casos.length > 0;
-        vacio.textContent = "Todavía no creaste ningún caso.";
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "epe-caso-card-btn";
 
-        casos.forEach(function (caso) {
-          var item = document.createElement("li");
-          item.className = "epe-caso-card";
-          if (caso.id === casoSeleccionadoId) item.classList.add("is-active");
+    var nombre = document.createElement("span");
+    nombre.textContent = caso.nombre;
+    btn.appendChild(nombre);
 
-          var btn = document.createElement("button");
-          btn.type = "button";
-          btn.className = "epe-caso-card-btn";
-          btn.textContent = caso.nombre;
-          btn.addEventListener("click", function () {
-            casoSeleccionadoId = caso.id;
-            resetSubtabActividades();
+    if (!esPropio) {
+      var badge = document.createElement("span");
+      badge.className = "epe-caso-badge";
+      badge.textContent = "Compartido…";
+      btn.appendChild(badge);
+      EpeStore.getColegaLabel(caso.dueno_id)
+        .then(function (label) {
+          badge.textContent = "Compartido por " + label;
+        })
+        .catch(function () {
+          badge.textContent = "Compartido con vos";
+        });
+    }
+
+    btn.addEventListener("click", function () {
+      casoSeleccionadoId = caso.id;
+      resetSubtabActividades();
+      renderListaCasos();
+      renderDetalleCaso();
+    });
+    item.appendChild(btn);
+
+    if (esPropio) {
+      var del = document.createElement("button");
+      del.type = "button";
+      del.className = "epe-caso-card-del";
+      del.setAttribute("aria-label", "Borrar caso " + caso.nombre);
+      del.textContent = "×";
+      del.addEventListener("click", function (ev) {
+        ev.stopPropagation();
+        if (!window.confirm('Borrar el caso "' + caso.nombre + '" y todo su contenido?')) return;
+        del.disabled = true;
+        EpeStore.deleteCaso(caso.id)
+          .then(function () {
+            if (casoSeleccionadoId === caso.id) casoSeleccionadoId = null;
             renderListaCasos();
             renderDetalleCaso();
+          })
+          .catch(function (err) {
+            window.alert("No se pudo borrar el caso." + detalleError(err));
+            del.disabled = false;
           });
+      });
+      item.appendChild(del);
+    }
 
-          var del = document.createElement("button");
-          del.type = "button";
-          del.className = "epe-caso-card-del";
-          del.setAttribute("aria-label", "Borrar caso " + caso.nombre);
-          del.textContent = "×";
-          del.addEventListener("click", function (ev) {
-            ev.stopPropagation();
-            if (!window.confirm('Borrar el caso "' + caso.nombre + '" y todo su contenido?')) return;
-            del.disabled = true;
-            EpeStore.deleteCaso(caso.id)
-              .then(function () {
-                if (casoSeleccionadoId === caso.id) casoSeleccionadoId = null;
-                renderListaCasos();
-                renderDetalleCaso();
-              })
-              .catch(function (err) {
-                window.alert("No se pudo borrar el caso." + detalleError(err));
-                del.disabled = false;
-              });
-          });
+    return item;
+  }
 
-          item.appendChild(btn);
-          item.appendChild(del);
-          lista.appendChild(item);
+  function renderListaCasos() {
+    var listaPropios = root.querySelector("[data-casos-lista-propios]");
+    var vacioPropios = root.querySelector("[data-casos-vacio-propios]");
+    var listaCompartidos = root.querySelector("[data-casos-lista-compartidos]");
+    var headerCompartidos = root.querySelector("[data-casos-compartidos-header]");
+
+    Promise.all([EpeStore.getCasos(), EpeStore.getUserId()])
+      .then(function (resultados) {
+        var casos = resultados[0];
+        var miUserId = resultados[1];
+
+        var propios = casos.filter(function (c) {
+          return c.dueno_id === miUserId;
+        });
+        var compartidos = casos.filter(function (c) {
+          return c.dueno_id !== miUserId;
+        });
+
+        listaPropios.innerHTML = "";
+        vacioPropios.hidden = propios.length > 0;
+        propios.forEach(function (caso) {
+          listaPropios.appendChild(construirCasoCard(caso, true));
+        });
+
+        listaCompartidos.innerHTML = "";
+        headerCompartidos.hidden = compartidos.length === 0;
+        compartidos.forEach(function (caso) {
+          listaCompartidos.appendChild(construirCasoCard(caso, false));
         });
       })
       .catch(function () {
-        lista.innerHTML = "";
-        vacio.hidden = false;
-        vacio.textContent = "No se pudieron cargar tus casos. Recargá la página.";
+        listaPropios.innerHTML = "";
+        vacioPropios.hidden = false;
+        vacioPropios.textContent = "No se pudieron cargar tus casos. Recargá la página.";
+        listaCompartidos.innerHTML = "";
+        headerCompartidos.hidden = true;
       });
   }
 
@@ -170,6 +229,36 @@ var EpeCasos = (function () {
   }
 
   // ── Detalle del caso seleccionado ──────────────────────────────────
+  // "Notas personales" y "Acceso" son exclusivas del dueño: se ocultan
+  // esas dos pestañas (no solo los datos) cuando el caso es compartido,
+  // para que no haya ningún control clickeable que lleve a un 403 — la
+  // interfaz misma comunica qué se puede hacer acá, en vez de dejar que
+  // el usuario lo descubra por un error.
+
+  function aplicarPermisosCaso(esDueno) {
+    root.querySelectorAll("[data-solo-dueno]").forEach(function (el) {
+      el.hidden = !esDueno;
+    });
+  }
+
+  function mostrarBanner(duenoId) {
+    var banner = root.querySelector("[data-caso-banner]");
+    banner.textContent = "Caso compartido — cargando…";
+    banner.hidden = false;
+    EpeStore.getColegaLabel(duenoId)
+      .then(function (label) {
+        banner.textContent =
+          "Caso compartido por " + label + " — podés ver Recursos y participar del Espacio compartido, pero no editarlo ni ver sus notas personales.";
+      })
+      .catch(function () {
+        banner.textContent = "Caso compartido con vos — podés ver Recursos y participar del Espacio compartido, pero no editarlo.";
+      });
+  }
+
+  function ocultarBanner() {
+    var banner = root.querySelector("[data-caso-banner]");
+    banner.hidden = true;
+  }
 
   function renderDetalleCaso() {
     var vacio = root.querySelector("[data-detalle-vacio]");
@@ -183,9 +272,11 @@ var EpeCasos = (function () {
     }
 
     var casoId = casoSeleccionadoId;
-    EpeStore.getCaso(casoId)
-      .then(function (caso) {
+    Promise.all([EpeStore.getCaso(casoId), EpeStore.getUserId()])
+      .then(function (resultados) {
         if (casoId !== casoSeleccionadoId) return; // se cambió de caso mientras esperaba
+        var caso = resultados[0];
+        var miUserId = resultados[1];
 
         if (!caso) {
           vacio.hidden = false;
@@ -198,10 +289,20 @@ var EpeCasos = (function () {
         detalle.hidden = false;
         detalle.querySelector("[data-detalle-nombre]").textContent = caso.nombre;
 
+        var esDueno = caso.dueno_id === miUserId;
+        aplicarPermisosCaso(esDueno);
+        if (esDueno) {
+          ocultarBanner();
+        } else {
+          mostrarBanner(caso.dueno_id);
+        }
+
         renderActividades(caso.id);
-        renderEntradas(caso.id);
-        renderShares(caso.id);
         renderComentarios(caso.id);
+        if (esDueno) {
+          renderEntradas(caso.id);
+          renderShares(caso.id);
+        }
       })
       .catch(function () {
         if (casoId !== casoSeleccionadoId) return;
