@@ -30,6 +30,7 @@ var EpeCasos = (function () {
     root.querySelector("[data-actividad-agregar]").addEventListener("click", abrirCatalogo);
     root.querySelector("[data-entrada-form]").addEventListener("submit", onAgregarEntrada);
     root.querySelector("[data-colega-agregar]").addEventListener("click", abrirFormCompartirColega);
+    root.querySelector("[data-comentario-form]").addEventListener("submit", onAgregarComentario);
 
     root.querySelectorAll("[data-share-toggle]").forEach(function (toggle) {
       toggle.addEventListener("change", onToggleShare);
@@ -82,6 +83,16 @@ var EpeCasos = (function () {
     elemento.appendChild(p);
   }
 
+  // Muestra el mensaje real del error (Supabase/Postgres suele traer algo
+  // legible en err.message) en vez de un genérico "revisá tu conexión" que
+  // puede ser directamente falso (p.ej. un error de RLS/permisos no tiene
+  // nada que ver con la conexión). Sirve para diagnosticar sin herramientas
+  // de desarrollador.
+  function detalleError(err) {
+    var msg = err && (err.message || err.error_description || err.msg);
+    return msg ? " (" + msg + ")" : "";
+  }
+
   // ── Listado de casos ────────────────────────────────────────────────
 
   function renderListaCasos() {
@@ -125,8 +136,8 @@ var EpeCasos = (function () {
                 renderListaCasos();
                 renderDetalleCaso();
               })
-              .catch(function () {
-                window.alert("No se pudo borrar el caso. Revisá tu conexión e intentá de nuevo.");
+              .catch(function (err) {
+                window.alert("No se pudo borrar el caso." + detalleError(err));
                 del.disabled = false;
               });
           });
@@ -153,8 +164,8 @@ var EpeCasos = (function () {
         renderListaCasos();
         renderDetalleCaso();
       })
-      .catch(function () {
-        window.alert("No se pudo crear el caso. Revisá tu conexión e intentá de nuevo.");
+      .catch(function (err) {
+        window.alert("No se pudo crear el caso." + detalleError(err));
       });
   }
 
@@ -190,6 +201,7 @@ var EpeCasos = (function () {
         renderActividades(caso.id);
         renderEntradas(caso.id);
         renderShares(caso.id);
+        renderComentarios(caso.id);
       })
       .catch(function () {
         if (casoId !== casoSeleccionadoId) return;
@@ -330,8 +342,8 @@ var EpeCasos = (function () {
               .then(function () {
                 renderActividades(casoId);
               })
-              .catch(function () {
-                window.alert("No se pudo quitar la actividad. Revisá tu conexión e intentá de nuevo.");
+              .catch(function (err) {
+                window.alert("No se pudo quitar la actividad." + detalleError(err));
                 del.disabled = false;
               });
           });
@@ -427,8 +439,8 @@ var EpeCasos = (function () {
           contenido: contenido,
         });
       })
-      .catch(function () {
-        window.alert("No se pudo cargar el catálogo. Revisá tu conexión e intentá de nuevo.");
+      .catch(function (err) {
+        window.alert("No se pudo cargar el catálogo." + detalleError(err));
       });
   }
 
@@ -472,8 +484,8 @@ var EpeCasos = (function () {
     if (app.tipo === "app-epe") {
       item.addEventListener("click", function () {
         item.disabled = true;
-        vincular().catch(function () {
-          window.alert("No se pudo vincular la actividad. Revisá tu conexión e intentá de nuevo.");
+        vincular().catch(function (err) {
+          window.alert("No se pudo vincular la actividad." + detalleError(err));
           item.disabled = false;
         });
       });
@@ -485,8 +497,8 @@ var EpeCasos = (function () {
           accionExtra: {
             etiqueta: "Vincular a este caso",
             onClick: function () {
-              vincular().catch(function () {
-                window.alert("No se pudo vincular la actividad. Revisá tu conexión e intentá de nuevo.");
+              vincular().catch(function (err) {
+                window.alert("No se pudo vincular la actividad." + detalleError(err));
               });
             },
           },
@@ -563,8 +575,8 @@ var EpeCasos = (function () {
           renderActividades(casoId);
           EpeModal.close();
         })
-        .catch(function () {
-          window.alert("No se pudo crear la app. Revisá tu conexión e intentá de nuevo.");
+        .catch(function (err) {
+          window.alert("No se pudo crear la app." + detalleError(err));
           guardar.disabled = false;
         });
     });
@@ -643,8 +655,8 @@ var EpeCasos = (function () {
         form.reset();
         renderEntradas(casoId);
       })
-      .catch(function () {
-        window.alert("No se pudo agregar la entrada. Revisá tu conexión e intentá de nuevo.");
+      .catch(function (err) {
+        window.alert("No se pudo agregar la entrada." + detalleError(err));
       })
       .finally(function () {
         boton.disabled = false;
@@ -710,8 +722,8 @@ var EpeCasos = (function () {
                 .then(function () {
                   renderShares(casoId);
                 })
-                .catch(function () {
-                  window.alert("No se pudo quitar. Revisá tu conexión e intentá de nuevo.");
+                .catch(function (err) {
+                  window.alert("No se pudo quitar." + detalleError(err));
                   quitar.disabled = false;
                 });
             });
@@ -744,9 +756,9 @@ var EpeCasos = (function () {
     var valorAnterior = !toggle.checked;
     toggle.disabled = true;
     EpeStore.setShare(casoSeleccionadoId, toggle.value, toggle.checked)
-      .catch(function () {
+      .catch(function (err) {
         toggle.checked = valorAnterior;
-        window.alert("No se pudo actualizar. Revisá tu conexión.");
+        window.alert("No se pudo actualizar." + detalleError(err));
       })
       .finally(function () {
         toggle.disabled = false;
@@ -806,8 +818,8 @@ var EpeCasos = (function () {
           renderShares(casoId);
           EpeModal.close();
         })
-        .catch(function () {
-          status.textContent = "No se pudo compartir. Revisá tu conexión e intentá de nuevo.";
+        .catch(function (err) {
+          status.textContent = "No se pudo compartir." + detalleError(err);
           guardar.disabled = false;
         });
     });
@@ -818,6 +830,113 @@ var EpeCasos = (function () {
       titulo: "Compartir con un colega",
       contenido: contenido,
     });
+  }
+
+  // ── Comentarios ─────────────────────────────────────────────────────
+  // A diferencia de compartir (solo lectura) y de las entradas (solo el
+  // dueño), acá cualquiera con acceso al caso puede escribir — es el
+  // canal para que un colega compartido le deje un mensaje al dueño. Solo
+  // el propio autor puede borrar su comentario (ver
+  // supabase/004_comentarios.sql).
+
+  function renderComentarios(casoId) {
+    var ul = root.querySelector("[data-comentarios-lista]");
+    mensajeVacio(ul, "Cargando…", "li");
+
+    Promise.all([EpeStore.listComentarios(casoId), EpeStore.getUserId()])
+      .then(function (resultados) {
+        if (casoId !== casoSeleccionadoId) return;
+        var comentarios = resultados[0];
+        var miUserId = resultados[1];
+
+        ul.innerHTML = "";
+        if (comentarios.length === 0) {
+          mensajeVacio(ul, "Sin comentarios todavía. Van a aparecer acá los que dejen las personas con las que compartas este caso.", "li");
+          return;
+        }
+
+        comentarios.forEach(function (comentario) {
+          var li = document.createElement("li");
+          li.className = "epe-comentario-item";
+
+          var header = document.createElement("div");
+          header.className = "epe-comentario-header";
+
+          var autor = document.createElement("span");
+          autor.className = "epe-comentario-autor";
+          autor.textContent = "…";
+          header.appendChild(autor);
+
+          var fecha = document.createElement("span");
+          fecha.className = "epe-comentario-fecha";
+          fecha.textContent = new Date(comentario.creado_en).toLocaleDateString("es-AR");
+          header.appendChild(fecha);
+
+          if (comentario.autor_id === miUserId) {
+            autor.textContent = "Vos";
+            var quitar = document.createElement("button");
+            quitar.type = "button";
+            quitar.className = "epe-btn-ghost epe-btn-sm epe-comentario-borrar";
+            quitar.textContent = "Borrar";
+            quitar.addEventListener("click", function () {
+              quitar.disabled = true;
+              EpeStore.removeComentario(comentario.id)
+                .then(function () {
+                  renderComentarios(casoId);
+                })
+                .catch(function (err) {
+                  window.alert("No se pudo borrar el comentario." + detalleError(err));
+                  quitar.disabled = false;
+                });
+            });
+            header.appendChild(quitar);
+          } else {
+            EpeStore.getColegaLabel(comentario.autor_id)
+              .then(function (label) {
+                if (casoId !== casoSeleccionadoId) return;
+                autor.textContent = label;
+              })
+              .catch(function () {
+                autor.textContent = "Colega";
+              });
+          }
+
+          var contenido = document.createElement("p");
+          contenido.textContent = comentario.contenido;
+
+          li.appendChild(header);
+          li.appendChild(contenido);
+          ul.appendChild(li);
+        });
+      })
+      .catch(function (err) {
+        if (casoId !== casoSeleccionadoId) return;
+        mensajeVacio(ul, "No se pudieron cargar los comentarios." + detalleError(err), "li");
+      });
+  }
+
+  function onAgregarComentario(ev) {
+    ev.preventDefault();
+    if (!casoSeleccionadoId) return;
+    var form = ev.target;
+    var contenido = form.elements.contenido.value.trim();
+    if (!contenido) return;
+
+    var casoId = casoSeleccionadoId;
+    var boton = form.querySelector("button[type=submit]");
+    boton.disabled = true;
+
+    EpeStore.addComentario(casoId, contenido)
+      .then(function () {
+        form.reset();
+        renderComentarios(casoId);
+      })
+      .catch(function (err) {
+        window.alert("No se pudo agregar el comentario." + detalleError(err));
+      })
+      .finally(function () {
+        boton.disabled = false;
+      });
   }
 
   return { init: init };

@@ -396,3 +396,42 @@
   outline: 2px solid var(--teal-600);
   outline-offset: 2px;
 }
+
+/* ── Comentarios ── */
+.epe-comentarios-lista {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.epe-comentario-item {
+  padding: 10px 12px;
+  border: 1px solid var(--tile-border);
+  border-radius: var(--radius-sm);
+  background: var(--shell-bg-2);
+}
+
+.epe-comentario-item p {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--text-strong);
+  white-space: pre-wrap;
+}
+
+.epe-comentario-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.epe-comentario-autor {
+  font-weight: 700;
+  color: var(--text-strong);
+}
+
+.epe-comentario-borrar {
+  margin-left: auto;
+}

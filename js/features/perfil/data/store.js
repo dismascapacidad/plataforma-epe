@@ -344,6 +344,55 @@ var EpeStore = (function () {
     });
   }
 
+  // ── Comentarios ─────────────────────────────────────────────────────
+  // A diferencia de entradas/actividades, esto SÍ acepta insert de
+  // cualquiera con acceso al caso (dueño o compartido) — ver
+  // supabase/004_comentarios.sql. Es el canal para que un colega
+  // compartido le deje un mensaje al dueño sin tocar la documentación
+  // clínica del caso.
+
+  // Promise<uuid>. Se usa en la UI para distinguir "mi comentario" (con
+  // opción de borrar) de los de otras personas.
+  function getUserId() {
+    return EpeSupabase.auth.getUser().then(function (userRes) {
+      if (userRes.error) throw userRes.error;
+      return userRes.data.user.id;
+    });
+  }
+
+  function listComentarios(casoId) {
+    return EpeSupabase.from("caso_comentarios")
+      .select("*")
+      .eq("caso_id", casoId)
+      .order("creado_en", { ascending: true })
+      .then(function (res) {
+        lanzarSiError(res);
+        return res.data || [];
+      });
+  }
+
+  function addComentario(casoId, contenido) {
+    return getUserId().then(function (uid) {
+      return EpeSupabase.from("caso_comentarios")
+        .insert({ caso_id: casoId, autor_id: uid, contenido: contenido || "" })
+        .select("*")
+        .single()
+        .then(function (res) {
+          lanzarSiError(res);
+          return res.data;
+        });
+    });
+  }
+
+  function removeComentario(comentarioId) {
+    return EpeSupabase.from("caso_comentarios")
+      .delete()
+      .eq("id", comentarioId)
+      .then(function (res) {
+        lanzarSiError(res);
+      });
+  }
+
   return {
     getProfile: getProfile,
     saveProfile: saveProfile,
@@ -368,5 +417,9 @@ var EpeStore = (function () {
     addShareColega: addShareColega,
     removeShare: removeShare,
     getColegaLabel: getColegaLabel,
+    getUserId: getUserId,
+    listComentarios: listComentarios,
+    addComentario: addComentario,
+    removeComentario: removeComentario,
   };
 })();

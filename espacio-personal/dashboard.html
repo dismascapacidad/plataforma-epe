@@ -179,10 +179,16 @@
 
                   <div class="epe-detalle-seccion">
                     <h4>Comentarios</h4>
-                    <p class="epe-vacio" data-comentarios-vacio>
-                      Sin comentarios todavía. Van a aparecer acá los que dejen
-                      las personas con las que compartas este caso.
+                    <p class="epe-panel-sub">
+                      Cualquiera con acceso a este caso puede dejar un mensaje
+                      acá, vos incluido — a diferencia de las notas, esto no
+                      es documentación clínica.
                     </p>
+                    <ul class="epe-comentarios-lista" data-comentarios-lista></ul>
+                    <form class="epe-inline-form" data-comentario-form>
+                      <textarea name="contenido" placeholder="Escribí un comentario…" required></textarea>
+                      <button class="epe-btn-ghost epe-btn-sm" type="submit">Comentar</button>
+                    </form>
                   </div>
                 </div>
               </div>
