@@ -40,93 +40,100 @@
         </button>
       </header>
 
-      <!-- ── Configuración ── -->
-      <div class="epe-lado-config" data-lado-config>
-        <h1>Lado Correcto</h1>
-        <p class="epe-lado-intro">
-          Ejercicio de reacción y lateralidad: una fila de frutas se acerca de a una.
-          Presioná la flecha del lado que le corresponde a la fruta más cercana —
-          con las flechas del teclado (← →) o tocando los botones en pantalla.
-        </p>
+      <!-- ── Configuración: modal, se cierra solo al Empezar (no tiene
+           sentido dejar cerrarlo de otra forma — sin partida configurada
+           no hay nada que mostrar detrás). ── -->
+      <div class="epe-lado-modal-overlay" data-lado-config>
+        <div class="epe-lado-modal">
+          <h1>Lado Correcto</h1>
+          <p class="epe-lado-intro">
+            Ejercicio de reacción y lateralidad: una fila de frutas se acerca de a una.
+            Presioná la flecha del lado que le corresponde a la fruta más cercana —
+            con las flechas del teclado (← →) o tocando los botones en pantalla.
+          </p>
 
-        <div class="epe-lado-config-grupo">
-          <h2>¿Cómo se termina la partida?</h2>
-          <div class="epe-lado-modo-opciones">
-            <label>
-              <input type="radio" name="lado-modo" value="cantidad" checked />
-              Por cantidad de aciertos
-            </label>
-            <label>
-              <input type="radio" name="lado-modo" value="tiempo" />
-              Por tiempo
-            </label>
+          <div class="epe-lado-config-grupo">
+            <h2>¿Cómo se termina la partida?</h2>
+            <div class="epe-lado-modo-opciones">
+              <label>
+                <input type="radio" name="lado-modo" value="cantidad" checked />
+                Por cantidad de aciertos
+              </label>
+              <label>
+                <input type="radio" name="lado-modo" value="tiempo" />
+                Por tiempo
+              </label>
+            </div>
+          </div>
+
+          <div class="epe-lado-config-grupo" data-lado-cantidad-wrap>
+            <label for="lado-cantidad">Aciertos para terminar</label>
+            <select id="lado-cantidad" data-lado-cantidad>
+              <option value="10">10</option>
+              <option value="15" selected>15</option>
+              <option value="25">25</option>
+              <option value="40">40</option>
+            </select>
+          </div>
+
+          <div class="epe-lado-config-grupo" data-lado-tiempo-wrap hidden>
+            <label for="lado-tiempo">Duración</label>
+            <select id="lado-tiempo" data-lado-tiempo>
+              <option value="30">30 segundos</option>
+              <option value="60" selected>60 segundos</option>
+              <option value="90">90 segundos</option>
+              <option value="120">120 segundos</option>
+            </select>
+          </div>
+
+          <div class="epe-lado-config-grupo">
+            <label for="lado-velocidad">Velocidad de la animación</label>
+            <select id="lado-velocidad" data-lado-velocidad>
+              <option value="lenta">Lenta</option>
+              <option value="media" selected>Media</option>
+              <option value="rapida">Rápida</option>
+            </select>
+          </div>
+
+          <button class="epe-btn-acc" type="button" data-lado-empezar>Empezar</button>
+        </div>
+      </div>
+
+      <!-- ── Área central: juego y resumen se centran acá, tanto vertical
+           como horizontalmente, en el espacio que deja el header. ── -->
+      <main class="epe-lado-main">
+        <div class="epe-lado-juego" data-lado-juego hidden>
+          <div class="epe-lado-hud">
+            <span data-lado-hud-objetivo></span>
+            <span data-lado-hud-errores></span>
+          </div>
+
+          <div class="epe-lado-carril" data-lado-carril></div>
+
+          <div class="epe-lado-controles">
+            <button class="epe-lado-flecha epe-lado-flecha-izq" type="button" data-lado-flecha="izquierda">
+              <span class="epe-lado-flecha-icono" aria-hidden="true">←</span>
+              <span class="epe-lado-flecha-fruta" data-lado-fruta-izq></span>
+              <span class="epe-lado-flecha-contador" data-lado-contador-izq>0</span>
+            </button>
+            <button class="epe-lado-flecha epe-lado-flecha-der" type="button" data-lado-flecha="derecha">
+              <span class="epe-lado-flecha-icono" aria-hidden="true">→</span>
+              <span class="epe-lado-flecha-fruta" data-lado-fruta-der></span>
+              <span class="epe-lado-flecha-contador" data-lado-contador-der>0</span>
+            </button>
           </div>
         </div>
 
-        <div class="epe-lado-config-grupo" data-lado-cantidad-wrap>
-          <label for="lado-cantidad">Aciertos para terminar</label>
-          <select id="lado-cantidad" data-lado-cantidad>
-            <option value="10">10</option>
-            <option value="15" selected>15</option>
-            <option value="25">25</option>
-            <option value="40">40</option>
-          </select>
+        <!-- ── Resumen final ── -->
+        <div class="epe-lado-resumen" data-lado-resumen hidden>
+          <h2>¡Listo!</h2>
+          <p data-lado-resumen-texto></p>
+          <div class="epe-lado-resumen-acciones">
+            <button class="epe-btn-acc" type="button" data-lado-jugar-de-nuevo>Jugar de nuevo</button>
+            <a class="epe-btn-ghost" href="index.html">Volver a Apps EpE</a>
+          </div>
         </div>
-
-        <div class="epe-lado-config-grupo" data-lado-tiempo-wrap hidden>
-          <label for="lado-tiempo">Duración</label>
-          <select id="lado-tiempo" data-lado-tiempo>
-            <option value="30">30 segundos</option>
-            <option value="60" selected>60 segundos</option>
-            <option value="90">90 segundos</option>
-            <option value="120">120 segundos</option>
-          </select>
-        </div>
-
-        <div class="epe-lado-config-grupo">
-          <label for="lado-velocidad">Velocidad de la animación</label>
-          <select id="lado-velocidad" data-lado-velocidad>
-            <option value="lenta">Lenta</option>
-            <option value="media" selected>Media</option>
-            <option value="rapida">Rápida</option>
-          </select>
-        </div>
-
-        <button class="epe-btn-acc" type="button" data-lado-empezar>Empezar</button>
-      </div>
-
-      <!-- ── Juego ── -->
-      <div class="epe-lado-juego" data-lado-juego hidden>
-        <div class="epe-lado-hud">
-          <span data-lado-hud-objetivo></span>
-          <span data-lado-hud-errores></span>
-        </div>
-
-        <div class="epe-lado-carril" data-lado-carril></div>
-
-        <div class="epe-lado-controles">
-          <button class="epe-lado-flecha epe-lado-flecha-izq" type="button" data-lado-flecha="izquierda">
-            <span class="epe-lado-flecha-icono" aria-hidden="true">←</span>
-            <span class="epe-lado-flecha-fruta" data-lado-fruta-izq></span>
-            <span class="epe-lado-flecha-contador" data-lado-contador-izq>0</span>
-          </button>
-          <button class="epe-lado-flecha epe-lado-flecha-der" type="button" data-lado-flecha="derecha">
-            <span class="epe-lado-flecha-icono" aria-hidden="true">→</span>
-            <span class="epe-lado-flecha-fruta" data-lado-fruta-der></span>
-            <span class="epe-lado-flecha-contador" data-lado-contador-der>0</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- ── Resumen final ── -->
-      <div class="epe-lado-resumen" data-lado-resumen hidden>
-        <h2>¡Listo!</h2>
-        <p data-lado-resumen-texto></p>
-        <div class="epe-lado-resumen-acciones">
-          <button class="epe-btn-acc" type="button" data-lado-jugar-de-nuevo>Jugar de nuevo</button>
-          <a class="epe-btn-ghost" href="index.html">Volver a Apps EpE</a>
-        </div>
-      </div>
+      </main>
     </div>
 
     <script src="../js/core/theme.js"></script>

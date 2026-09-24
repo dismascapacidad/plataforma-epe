@@ -8,8 +8,9 @@
 */
 
 .epe-lado-shell {
-  min-height: 100vh;
-  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   background: var(--shell-bg);
@@ -23,18 +24,52 @@
   padding: 16px clamp(16px, 4vw, 40px);
 }
 
-/* ── Configuración ── */
-.epe-lado-config {
-  max-width: 480px;
-  margin: 0 auto;
-  width: 100%;
-  padding: 0 clamp(16px, 4vw, 40px) 40px;
+/* ── Área central: el juego (o el resumen) se centra acá, tanto vertical
+   como horizontalmente, en el espacio que deja el header. ── */
+.epe-lado-main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 clamp(16px, 4vw, 40px) clamp(16px, 3vw, 28px);
+}
+
+/* ── Configuración: modal ──
+   Se cierra únicamente al presionar "Empezar" (ver lado-correcto.js) —
+   sin click-afuera ni Escape, porque sin partida configurada no hay nada
+   útil que mostrar detrás. */
+.epe-lado-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 20, 20, 0.55);
+}
+
+.epe-lado-modal-overlay[hidden] {
+  display: none;
+}
+
+.epe-lado-modal {
+  width: min(480px, 100%);
+  max-height: min(600px, 90vh);
+  overflow-y: auto;
+  background: var(--tile-bg);
+  border: 1px solid var(--tile-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 18px;
 }
 
-.epe-lado-config h1 {
+.epe-lado-modal h1 {
   font-size: 20px;
   color: var(--text-strong);
 }
@@ -91,13 +126,14 @@
   font-size: 13px;
 }
 
-/* ── Juego ── */
+/* ── Juego ──
+   Vive centrado dentro de .epe-lado-main (ver arriba). Ancho acotado para
+   que el carril y las flechas no queden gigantes en pantallas anchas. */
 .epe-lado-juego {
-  flex: 1;
-  min-height: 0;
+  width: 100%;
+  max-width: 460px;
   display: flex;
   flex-direction: column;
-  padding: 0 clamp(16px, 4vw, 40px) clamp(16px, 3vw, 28px);
   gap: 14px;
 }
 
@@ -235,9 +271,8 @@
 
 /* ── Resumen final ── */
 .epe-lado-resumen {
+  width: 100%;
   max-width: 440px;
-  margin: 40px auto 0;
-  padding: 0 clamp(16px, 4vw, 40px);
   text-align: center;
   display: flex;
   flex-direction: column;
