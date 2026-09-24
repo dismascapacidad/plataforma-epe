@@ -76,21 +76,36 @@
             </div>
           </div>
 
-          <div class="epe-barrido-config-grupo">
-            <h2>Modo de barrido</h2>
-            <div class="epe-barrido-modo-opciones">
-              <label>
-                <input type="radio" name="barrido-modo" value="tiempo" checked />
-                Por tiempo (1 pulsador)
-              </label>
-              <label>
-                <input type="radio" name="barrido-modo" value="manual-lineal" />
-                Manual, celda por celda (2 pulsadores)
-              </label>
-              <label>
-                <input type="radio" name="barrido-modo" value="manual-filacol" />
-                Manual, fila y columna (2 pulsadores)
-              </label>
+          <div class="epe-barrido-config-fila">
+            <div class="epe-barrido-config-grupo">
+              <h2>Modo de barrido</h2>
+              <p class="epe-barrido-modo-sublabel">Pulsadores</p>
+              <div class="epe-barrido-modo-opciones epe-barrido-modo-opciones-compacta">
+                <label>
+                  <input type="radio" name="barrido-pulsadores" value="1" checked />
+                  1 (automático)
+                </label>
+                <label>
+                  <input type="radio" name="barrido-pulsadores" value="2" />
+                  2 (manual)
+                </label>
+              </div>
+              <p class="epe-barrido-modo-sublabel">Recorrido</p>
+              <div class="epe-barrido-modo-opciones epe-barrido-modo-opciones-compacta">
+                <label>
+                  <input type="radio" name="barrido-patron" value="lineal" checked />
+                  Celda por celda
+                </label>
+                <label>
+                  <input type="radio" name="barrido-patron" value="filacol" />
+                  Fila y columna
+                </label>
+              </div>
+            </div>
+
+            <div class="epe-barrido-config-grupo">
+              <p class="epe-barrido-teclas-label">Teclas de este modo</p>
+              <div class="epe-barrido-teclas" data-barrido-teclas></div>
             </div>
           </div>
 
@@ -101,11 +116,6 @@
               <span>Lento</span>
               <span>Rápido</span>
             </div>
-          </div>
-
-          <div class="epe-barrido-config-grupo">
-            <p class="epe-barrido-teclas-label">Teclas de este modo</p>
-            <div class="epe-barrido-teclas" data-barrido-teclas></div>
           </div>
 
           <div class="epe-barrido-config-grupo epe-barrido-palabra">

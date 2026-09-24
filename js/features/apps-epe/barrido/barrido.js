@@ -2,26 +2,33 @@
  * barrido.js
  * App EpE — Entrenador de barrido (scanning) para acceso por pulsadores.
  * Actividad: copiar una palabra de ejemplo eligiendo letras de una grilla,
- * en cualquiera de tres modos de barrido:
+ * en cualquiera de cuatro modos de barrido:
  *
- *   - "tiempo": barrido automático de 1 pulsador. El sistema recorre las
- *     celdas solo, a intervalo fijo; el pulsador selecciona la celda
- *     donde el resaltado está parado en ese momento.
+ *   - "tiempo": barrido automático de 1 pulsador, celda por celda. El
+ *     sistema recorre las celdas solo, a intervalo fijo; el pulsador
+ *     selecciona la celda donde el resaltado está parado en ese momento.
+ *   - "auto-filacol": barrido automático de 1 pulsador, por bloques (fila
+ *     y columna). El sistema recorre las filas solo; el pulsador confirma
+ *     la fila resaltada y ahí el sistema pasa a recorrer solo las columnas
+ *     de esa fila; el pulsador vuelve a tocar para seleccionar la celda.
+ *     Cada confirmación reinicia el barrido con el intervalo completo (ver
+ *     activar()), para dar siempre el mismo tiempo de reacción.
  *   - "manual-lineal": barrido manual de 2 pulsadores, celda por celda en
  *     un único recorrido lineal. Un pulsador avanza, el otro selecciona.
- *   - "manual-filacol": barrido manual de 2 pulsadores, por bloques: un
- *     pulsador avanza fila por fila; al llegar a la fila deseada, el
- *     otro la confirma y ahí empieza a recorrer columna por columna
- *     dentro de esa fila; un tercer toque selecciona la celda. Es el
- *     estándar en comunicadores por barrido con muchas celdas, porque
- *     escala mejor que recorrer celda por celda.
+ *   - "manual-filacol": igual que "auto-filacol" pero manual — un
+ *     pulsador avanza fila por fila (o columna por columna, dentro de la
+ *     fila ya elegida) y el otro confirma/selecciona. Comparte la lógica
+ *     de avance con "auto-filacol" (ver avanzarFilaCol()). Es el estándar
+ *     en comunicadores por barrido con muchas celdas, porque escala mejor
+ *     que recorrer celda por celda.
  *
  * Igual que en el resto de la plataforma, "pulsador" hoy es una tecla del
- * teclado (K = avanzar, L = activar/seleccionar; en modo "tiempo" K
- * también selecciona) — así funciona con cualquier interfaz de switch que
- * ya emule teclado (como hace el propio hardware de dis+capacidad), sin
- * necesitar Web Bluetooth/Serial para este prototipo. Cada acción también
- * tiene un botón grande en pantalla, para probar con mouse/switch-mouse.
+ * teclado (K = avanzar, L = activar/seleccionar; en los modos automáticos,
+ * de 1 pulsador, K también selecciona) — así funciona con cualquier
+ * interfaz de switch que ya emule teclado (como hace el propio hardware de
+ * dis+capacidad), sin necesitar Web Bluetooth/Serial para este prototipo.
+ * Cada acción también tiene un botón grande en pantalla, para probar con
+ * mouse/switch-mouse.
  *
  * Script clásico. Namespace: EpeBarrido.
  */
@@ -106,7 +113,7 @@ var EpeBarrido = (function () {
     if (!root) return;
 
     var state = {
-      modo: "tiempo", // 'tiempo' | 'manual-lineal' | 'manual-filacol'
+      modo: "tiempo", // 'tiempo' | 'auto-filacol' | 'manual-lineal' | 'manual-filacol'
       disposicion: "abecedario", // 'abecedario' | 'qwerty'
       velocidadMs: VELOCIDAD_MIN_MS + VELOCIDAD_MAX_MS - 1500,
       indice: 0, // celda resaltada en 'tiempo' y 'manual-lineal'
@@ -182,9 +189,23 @@ var EpeBarrido = (function () {
 
     construirGrilla(state.disposicion);
 
-    root.querySelectorAll("[name=barrido-modo]").forEach(function (radio) {
+    // El modo real es la combinación de dos elecciones independientes en
+    // el modal — cantidad de pulsadores (1 o 2) y patrón de recorrido
+    // (celda por celda o fila y columna) — en vez de un único radio de 4
+    // opciones ya armadas, que ocupaba demasiado alto. Cualquier cambio en
+    // cualquiera de las dos recalcula el modo combinado.
+    function calcularModo() {
+      var pulsadores = root.querySelector("[name=barrido-pulsadores]:checked").value;
+      var patron = root.querySelector("[name=barrido-patron]:checked").value;
+      if (pulsadores === "1") {
+        return patron === "filacol" ? "auto-filacol" : "tiempo";
+      }
+      return patron === "filacol" ? "manual-filacol" : "manual-lineal";
+    }
+
+    root.querySelectorAll("[name=barrido-pulsadores], [name=barrido-patron]").forEach(function (radio) {
       radio.addEventListener("change", function () {
-        if (radio.checked) cambiarModo(radio.value);
+        cambiarModo(calcularModo());
       });
     });
 
@@ -268,9 +289,9 @@ var EpeBarrido = (function () {
 
       var tecla = ev.key.toLowerCase();
       if (tecla === "k") {
-        if (state.modo === "tiempo") activar();
+        if (state.modo === "tiempo" || state.modo === "auto-filacol") activar();
         else avanzar();
-      } else if (tecla === "l" && state.modo !== "tiempo") {
+      } else if (tecla === "l" && state.modo !== "tiempo" && state.modo !== "auto-filacol") {
         activar();
       } else if (tecla === "p" && state.reproduccion === "tecla") {
         hablar(textoAHablar());
@@ -331,6 +352,8 @@ var EpeBarrido = (function () {
       elTeclas.innerHTML = "";
       if (state.modo === "tiempo") {
         agregarFilaTecla("K", "Seleccionar la celda resaltada (el barrido avanza solo)");
+      } else if (state.modo === "auto-filacol") {
+        agregarFilaTecla("K", "Confirmar la fila resaltada / seleccionar la celda (el barrido avanza solo)");
       } else if (state.modo === "manual-lineal") {
         agregarFilaTecla("K", "Avanzar a la siguiente celda");
         agregarFilaTecla("L", "Seleccionar la celda resaltada");
@@ -386,7 +409,7 @@ var EpeBarrido = (function () {
 
     function resaltar() {
       limpiarResaltado();
-      if (state.modo === "manual-filacol") {
+      if (state.modo === "manual-filacol" || state.modo === "auto-filacol") {
         if (state.fase === "fila") {
           celdaEls
             .filter(function (c) {
@@ -416,22 +439,30 @@ var EpeBarrido = (function () {
       resaltar();
     }
 
+    // Avance por fila/columna, compartido entre "manual-filacol" (lo llama
+    // avanzar(), a pulsación) y "auto-filacol" (lo llama el timer solo,
+    // igual que avanzarLineal() en modo "tiempo").
+    function avanzarFilaCol() {
+      var totalFilas = filas.length;
+      if (state.fase === "fila") {
+        state.filaActual = (state.filaActual + 1) % totalFilas;
+      } else {
+        var enFila = celdaEls.filter(function (c) {
+          return c.fila === state.filaBloqueada;
+        });
+        state.colActual = (state.colActual + 1) % enFila.length;
+      }
+      resaltar();
+    }
+
     function avanzar() {
       if (state.modo === "manual-filacol") {
-        var totalFilas = filas.length;
-        if (state.fase === "fila") {
-          state.filaActual = (state.filaActual + 1) % totalFilas;
-        } else {
-          var enFila = celdaEls.filter(function (c) {
-            return c.fila === state.filaBloqueada;
-          });
-          state.colActual = (state.colActual + 1) % enFila.length;
-        }
-        resaltar();
+        avanzarFilaCol();
       } else if (state.modo === "manual-lineal") {
         avanzarLineal();
       }
-      // en modo 'tiempo' el avance es automático: este botón no hace nada.
+      // en modo 'tiempo' y 'auto-filacol' el avance es automático: este
+      // botón no hace nada.
     }
 
     function activarEnCelda(item) {
@@ -445,7 +476,7 @@ var EpeBarrido = (function () {
     }
 
     function activar() {
-      if (state.modo === "manual-filacol") {
+      if (state.modo === "manual-filacol" || state.modo === "auto-filacol") {
         if (state.fase === "fila") {
           state.filaBloqueada = state.filaActual;
           state.fase = "columna";
@@ -459,6 +490,12 @@ var EpeBarrido = (function () {
           state.filaActual = 0;
         }
         resaltar();
+        // En "auto-filacol" cada confirmación (elegir fila, o elegir
+        // columna) reinicia el barrido automático desde cero en la nueva
+        // fase, para darle al jugador el mismo tiempo completo de reacción
+        // que tuvo al arrancar — si no, heredaría el resto del intervalo
+        // anterior, que puede ser casi nada.
+        if (state.modo === "auto-filacol") reiniciarTimer();
       } else {
         activarEnCelda(celdaEls[state.indice]);
       }
@@ -471,6 +508,8 @@ var EpeBarrido = (function () {
       state.timer = null;
       if (state.modo === "tiempo") {
         state.timer = window.setInterval(avanzarLineal, state.velocidadMs);
+      } else if (state.modo === "auto-filacol") {
+        state.timer = window.setInterval(avanzarFilaCol, state.velocidadMs);
       }
     }
 
@@ -482,7 +521,7 @@ var EpeBarrido = (function () {
       state.filaBloqueada = null;
       state.colActual = 0;
 
-      elVelocidadWrap.hidden = modo !== "tiempo";
+      elVelocidadWrap.hidden = modo !== "tiempo" && modo !== "auto-filacol";
       renderTeclas();
 
       resaltar();

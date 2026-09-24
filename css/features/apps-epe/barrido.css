@@ -129,6 +129,31 @@
   gap: 8px;
 }
 
+/* Modo de barrido: en vez de una lista de 4 combinaciones ya armadas
+   (que ocupaba demasiado alto), se elige por separado cantidad de
+   pulsadores y patrón de recorrido — el JS combina las dos elecciones
+   en el modo real (ver calcularModo() en barrido.js). Las dos opciones
+   de cada sub-elección van en fila, no en columna, porque son cortas y
+   así ocupan la mitad del alto. */
+.epe-barrido-modo-sublabel {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-faint);
+  margin: 8px 0 4px;
+}
+
+.epe-barrido-modo-sublabel:first-of-type {
+  margin-top: 0;
+}
+
+.epe-barrido-modo-opciones-compacta {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+}
+
 .epe-barrido-velocidad-escala {
   display: flex;
   justify-content: space-between;
