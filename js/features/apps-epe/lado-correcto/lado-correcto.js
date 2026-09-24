@@ -44,6 +44,7 @@ var EpeLadoCorrecto = (function () {
   var elHudObjetivo, elHudErrores;
   var elFrutaIzq, elFrutaDer, elContadorIzq, elContadorDer;
   var elFlechaIzq, elFlechaDer;
+  var elResumenTexto, elEstadisticasBoton, elEstadisticasPanel;
 
   var estado = null; // null = no hay partida en curso
 
@@ -83,7 +84,7 @@ var EpeLadoCorrecto = (function () {
   function posicionParaIndice(idx) {
     var paso = 1 - idx / LARGO_FILA; // 1 = más cerca, ~0.25 = más lejos
     var escala = 0.4 + paso * 0.6;
-    var y = -(LARGO_FILA - 1 - idx) * 46;
+    var y = -(LARGO_FILA - 1 - idx) * 60;
     var opacidad = 0.3 + paso * 0.7;
     return "translate(-50%, " + y + "px) scale(" + escala + ")";
   }
@@ -187,6 +188,57 @@ var EpeLadoCorrecto = (function () {
 
   // ── Ciclo de partida ────────────────────────────────────────────────
 
+  function formatearDuracion(ms) {
+    var segundos = Math.round(ms / 1000);
+    if (segundos < 60) return segundos + "s";
+    var minutos = Math.floor(segundos / 60);
+    var resto = segundos % 60;
+    return minutos + "m " + resto + "s";
+  }
+
+  function calcularEstadisticas() {
+    var duracionMs = performance.now() - estado.inicioMs;
+    var total = estado.aciertos + estado.errores;
+    var precision = total > 0 ? Math.round((estado.aciertos / total) * 100) : 0;
+
+    return {
+      tiempoTexto: formatearDuracion(duracionMs),
+      precisionTexto: precision + "% (" + estado.aciertos + " de " + total + " respuestas)",
+      ladosTexto: estado.aciertosPorLado.izquierda + " a la izquierda, " + estado.aciertosPorLado.derecha + " a la derecha",
+      erroresTexto: String(estado.errores),
+    };
+  }
+
+  function alternarEstadisticas() {
+    if (!elEstadisticasPanel.hidden) {
+      elEstadisticasPanel.hidden = true;
+      elEstadisticasBoton.textContent = "Ver estadísticas";
+      return;
+    }
+    var stats = calcularEstadisticas();
+    elEstadisticasPanel.innerHTML = "";
+    [
+      ["Tiempo de juego", stats.tiempoTexto],
+      ["Precisión", stats.precisionTexto],
+      ["Aciertos por lado", stats.ladosTexto],
+      ["Errores", stats.erroresTexto],
+    ].forEach(function (par) {
+      var fila = document.createElement("div");
+      fila.className = "epe-lado-stat";
+      var etiqueta = document.createElement("span");
+      etiqueta.className = "epe-lado-stat-etiqueta";
+      etiqueta.textContent = par[0];
+      var valor = document.createElement("span");
+      valor.className = "epe-lado-stat-valor";
+      valor.textContent = par[1];
+      fila.appendChild(etiqueta);
+      fila.appendChild(valor);
+      elEstadisticasPanel.appendChild(fila);
+    });
+    elEstadisticasPanel.hidden = false;
+    elEstadisticasBoton.textContent = "Ocultar estadísticas";
+  }
+
   function terminarPartida() {
     if (!estado || estado.terminado) return;
     estado.terminado = true;
@@ -195,19 +247,10 @@ var EpeLadoCorrecto = (function () {
     var total = estado.aciertos + estado.errores;
     var precision = total > 0 ? Math.round((estado.aciertos / total) * 100) : 0;
 
-    var resumenTexto = document.querySelector("[data-lado-resumen-texto]");
-    resumenTexto.textContent =
-      "Aciertos: " +
-      estado.aciertos +
-      " (" +
-      estado.aciertosPorLado.izquierda +
-      " a la izquierda, " +
-      estado.aciertosPorLado.derecha +
-      " a la derecha) · Errores: " +
-      estado.errores +
-      " · Precisión: " +
-      precision +
-      "%";
+    elResumenTexto.textContent = "Aciertos: " + estado.aciertos + " · Errores: " + estado.errores + " · Precisión: " + precision + "%";
+    elEstadisticasPanel.hidden = true;
+    elEstadisticasPanel.innerHTML = "";
+    elEstadisticasBoton.textContent = "Ver estadísticas";
 
     elJuego.hidden = true;
     elResumen.hidden = false;
@@ -227,6 +270,7 @@ var EpeLadoCorrecto = (function () {
       aciertosPorLado: { izquierda: 0, derecha: 0 },
       terminado: false,
       temporizador: null,
+      inicioMs: performance.now(),
     };
 
     elCarril.className = "epe-lado-carril epe-lado-velocidad-" + config.velocidad;
@@ -277,6 +321,9 @@ var EpeLadoCorrecto = (function () {
     elContadorDer = root.querySelector("[data-lado-contador-der]");
     elFlechaIzq = root.querySelector('[data-lado-flecha="izquierda"]');
     elFlechaDer = root.querySelector('[data-lado-flecha="derecha"]');
+    elResumenTexto = root.querySelector("[data-lado-resumen-texto]");
+    elEstadisticasBoton = root.querySelector("[data-lado-estadisticas-boton]");
+    elEstadisticasPanel = root.querySelector("[data-lado-estadisticas-panel]");
 
     var cantidadWrap = root.querySelector("[data-lado-cantidad-wrap]");
     var tiempoWrap = root.querySelector("[data-lado-tiempo-wrap]");
@@ -295,6 +342,7 @@ var EpeLadoCorrecto = (function () {
       elConfig.hidden = false;
       elResumen.hidden = true;
     });
+    elEstadisticasBoton.addEventListener("click", alternarEstadisticas);
 
     elFlechaIzq.addEventListener("pointerdown", function () {
       responder("izquierda");
