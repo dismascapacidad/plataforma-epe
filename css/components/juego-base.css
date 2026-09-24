@@ -1,0 +1,428 @@
+/*
+  juego-base.css
+  Base compartida de los juegos de Apps EpE que se juegan por teclado o
+  pulsador (Hanói, N-back, Stroop): shell de pantalla completa, modal de
+  configuración y de resumen, HUD, chip de tecla, panel de acceso y
+  resaltado del barrido. Cada juego suma solo lo suyo en su propio css
+  (css/features/apps-epe/<juego>.css).
+
+  Mismo criterio visual que lado-correcto.css (que sigue con su propio
+  css; unificarlos queda para cuando se decida). Todo color sale de los
+  tokens de rol de theme.css, así que se adapta solo a claro/oscuro.
+*/
+
+.epe-juego-shell {
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--shell-bg);
+}
+
+/* `hidden` pierde contra cualquier display: flex/grid de una clase: acá se
+   fuerza, para que hidden funcione en todo lo que vive dentro del shell. */
+.epe-juego-shell [hidden] {
+  display: none !important;
+}
+
+.epe-juego-header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px clamp(16px, 4vw, 40px);
+}
+
+.epe-juego-main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 clamp(16px, 4vw, 40px) clamp(12px, 2.5vw, 24px);
+}
+
+/* ── Chip de tecla ── */
+.epe-tecla {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 8px;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text-strong);
+  background: var(--shell-bg);
+  border: 1px solid var(--tile-border);
+  border-bottom-width: 3px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+/* ── Resaltado del barrido ──
+   Ámbar a propósito: la selección/acento del juego es teal, y el resaltado
+   del barrido tiene que distinguirse de un vistazo de cualquier otro
+   estado (origen elegido, acierto, error). Contorno grueso + halo, para
+   que se vea también desde lejos o con poca agudeza visual. */
+.epe-scan-actual {
+  outline: 4px solid var(--amb) !important;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 9px color-mix(in srgb, var(--amb) 28%, transparent) !important;
+}
+
+/* ── Modal (configuración y resumen) ── */
+.epe-juego-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(15, 20, 20, 0.55);
+}
+
+.epe-juego-modal {
+  width: min(720px, 96vw);
+  max-height: 96vh;
+  max-height: 96dvh;
+  overflow-y: auto;
+  background: var(--tile-bg);
+  border: 1px solid var(--tile-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Con un fondo semitransparente (--tile-bg en oscuro), el texto del modal
+   se leería sobre el juego de atrás: se le pone el fondo sólido del shell. */
+[data-theme="dark"] .epe-juego-modal {
+  background: var(--shell-bg-2);
+}
+
+.epe-juego-modal h1 {
+  font-size: 19px;
+  color: var(--text-strong);
+}
+
+.epe-juego-intro {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-dim);
+}
+
+.epe-juego-h2 {
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+
+.epe-juego-columnas {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 640px) {
+  .epe-juego-columnas {
+    grid-template-columns: 1fr 1.3fr;
+    align-items: start;
+  }
+}
+
+.epe-juego-grupo {
+  background: var(--shell-bg-2);
+  border: 1px solid var(--tile-border);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+}
+
+[data-theme="dark"] .epe-juego-grupo {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.epe-juego-grupo + .epe-juego-grupo {
+  margin-top: 10px;
+}
+
+.epe-juego-grupo > label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+
+.epe-juego-grupo select {
+  width: 100%;
+  border: 1px solid var(--tile-border);
+  background: var(--shell-bg);
+  color: var(--text-strong);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+.epe-juego-opciones {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--text-strong);
+}
+
+.epe-juego-opciones label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.epe-juego-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+/* Botón con chip de tecla adentro ("Deshacer [Z]"): separa texto y chip. */
+.epe-juego-acciones .epe-btn-ghost {
+  gap: 8px;
+}
+
+.epe-juego-modal > .epe-btn-acc {
+  align-self: center;
+  padding: 10px 28px;
+  font-size: 14px;
+}
+
+/* ── HUD y ayuda de teclas ── */
+.epe-juego-hud {
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-strong);
+  background: var(--tile-bg);
+  border: 1px solid var(--tile-border);
+  border-radius: var(--radius-md);
+  padding: 10px 16px;
+}
+
+.epe-juego-ayuda {
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 16px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.epe-juego-ayuda-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── Resumen ── */
+.epe-juego-modal-resumen {
+  width: min(460px, 94vw);
+  text-align: center;
+  align-items: stretch;
+}
+
+.epe-juego-modal-resumen h2 {
+  font-size: 20px;
+  color: var(--grn);
+  text-align: center;
+}
+
+.epe-juego-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+  background: var(--shell-bg-2);
+  border: 1px solid var(--tile-border);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+}
+
+[data-theme="dark"] .epe-juego-stats {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.epe-juego-stat {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.epe-juego-stat-etiqueta {
+  color: var(--text-dim);
+}
+
+.epe-juego-stat-valor {
+  color: var(--text-strong);
+  font-weight: 600;
+  text-align: right;
+}
+
+.epe-juego-stat-nota {
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--text-dim);
+  border-top: 1px solid var(--tile-border);
+  padding-top: 8px;
+}
+
+.epe-juego-resumen-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+/* ── Panel de acceso (ver js/features/apps-epe/_comun/acceso.js) ── */
+.epe-acceso-modos {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.epe-acceso-modo {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--tile-border);
+  border-radius: var(--radius-sm);
+  background: var(--shell-bg);
+  cursor: pointer;
+}
+
+[data-theme="dark"] .epe-acceso-modo {
+  background: transparent;
+}
+
+.epe-acceso-modo:has(input:checked) {
+  border-color: var(--teal-600);
+  box-shadow: 0 0 0 1px var(--teal-600);
+}
+
+.epe-acceso-modo input {
+  margin-top: 3px;
+  accent-color: var(--teal-600);
+}
+
+.epe-acceso-modo-texto {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.epe-acceso-modo-texto strong {
+  font-size: 12.5px;
+  color: var(--text-strong);
+}
+
+.epe-acceso-modo-texto small {
+  font-size: 11.5px;
+  color: var(--text-dim);
+}
+
+.epe-acceso-velocidad {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.epe-acceso-velocidad input {
+  accent-color: var(--teal-600);
+}
+
+.epe-acceso-velocidad-valor {
+  min-width: 96px;
+  text-align: right;
+  color: var(--text-strong);
+  font-weight: 600;
+}
+
+.epe-acceso-teclas {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.epe-acceso-fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12.5px;
+  color: var(--text-strong);
+}
+
+.epe-acceso-tecla {
+  min-width: 120px;
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 10px;
+  border: 1px dashed var(--tile-border-hover);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--text-dim);
+  transition: background 0.12s var(--ease), border-color 0.12s var(--ease);
+}
+
+.epe-acceso-tecla:hover {
+  background: var(--btn-ghost-bg-hover);
+  border-color: var(--teal-600);
+}
+
+.epe-acceso-tecla.is-capturando {
+  border-style: solid;
+  border-color: var(--amb);
+  background: var(--amb-dim);
+  color: var(--txt);
+  font-weight: 600;
+}
+
+[data-theme="dark"] .epe-acceso-tecla.is-capturando {
+  background: transparent;
+  color: var(--amb);
+}
+
+.epe-acceso-ayuda {
+  margin-top: 8px;
+  font-size: 11.5px;
+  color: var(--text-dim);
+}
+
+/* Botones de juego (los blancos grandes): sin movimiento brusco al
+   presionarlos, con el mismo :active que las flechas de Lado Correcto. */
+.epe-juego-blanco:active {
+  transform: scale(0.97);
+}

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>N-back — Apps EpE</title>
+    <link rel="icon" href="../assets/img/logo-epe.png" />
+
+    <script src="../js/core/theme-boot.js"></script>
+
+    <link rel="stylesheet" href="../css/base/reset.css" />
+    <link rel="stylesheet" href="../css/base/tokens.css" />
+    <link rel="stylesheet" href="../css/base/theme.css" />
+    <link rel="stylesheet" href="../css/base/typography.css" />
+    <link rel="stylesheet" href="../css/components/buttons.css" />
+    <link rel="stylesheet" href="../css/components/app-nav.css" />
+    <link rel="stylesheet" href="../css/components/juego-base.css" />
+    <link rel="stylesheet" href="../css/features/apps-epe/nback.css" />
+  </head>
+  <body>
+    <div class="epe-juego-shell epe-nback-shell">
+      <header class="epe-juego-header">
+        <div class="epe-app-header-left">
+          <a class="epe-app-back" href="index.html">← Apps EpE</a>
+          <a href="../index.html"><img src="../assets/img/logo-epe.png" alt="Equipar para Equipar" height="26" /></a>
+        </div>
+        <button
+          class="epe-theme-toggle"
+          type="button"
+          id="theme-toggle"
+          aria-pressed="false"
+          aria-label="Cambiar a modo oscuro"
+        >
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4" />
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+          </svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" />
+          </svg>
+        </button>
+      </header>
+
+      <!-- ── Configuración: modal (ver hanoi.html para el criterio) ── -->
+      <div class="epe-juego-overlay" data-juego-config>
+        <div class="epe-juego-modal" role="dialog" aria-modal="true" aria-labelledby="nback-titulo">
+          <h1 id="nback-titulo">N-back</h1>
+          <p class="epe-juego-intro">
+            Ejercicio de memoria de trabajo. Aparece una serie de estímulos, uno cada tanto: hay que
+            indicar cuándo el estímulo actual es igual al de hace <strong>N</strong> pasos. Se responde
+            con una tecla (o pulsador) por tipo de coincidencia; el ritmo lo marca el juego, así que
+            no hay que buscar nada en pantalla.
+          </p>
+
+          <div class="epe-juego-columnas">
+            <div>
+              <div class="epe-juego-grupo">
+                <label for="nback-n">Comparar con el de hace…</label>
+                <select id="nback-n" data-nback-n>
+                  <option value="1">1 paso (1-back)</option>
+                  <option value="2" selected>2 pasos (2-back)</option>
+                  <option value="3">3 pasos (3-back)</option>
+                </select>
+              </div>
+              <div class="epe-juego-grupo">
+                <label for="nback-modo">Qué hay que recordar</label>
+                <select id="nback-modo" data-nback-modo>
+                  <option value="visual" selected>Posición (visual)</option>
+                  <option value="verbal">Letra (verbal)</option>
+                  <option value="dual">Posición y letra (dual)</option>
+                </select>
+              </div>
+              <div class="epe-juego-grupo">
+                <label for="nback-ritmo">Ritmo</label>
+                <select id="nback-ritmo" data-nback-ritmo>
+                  <option value="4000">Muy lento (4 s por estímulo)</option>
+                  <option value="3000">Lento (3 s)</option>
+                  <option value="2500" selected>Medio (2,5 s)</option>
+                  <option value="2000">Rápido (2 s)</option>
+                </select>
+              </div>
+              <div class="epe-juego-grupo">
+                <label for="nback-cantidad">Cantidad de estímulos</label>
+                <select id="nback-cantidad" data-nback-cantidad>
+                  <option value="20">20</option>
+                  <option value="30" selected>30</option>
+                  <option value="40">40</option>
+                </select>
+              </div>
+              <div class="epe-juego-grupo epe-juego-opciones">
+                <label><input type="checkbox" data-nback-voz checked /> Leer las letras en voz alta</label>
+                <label><input type="checkbox" data-nback-feedback checked /> Mostrar si acerté al responder</label>
+              </div>
+            </div>
+            <div class="epe-juego-grupo" data-acceso-panel></div>
+          </div>
+
+          <button class="epe-btn-acc" type="button" data-juego-empezar>Empezar</button>
+        </div>
+      </div>
+
+      <main class="epe-juego-main">
+        <div class="epe-nback-juego" data-nback-juego hidden>
+          <div class="epe-juego-hud">
+            <span>Estímulo <strong data-nback-actual>0</strong> de <strong data-nback-total>30</strong></span>
+            <span data-nback-etiqueta></span>
+          </div>
+
+          <p class="epe-nback-consigna" data-nback-consigna aria-live="polite"></p>
+
+          <div class="epe-nback-grilla" data-nback-grilla aria-hidden="true">
+            <!-- 3×3: 8 posiciones alrededor + el centro (fijación / letra). Las arma el JS. -->
+          </div>
+
+          <div class="epe-nback-respuestas" data-nback-respuestas>
+            <button class="epe-nback-resp epe-juego-blanco" type="button" data-resp="pos">
+              <span class="epe-nback-resp-titulo">Misma posición</span>
+              <kbd class="epe-tecla" data-tecla-resp="pos"></kbd>
+            </button>
+            <button class="epe-nback-resp epe-juego-blanco" type="button" data-resp="let">
+              <span class="epe-nback-resp-titulo">Misma letra</span>
+              <kbd class="epe-tecla" data-tecla-resp="let"></kbd>
+            </button>
+          </div>
+
+          <div class="epe-juego-acciones">
+            <button class="epe-btn-ghost" type="button" data-nback-salir>Salir <kbd class="epe-tecla">Esc</kbd></button>
+          </div>
+        </div>
+      </main>
+
+      <!-- ── Resumen final ── -->
+      <div class="epe-juego-overlay" data-juego-resumen hidden>
+        <div class="epe-juego-modal epe-juego-modal-resumen" role="dialog" aria-modal="true" aria-labelledby="nback-resumen-titulo">
+          <h2 id="nback-resumen-titulo">¡Listo!</h2>
+          <div class="epe-juego-stats" data-juego-stats></div>
+          <div class="epe-juego-resumen-acciones">
+            <button class="epe-btn-acc" type="button" data-juego-de-nuevo>Jugar de nuevo</button>
+            <button class="epe-btn-ghost" type="button" data-juego-configurar>Cambiar configuración</button>
+            <a class="epe-btn-ghost" href="index.html">Volver a Apps EpE</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="../js/core/theme.js"></script>
+    <script src="../js/features/apps-epe/_comun/teclas.js"></script>
+    <script src="../js/features/apps-epe/_comun/entrada.js"></script>
+    <script src="../js/features/apps-epe/_comun/acceso.js"></script>
+    <script src="../js/features/apps-epe/nback/nback.js"></script>
+    <script>
+      EpeTheme.initThemeToggle(document.getElementById("theme-toggle"));
+      EpeNback.init(document.querySelector(".epe-nback-shell"));
+    </script>
+  </body>
+</html>

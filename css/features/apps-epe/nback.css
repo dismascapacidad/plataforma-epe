@@ -1,0 +1,146 @@
+/*
+  nback.css
+  N-back. Lo compartido con los demás juegos por teclado vive en
+  css/components/juego-base.css: acá solo está la grilla de estímulos y los
+  botones de respuesta.
+*/
+
+.epe-nback-juego {
+  width: 100%;
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+}
+
+.epe-nback-consigna {
+  min-height: 20px;
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-dim);
+}
+
+/* ── Grilla 3×3 ──
+   Las celdas son cuadradas y del mismo tamaño; el tamaño sale del alto
+   disponible para que el juego no necesite scroll en pantallas bajas. */
+.epe-nback-grilla {
+  --celda: clamp(48px, min(11vh, 22vw), 116px);
+  align-self: center;
+  display: grid;
+  grid-template-columns: repeat(3, var(--celda));
+  grid-template-rows: repeat(3, var(--celda));
+  gap: 8px;
+  padding: 12px;
+  background: var(--tile-bg);
+  border: 1px solid var(--tile-border);
+  border-radius: var(--radius-lg);
+}
+
+.epe-nback-celda {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  background: var(--shell-bg-2);
+  border: 1px solid var(--tile-border);
+  transition: background 0.1s var(--ease), box-shadow 0.1s var(--ease);
+}
+
+[data-theme="dark"] .epe-nback-celda {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.epe-nback-celda.is-activa {
+  background: var(--teal-600);
+  border-color: var(--teal-700);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--teal-500) 35%, transparent);
+}
+
+/* Centro: cruz de fijación, o la letra cuando el modo la usa. */
+.epe-nback-centro {
+  background: transparent;
+  border-color: transparent;
+  font-size: calc(var(--celda) * 0.55);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--text-faint);
+}
+
+.epe-nback-centro.es-letra {
+  color: var(--text-strong);
+}
+
+/* ── Botones de respuesta ── */
+.epe-nback-respuestas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.epe-nback-resp {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 18px 10px;
+  border: 2px solid var(--tile-border);
+  border-radius: var(--radius-lg);
+  background: var(--tile-bg);
+  transition: background 0.1s var(--ease), border-color 0.1s var(--ease), transform 0.08s ease;
+}
+
+.epe-nback-resp:hover {
+  border-color: var(--tile-border-hover);
+}
+
+.epe-nback-resp-titulo {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-strong);
+}
+
+.epe-nback-resp .epe-tecla {
+  font-size: 14px;
+  min-width: 34px;
+  height: 32px;
+}
+
+.epe-nback-resp.is-pulsado {
+  border-color: var(--teal-600);
+  background: color-mix(in srgb, var(--teal-600) 12%, var(--tile-bg));
+}
+
+.epe-nback-resp.is-acierto {
+  border-color: var(--grn);
+  background: var(--grn-dim);
+}
+
+.epe-nback-resp.is-error {
+  border-color: var(--red);
+  background: var(--red-dim);
+}
+
+[data-theme="dark"] .epe-nback-resp.is-acierto,
+[data-theme="dark"] .epe-nback-resp.is-error {
+  background: transparent;
+}
+
+@media (max-height: 640px) {
+  .epe-nback-resp {
+    padding: 10px 8px;
+  }
+
+  .epe-nback-juego {
+    gap: 10px;
+  }
+}
+
+/* En pantallas muy bajas, "Salir" se resigna (Esc y el link de arriba
+   siguen ahí) para que la grilla y las respuestas entren sin scroll. */
+@media (max-height: 560px) {
+  .epe-nback-juego .epe-juego-acciones {
+    display: none;
+  }
+}

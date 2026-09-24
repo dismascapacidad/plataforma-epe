@@ -1,0 +1,173 @@
+/*
+  stroop.css
+  Stroop. Lo compartido con los demás juegos por teclado vive en
+  css/components/juego-base.css: acá solo está el estímulo y los botones de
+  color.
+
+  Paleta propia del juego, declarada como variables acá y no en
+  tokens.css: son colores de un ejercicio (necesitan ser cuatro tonos
+  inconfundibles entre sí), no colores de marca. Si se prefiere tener
+  TODOS los colores en tokens.css, alcanza con mover estas variables.
+
+  El estímulo va SIEMPRE sobre fondo azul marino (en claro y en oscuro):
+  el amarillo y el rojo de la tinta se distinguen mal sobre blanco, y
+  cambiar los tonos según el tema alteraría el ejercicio. Los botones de
+  respuesta llevan el nombre escrito además del color, para que nadie
+  dependa de distinguir tonos para responder.
+*/
+
+.epe-stroop-shell {
+  /* Tinta (sobre navy) */
+  --stroop-tinta-rojo: #ff5a52;
+  --stroop-tinta-azul: #5b9bff;
+  --stroop-tinta-verde: #34d17a;
+  --stroop-tinta-amarillo: #ffd43b;
+
+  /* Botones de respuesta (texto blanco; el amarillo lleva texto oscuro) */
+  --stroop-btn-rojo: #d92d2d;
+  --stroop-btn-azul: #2563eb;
+  --stroop-btn-verde: #15803d;
+  --stroop-btn-amarillo: #f5b90a;
+}
+
+.epe-stroop-juego {
+  width: 100%;
+  max-width: 760px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.epe-stroop-estimulo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: clamp(120px, 26vh, 220px);
+  background: var(--navy-800);
+  border: 1px solid var(--navy-600);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.epe-stroop-palabra {
+  font-size: clamp(36px, min(12vh, 11vw), 96px);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  color: var(--txt-on-navy-dim);
+}
+
+.epe-stroop-palabra.tinta-rojo {
+  color: var(--stroop-tinta-rojo);
+}
+.epe-stroop-palabra.tinta-azul {
+  color: var(--stroop-tinta-azul);
+}
+.epe-stroop-palabra.tinta-verde {
+  color: var(--stroop-tinta-verde);
+}
+.epe-stroop-palabra.tinta-amarillo {
+  color: var(--stroop-tinta-amarillo);
+}
+
+.epe-stroop-consigna {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.epe-stroop-consigna strong {
+  color: var(--text-strong);
+}
+
+/* ── Botones de color ── */
+.epe-stroop-respuestas {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 560px) {
+  .epe-stroop-respuestas {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.epe-stroop-resp {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 18px 8px;
+  border: 3px solid transparent;
+  border-radius: var(--radius-lg);
+  color: #fff;
+  transition: border-color 0.1s var(--ease), transform 0.08s ease;
+}
+
+.epe-stroop-resp[data-color="rojo"] {
+  background: var(--stroop-btn-rojo);
+}
+.epe-stroop-resp[data-color="azul"] {
+  background: var(--stroop-btn-azul);
+}
+.epe-stroop-resp[data-color="verde"] {
+  background: var(--stroop-btn-verde);
+}
+.epe-stroop-resp[data-color="amarillo"] {
+  background: var(--stroop-btn-amarillo);
+  color: #1c1917;
+}
+
+.epe-stroop-resp-nombre {
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.epe-stroop-resp .epe-tecla {
+  font-size: 13px;
+  min-width: 32px;
+  height: 30px;
+}
+
+/* Retroalimentación: un aro alrededor del botón apretado. El color de
+   relleno queda intacto (es el que identifica al botón). */
+.epe-stroop-resp.is-acierto {
+  border-color: var(--grn);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--grn) 45%, transparent);
+}
+
+.epe-stroop-resp.is-error {
+  border-color: var(--txt);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--red) 55%, transparent);
+  animation: epe-stroop-sacudir 0.28s ease;
+}
+
+[data-theme="dark"] .epe-stroop-resp.is-error {
+  border-color: #fff;
+}
+
+@keyframes epe-stroop-sacudir {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
+}
+
+@media (max-height: 640px) {
+  .epe-stroop-resp {
+    padding: 10px 6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .epe-stroop-resp.is-error {
+    animation: none;
+  }
+}

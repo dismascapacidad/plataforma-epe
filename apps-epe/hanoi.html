@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Torre de Hanói — Apps EpE</title>
+    <link rel="icon" href="../assets/img/logo-epe.png" />
+
+    <script src="../js/core/theme-boot.js"></script>
+
+    <link rel="stylesheet" href="../css/base/reset.css" />
+    <link rel="stylesheet" href="../css/base/tokens.css" />
+    <link rel="stylesheet" href="../css/base/theme.css" />
+    <link rel="stylesheet" href="../css/base/typography.css" />
+    <link rel="stylesheet" href="../css/components/buttons.css" />
+    <link rel="stylesheet" href="../css/components/app-nav.css" />
+    <link rel="stylesheet" href="../css/components/juego-base.css" />
+    <link rel="stylesheet" href="../css/features/apps-epe/hanoi.css" />
+  </head>
+  <body>
+    <div class="epe-juego-shell epe-hanoi-shell">
+      <header class="epe-juego-header">
+        <div class="epe-app-header-left">
+          <a class="epe-app-back" href="index.html">← Apps EpE</a>
+          <a href="../index.html"><img src="../assets/img/logo-epe.png" alt="Equipar para Equipar" height="26" /></a>
+        </div>
+        <button
+          class="epe-theme-toggle"
+          type="button"
+          id="theme-toggle"
+          aria-pressed="false"
+          aria-label="Cambiar a modo oscuro"
+        >
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4" />
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+          </svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" />
+          </svg>
+        </button>
+      </header>
+
+      <!-- ── Configuración: modal. Se cierra solo con "Empezar" (sin partida
+           configurada no hay nada que mostrar detrás). El foco arranca en
+           "Empezar", para que con teclado alcance con Enter. ── -->
+      <div class="epe-juego-overlay" data-juego-config>
+        <div class="epe-juego-modal" role="dialog" aria-modal="true" aria-labelledby="hanoi-titulo">
+          <h1 id="hanoi-titulo">Torre de Hanói</h1>
+          <p class="epe-juego-intro">
+            Pasá todos los discos de la varilla 1 a la varilla 3, de a uno por vez, sin apoyar nunca un
+            disco grande sobre uno más chico. Primero elegís la varilla de origen y después la de destino.
+            Se juega solo con el teclado o con pulsadores; el puntero es opcional.
+          </p>
+
+          <div class="epe-juego-columnas">
+            <div>
+              <div class="epe-juego-grupo">
+                <label for="hanoi-discos">Cantidad de discos</label>
+                <select id="hanoi-discos" data-hanoi-discos>
+                  <option value="3" selected>3 discos</option>
+                  <option value="4">4 discos</option>
+                  <option value="5">5 discos</option>
+                  <option value="6">6 discos</option>
+                </select>
+              </div>
+            </div>
+            <div class="epe-juego-grupo" data-acceso-panel></div>
+          </div>
+
+          <button class="epe-btn-acc" type="button" data-juego-empezar>Empezar</button>
+        </div>
+      </div>
+
+      <main class="epe-juego-main">
+        <div class="epe-hanoi-juego" data-hanoi-juego hidden>
+          <div class="epe-juego-hud">
+            <span>Movimientos: <strong data-hanoi-mov>0</strong></span>
+            <span>Mínimo posible: <strong data-hanoi-min>7</strong></span>
+            <span>Intentos inválidos: <strong data-hanoi-inv>0</strong></span>
+          </div>
+
+          <p class="epe-hanoi-mensaje" data-hanoi-mensaje aria-live="polite"></p>
+
+          <div class="epe-hanoi-escenario" data-hanoi-escenario>
+            <button class="epe-hanoi-varilla epe-juego-blanco" type="button" data-varilla="0">
+              <span class="epe-hanoi-poste" aria-hidden="true"></span>
+              <span class="epe-hanoi-discos" data-discos></span>
+              <span class="epe-hanoi-etiqueta">Varilla 1</span>
+              <kbd class="epe-tecla" data-tecla-varilla></kbd>
+            </button>
+            <button class="epe-hanoi-varilla epe-juego-blanco" type="button" data-varilla="1">
+              <span class="epe-hanoi-poste" aria-hidden="true"></span>
+              <span class="epe-hanoi-discos" data-discos></span>
+              <span class="epe-hanoi-etiqueta">Varilla 2</span>
+              <kbd class="epe-tecla" data-tecla-varilla></kbd>
+            </button>
+            <button class="epe-hanoi-varilla epe-juego-blanco" type="button" data-varilla="2">
+              <span class="epe-hanoi-poste" aria-hidden="true"></span>
+              <span class="epe-hanoi-discos" data-discos></span>
+              <span class="epe-hanoi-etiqueta">Varilla 3</span>
+              <kbd class="epe-tecla" data-tecla-varilla></kbd>
+            </button>
+          </div>
+
+          <div class="epe-juego-acciones">
+            <button class="epe-btn-ghost epe-juego-blanco" type="button" data-hanoi-deshacer>
+              Deshacer <kbd class="epe-tecla" data-tecla-deshacer></kbd>
+            </button>
+            <button class="epe-btn-ghost" type="button" data-hanoi-reiniciar>Reiniciar</button>
+            <button class="epe-btn-ghost" type="button" data-hanoi-salir>Salir <kbd class="epe-tecla">Esc</kbd></button>
+          </div>
+
+          <p class="epe-juego-ayuda" data-juego-ayuda></p>
+        </div>
+      </main>
+
+      <!-- ── Resumen final ── -->
+      <div class="epe-juego-overlay" data-juego-resumen hidden>
+        <div class="epe-juego-modal epe-juego-modal-resumen" role="dialog" aria-modal="true" aria-labelledby="hanoi-resumen-titulo">
+          <h2 id="hanoi-resumen-titulo">¡Torre completa!</h2>
+          <div class="epe-juego-stats" data-juego-stats></div>
+          <div class="epe-juego-resumen-acciones">
+            <button class="epe-btn-acc" type="button" data-juego-de-nuevo>Jugar de nuevo</button>
+            <button class="epe-btn-ghost" type="button" data-juego-configurar>Cambiar configuración</button>
+            <a class="epe-btn-ghost" href="index.html">Volver a Apps EpE</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="../js/core/theme.js"></script>
+    <script src="../js/features/apps-epe/_comun/teclas.js"></script>
+    <script src="../js/features/apps-epe/_comun/entrada.js"></script>
+    <script src="../js/features/apps-epe/_comun/acceso.js"></script>
+    <script src="../js/features/apps-epe/hanoi/hanoi.js"></script>
+    <script>
+      EpeTheme.initThemeToggle(document.getElementById("theme-toggle"));
+      EpeHanoi.init(document.querySelector(".epe-hanoi-shell"));
+    </script>
+  </body>
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stroop — Apps EpE</title>
+    <link rel="icon" href="../assets/img/logo-epe.png" />
+
+    <script src="../js/core/theme-boot.js"></script>
+
+    <link rel="stylesheet" href="../css/base/reset.css" />
+    <link rel="stylesheet" href="../css/base/tokens.css" />
+    <link rel="stylesheet" href="../css/base/theme.css" />
+    <link rel="stylesheet" href="../css/base/typography.css" />
+    <link rel="stylesheet" href="../css/components/buttons.css" />
+    <link rel="stylesheet" href="../css/components/app-nav.css" />
+    <link rel="stylesheet" href="../css/components/juego-base.css" />
+    <link rel="stylesheet" href="../css/features/apps-epe/stroop.css" />
+  </head>
+  <body>
+    <div class="epe-juego-shell epe-stroop-shell">
+      <header class="epe-juego-header">
+        <div class="epe-app-header-left">
+          <a class="epe-app-back" href="index.html">← Apps EpE</a>
+          <a href="../index.html"><img src="../assets/img/logo-epe.png" alt="Equipar para Equipar" height="26" /></a>
+        </div>
+        <button
+          class="epe-theme-toggle"
+          type="button"
+          id="theme-toggle"
+          aria-pressed="false"
+          aria-label="Cambiar a modo oscuro"
+        >
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4" />
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+          </svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" />
+          </svg>
+        </button>
+      </header>
+
+      <!-- ── Configuración: modal (ver hanoi.html para el criterio) ── -->
+      <div class="epe-juego-overlay" data-juego-config>
+        <div class="epe-juego-modal" role="dialog" aria-modal="true" aria-labelledby="stroop-titulo">
+          <h1 id="stroop-titulo">Stroop</h1>
+          <p class="epe-juego-intro">
+            Ejercicio de control inhibitorio y atención selectiva. Aparece una palabra que nombra un
+            color, escrita con tinta de un color. Hay que responder al <strong>color de la tinta</strong>,
+            ignorando lo que dice la palabra: si dice AZUL pero está escrita en rojo, la respuesta es rojo.
+          </p>
+
+          <div class="epe-juego-columnas">
+            <div>
+              <div class="epe-juego-grupo">
+                <label for="stroop-duracion">Cuánto dura</label>
+                <select id="stroop-duracion" data-stroop-duracion>
+                  <optgroup label="Por cantidad de estímulos">
+                    <option value="c20" selected>20 estímulos</option>
+                    <option value="c30">30 estímulos</option>
+                    <option value="c40">40 estímulos</option>
+                  </optgroup>
+                  <optgroup label="Por tiempo">
+                    <option value="t30">30 segundos</option>
+                    <option value="t60">60 segundos</option>
+                    <option value="t90">90 segundos</option>
+                  </optgroup>
+                </select>
+              </div>
+              <div class="epe-juego-grupo">
+                <label for="stroop-mezcla">Estímulos</label>
+                <select id="stroop-mezcla" data-stroop-mezcla>
+                  <option value="mezcla" selected>Mezcla (mitad y mitad)</option>
+                  <option value="congruentes">Solo coincidentes (práctica)</option>
+                  <option value="incongruentes">Solo no coincidentes</option>
+                </select>
+              </div>
+              <div class="epe-juego-grupo epe-juego-opciones">
+                <label><input type="checkbox" data-stroop-feedback checked /> Mostrar si acerté al responder</label>
+              </div>
+            </div>
+            <div class="epe-juego-grupo" data-acceso-panel></div>
+          </div>
+
+          <button class="epe-btn-acc" type="button" data-juego-empezar>Empezar</button>
+        </div>
+      </div>
+
+      <main class="epe-juego-main">
+        <div class="epe-stroop-juego" data-stroop-juego hidden>
+          <div class="epe-juego-hud">
+            <span data-stroop-progreso></span>
+            <span>Aciertos: <strong data-stroop-aciertos>0</strong></span>
+            <span>Errores: <strong data-stroop-errores>0</strong></span>
+          </div>
+
+          <div class="epe-stroop-estimulo" data-stroop-estimulo aria-live="off">
+            <span class="epe-stroop-palabra" data-stroop-palabra>+</span>
+          </div>
+
+          <p class="epe-stroop-consigna">Respondé al color de la <strong>tinta</strong>, no a lo que dice la palabra.</p>
+
+          <div class="epe-stroop-respuestas" data-stroop-respuestas>
+            <button class="epe-stroop-resp epe-juego-blanco" type="button" data-color="rojo">
+              <span class="epe-stroop-resp-nombre">Rojo</span>
+              <kbd class="epe-tecla" data-tecla-color="rojo"></kbd>
+            </button>
+            <button class="epe-stroop-resp epe-juego-blanco" type="button" data-color="azul">
+              <span class="epe-stroop-resp-nombre">Azul</span>
+              <kbd class="epe-tecla" data-tecla-color="azul"></kbd>
+            </button>
+            <button class="epe-stroop-resp epe-juego-blanco" type="button" data-color="verde">
+              <span class="epe-stroop-resp-nombre">Verde</span>
+              <kbd class="epe-tecla" data-tecla-color="verde"></kbd>
+            </button>
+            <button class="epe-stroop-resp epe-juego-blanco" type="button" data-color="amarillo">
+              <span class="epe-stroop-resp-nombre">Amarillo</span>
+              <kbd class="epe-tecla" data-tecla-color="amarillo"></kbd>
+            </button>
+          </div>
+
+          <div class="epe-juego-acciones">
+            <button class="epe-btn-ghost" type="button" data-stroop-salir>Salir <kbd class="epe-tecla">Esc</kbd></button>
+          </div>
+
+          <p class="epe-juego-ayuda" data-juego-ayuda></p>
+        </div>
+      </main>
+
+      <!-- ── Resumen final ── -->
+      <div class="epe-juego-overlay" data-juego-resumen hidden>
+        <div class="epe-juego-modal epe-juego-modal-resumen" role="dialog" aria-modal="true" aria-labelledby="stroop-resumen-titulo">
+          <h2 id="stroop-resumen-titulo">¡Listo!</h2>
+          <div class="epe-juego-stats" data-juego-stats></div>
+          <div class="epe-juego-resumen-acciones">
+            <button class="epe-btn-acc" type="button" data-juego-de-nuevo>Jugar de nuevo</button>
+            <button class="epe-btn-ghost" type="button" data-juego-configurar>Cambiar configuración</button>
+            <a class="epe-btn-ghost" href="index.html">Volver a Apps EpE</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="../js/core/theme.js"></script>
+    <script src="../js/features/apps-epe/_comun/teclas.js"></script>
+    <script src="../js/features/apps-epe/_comun/entrada.js"></script>
+    <script src="../js/features/apps-epe/_comun/acceso.js"></script>
+    <script src="../js/features/apps-epe/stroop/stroop.js"></script>
+    <script>
+      EpeTheme.initThemeToggle(document.getElementById("theme-toggle"));
+      EpeStroop.init(document.querySelector(".epe-stroop-shell"));
+    </script>
+  </body>
+</html>
