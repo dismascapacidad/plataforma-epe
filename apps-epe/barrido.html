@@ -40,17 +40,43 @@
         </button>
       </header>
 
-      <div class="epe-barrido-body">
-        <aside class="epe-barrido-panel">
-          <div>
-            <h2>Disposición de la grilla</h2>
-            <select data-barrido-disposicion>
-              <option value="abecedario">Abecedario</option>
-              <option value="qwerty">QWERTY</option>
-            </select>
+      <!-- ── Configuración: modal. Al arrancar se cierra solo con
+           "Empezar"; una vez en juego, Escape la vuelve a abrir (ver
+           barrido.js) para poder cambiar algo sin perder lo escrito. ── -->
+      <div class="epe-barrido-modal-overlay" data-barrido-config>
+        <div class="epe-barrido-modal">
+          <h1>Barrido</h1>
+          <p class="epe-barrido-intro">
+            Entrenador de barrido (scanning): copiá la palabra eligiendo letras de la grilla, con
+            teclado o con los botones en pantalla. Con el juego iniciado, Escape vuelve a abrir
+            esta configuración.
+          </p>
+
+          <div class="epe-barrido-config-fila">
+            <div class="epe-barrido-config-grupo">
+              <h2>Disposición de la grilla</h2>
+              <select data-barrido-disposicion>
+                <option value="abecedario">Abecedario</option>
+                <option value="qwerty">QWERTY</option>
+              </select>
+            </div>
+
+            <div class="epe-barrido-config-grupo">
+              <h2>Reproducir la palabra</h2>
+              <div class="epe-barrido-modo-opciones">
+                <label>
+                  <input type="radio" name="barrido-reproduccion" value="auto" checked />
+                  Automática, al completarla
+                </label>
+                <label>
+                  <input type="radio" name="barrido-reproduccion" value="tecla" />
+                  Con tecla dedicada (P)
+                </label>
+              </div>
+            </div>
           </div>
 
-          <div>
+          <div class="epe-barrido-config-grupo">
             <h2>Modo de barrido</h2>
             <div class="epe-barrido-modo-opciones">
               <label>
@@ -68,12 +94,7 @@
             </div>
           </div>
 
-          <div>
-            <p class="epe-barrido-teclas-label">Teclas de este modo</p>
-            <div class="epe-barrido-teclas" data-barrido-teclas></div>
-          </div>
-
-          <div class="epe-barrido-velocidad" data-barrido-velocidad-wrap>
+          <div class="epe-barrido-config-grupo" data-barrido-velocidad-wrap>
             <label for="barrido-velocidad">Velocidad del barrido automático</label>
             <input type="range" id="barrido-velocidad" data-barrido-velocidad min="400" max="2000" step="100" value="1500" />
             <div class="epe-barrido-velocidad-escala">
@@ -82,7 +103,12 @@
             </div>
           </div>
 
-          <div class="epe-barrido-palabra">
+          <div class="epe-barrido-config-grupo">
+            <p class="epe-barrido-teclas-label">Teclas de este modo</p>
+            <div class="epe-barrido-teclas" data-barrido-teclas></div>
+          </div>
+
+          <div class="epe-barrido-config-grupo epe-barrido-palabra">
             <h2>Palabra a copiar</h2>
             <select data-barrido-palabra-select></select>
             <div class="epe-barrido-palabra-nueva-row">
@@ -91,25 +117,15 @@
             </div>
           </div>
 
-          <div>
-            <h2>Reproducir la palabra</h2>
-            <div class="epe-barrido-modo-opciones">
-              <label>
-                <input type="radio" name="barrido-reproduccion" value="auto" checked />
-                Automática, al completarla
-              </label>
-              <label>
-                <input type="radio" name="barrido-reproduccion" value="tecla" />
-                Con tecla dedicada (P)
-              </label>
-            </div>
-          </div>
-
           <div class="epe-barrido-acciones">
             <button class="epe-btn-ghost epe-btn-sm" type="button" data-barrido-reiniciar>Borrar todo</button>
           </div>
-        </aside>
 
+          <button class="epe-btn-acc" type="button" data-barrido-empezar>Empezar</button>
+        </div>
+      </div>
+
+      <div class="epe-barrido-body">
         <div class="epe-barrido-juego">
           <div class="epe-barrido-panel-texto">
             <p class="epe-barrido-objetivo-label">Copiá esta palabra</p>

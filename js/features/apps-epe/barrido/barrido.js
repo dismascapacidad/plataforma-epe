@@ -126,6 +126,8 @@ var EpeBarrido = (function () {
     var celdaEls = []; // ídem, paralelo a la disposición activa
 
     // ── DOM ──────────────────────────────────────────────────────────
+    var elConfig = root.querySelector("[data-barrido-config]");
+    var elEmpezar = root.querySelector("[data-barrido-empezar]");
     var elGrilla = root.querySelector("[data-barrido-grilla]");
     var elObjetivo = root.querySelector("[data-barrido-objetivo]");
     var elTeclas = root.querySelector("[data-barrido-teclas]");
@@ -235,8 +237,35 @@ var EpeBarrido = (function () {
       });
     });
 
+    // ── Configuración: modal ──────────────────────────────────────────
+    // Se cierra solo con "Empezar". Con el juego ya iniciado, Escape la
+    // vuelve a abrir (ver keydown más abajo) — así que acá no hay
+    // click-afuera ni Escape "para cerrar": es al revés que en el resto
+    // de las Apps EpE, donde Escape no hace nada.
+    var iniciado = false; // true después del primer "Empezar" — cambia el label a "Continuar"
+
+    elEmpezar.addEventListener("click", function () {
+      elConfig.hidden = true;
+      if (!iniciado) {
+        iniciado = true;
+        elEmpezar.textContent = "Continuar";
+      }
+    });
+
     document.addEventListener("keydown", function (ev) {
       if (ev.repeat) return;
+
+      if (ev.key === "Escape") {
+        if (iniciado) elConfig.hidden = false;
+        return;
+      }
+
+      // Mientras el modal está abierto (al arrancar, o reabierto con
+      // Escape) las teclas de juego (K/L/P) no hacen nada — si no, una
+      // pulsación mientras se está reconfigurando terminaría escribiendo
+      // una letra sin querer.
+      if (!elConfig.hidden) return;
+
       var tecla = ev.key.toLowerCase();
       if (tecla === "k") {
         if (state.modo === "tiempo") activar();
