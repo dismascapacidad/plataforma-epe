@@ -13,6 +13,15 @@
   --dp-azul-dim: #eff6ff;
   --dp-amarillo: #ca8a04;
   --dp-amarillo-dim: #fefce8;
+
+  /* Un alias por color de bloque, para que el JS pueda pedir el tono del
+     carril objetivo por id ("rojo"/"verde"/"azul"/"amarillo") sin tener
+     que saber los nombres de los tokens de marca — ver marcarObjetivoVisual()
+     y .epe-dp-zona más abajo. */
+  --dp-tono-rojo: var(--red);
+  --dp-tono-verde: var(--grn);
+  --dp-tono-azul: var(--dp-azul);
+  --dp-tono-amarillo: var(--dp-amarillo);
 }
 
 [data-theme="dark"] {
@@ -223,6 +232,18 @@
   box-shadow: 0 0 0 5px color-mix(in srgb, var(--teal-600) 30%, transparent);
 }
 
+/* Carril "objetivo": lo elige el juego al azar (ver sortearObjetivo() en
+   el JS), no el jugador. Se marca SOLO con color — el borde y su franja
+   (.epe-dp-zona, que hereda --zona-tono de acá) toman el tono del propio
+   bloque — sin badge ni otro indicador superpuesto. Va después de
+   .is-seleccionado a propósito: si el foco del barrido ya está sobre el
+   carril objetivo, el borde con el tono del bloque gana por sobre el
+   teal genérico del foco (misma especificidad, último en cascada), y el
+   box-shadow/pulso de .is-seleccionado se mantiene igual arriba. */
+.epe-dp-carril.es-objetivo {
+  border-color: var(--zona-tono, var(--grn));
+}
+
 .epe-dp-carril.en-movimiento {
   border-style: dashed;
 }
@@ -231,14 +252,19 @@
   border-color: var(--grn);
 }
 
-/* Zona objetivo: una franja marcada dentro del carril, a la derecha. */
+/* Zona objetivo: una franja marcada dentro del carril, a la derecha.
+   Gris neutro por defecto — SOLO el carril objetivo la tiñe con el tono
+   de su propio bloque (--zona-tono, heredada del carril — ver
+   marcarObjetivoVisual() en el JS). Si los 4 carriles mostraran la
+   franja en verde todo el tiempo, no se distinguiría cuál es el
+   objetivo real. */
 .epe-dp-zona {
   position: absolute;
   top: 0;
   bottom: 0;
-  background: color-mix(in srgb, var(--grn) 14%, transparent);
-  border-left: 2px dashed color-mix(in srgb, var(--grn) 50%, transparent);
-  border-right: 2px dashed color-mix(in srgb, var(--grn) 50%, transparent);
+  background: color-mix(in srgb, var(--zona-tono, var(--text-faint)) 20%, transparent);
+  border-left: 2px dashed color-mix(in srgb, var(--zona-tono, var(--text-faint)) 55%, transparent);
+  border-right: 2px dashed color-mix(in srgb, var(--zona-tono, var(--text-faint)) 55%, transparent);
 }
 
 .epe-dp-bloque {

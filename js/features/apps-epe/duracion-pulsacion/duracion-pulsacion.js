@@ -6,28 +6,36 @@
  * Mecánica (confirmada con el usuario antes de implementar):
  * - 4 bloques de colores, cada uno en su carril horizontal, arrancan
  *   pegados a la izquierda.
- * - NINGÚN carril está seleccionado al arrancar la partida, ni apenas se
- *   logra un bloque — es a propósito: si la selección pasara sola al
- *   siguiente bloque pendiente, se podría resolver todo el nivel a pura
- *   pulsación larga, sin usar nunca la corta.
- * - Pulsación CORTA (se suelta antes del umbral configurado): habilita
- *   UN carril pendiente al azar como "activo" (si ya había uno activo,
- *   se sortea de nuevo — no es un barrido secuencial). No mueve nada.
- *   El bloque activo "respira" (leve pulso de escala) para que se note
- *   cuál es sin depender solo del color del borde.
- * - Pulsación LARGA (se mantiene apretado más que el umbral): si hay un
- *   carril activo, ese bloque arranca a moverse a la derecha EN VIVO
- *   mientras se mantiene apretado (sin carril activo, la pulsación larga
- *   no hace nada — hace falta una corta primero). Al soltar:
+ * - En todo momento hay un carril "objetivo": el que el JUEGO eligió al
+ *   azar entre los pendientes (no el jugador) y que hay que trabajar a
+ *   continuación. Se marca con un indicador fijo (ver .es-objetivo en el
+ *   CSS) para que el jugador sepa hacia dónde tiene que barrer, pero no
+ *   se puede accionar directo — hay que LLEGAR ahí con el barrido.
+ * - Además hay un "foco" de barrido, que es el que de verdad se mueve con
+ *   cada pulsación corta: recorre los carriles pendientes en orden fijo
+ *   (0→1→2→3→0…), como un barrido secuencial clásico de switch-access.
+ *   Ningún carril tiene el foco al arrancar la partida, ni apenas se
+ *   logra un bloque — hay que volver a barrer desde el principio.
+ * - Pulsación CORTA (se suelta antes del umbral configurado): avanza el
+ *   foco un paso en el barrido secuencial. No mueve nada. El carril con
+ *   el foco "respira" (leve pulso de escala) para que se note cuál es
+ *   sin depender solo del color del borde.
+ * - Pulsación LARGA (se mantiene apretado más que el umbral): SOLO mueve
+ *   el bloque si el foco ya está sobre el carril objetivo — si el foco
+ *   está en cualquier otro carril, la pulsación larga no hace nada (hay
+ *   que seguir barriendo con cortas hasta llegar). Cuando el foco
+ *   coincide con el objetivo, el bloque arranca a moverse a la derecha
+ *   EN VIVO mientras se mantiene apretado. Al soltar:
  *     - Si ya está dentro de la zona objetivo → queda "logrado" (se
- *       trava ahí, centrado en la zona) y la selección vuelve a "ninguno"
- *       — hace falta otra pulsación corta para habilitar el próximo.
+ *       trava ahí, centrado en la zona), el foco vuelve a "ninguno" y se
+ *       sortea un nuevo carril objetivo entre los que quedan — hay que
+ *       volver a barrer desde cero para llegar a él.
  *     - Si todavía no llegó → se queda parado exactamente donde soltó
- *       (NO se resetea) y sigue siendo el carril activo — la próxima
+ *       (NO se resetea) y el foco sigue en ese mismo carril — la próxima
  *       pulsación larga lo sigue empujando desde ahí, así que el
  *       progreso entre intentos se conserva.
- *     - Si se pasó de la zona → vuelve animado a la posición inicial,
- *       sigue siendo el carril activo, y hay que arrancar de nuevo con
+ *     - Si se pasó de la zona → vuelve animado a la posición inicial, el
+ *       foco sigue en ese mismo carril, y hay que arrancar de nuevo con
  *       ese bloque.
  * - Al lograr los 4 bloques: modal de felicitaciones (mismo tratamiento
  *   visual que el modal de configuración — overlay de pantalla completa,
@@ -174,7 +182,8 @@ var EpeDuracionPulsacion = (function () {
       bloques: colores.map(function (color) {
         return { color: color, pos: 0, lograda: false };
       }),
-      seleccion: null, // ningún carril activo al arrancar — hace falta una pulsación corta
+      foco: null, // ningún carril tiene el foco del barrido al arrancar
+      objetivo: null, // se sortea unas líneas más abajo, ya con `juego` armado
       presionando: false,
       moviendo: false,
       animandoSnap: false,
@@ -205,14 +214,16 @@ var EpeDuracionPulsacion = (function () {
     elEstadisticasPanel.hidden = true;
     elEstadisticasPanel.innerHTML = "";
 
-    marcarSeleccionVisual();
+    sortearObjetivo();
+    marcarFocoVisual();
+    marcarObjetivoVisual();
     actualizarHud();
 
     elConfig.hidden = true;
     elFelicitacion.hidden = true;
   }
 
-  // ── Selección (habilitación al azar con pulsación corta) ────────────
+  // ── Objetivo (lo elige el juego) y foco (lo mueve el barrido) ───────
 
   function indicesPendientes() {
     var lista = [];
@@ -222,21 +233,53 @@ var EpeDuracionPulsacion = (function () {
     return lista;
   }
 
-  function marcarSeleccionVisual() {
+  // El JUEGO sortea cuál carril hay que trabajar a continuación — el
+  // jugador no lo elige, solo lo alcanza barriendo con pulsaciones
+  // cortas (ver avanzarFoco). Se llama al arrancar la partida y cada vez
+  // que se logra un bloque.
+  function sortearObjetivo() {
+    var pendientes = indicesPendientes();
+    juego.objetivo = pendientes.length === 0 ? null : pendientes[Math.floor(Math.random() * pendientes.length)];
+  }
+
+  // Ya no hay un badge aparte para marcar el objetivo: directamente se
+  // tiñen SU zona objetivo (la franja donde hay que soltar) Y su borde
+  // con el mismo tono que el bloque de ese carril, vía la variable CSS
+  // --zona-tono (seteada en el carril, no en la zona, para que herede
+  // tanto el borde del carril como el fondo de su franja — ver
+  // .epe-dp-carril.es-objetivo y .epe-dp-zona en el CSS). El resto de
+  // los carriles queda con su franja gris neutra: si por defecto fuera
+  // verde en los 4, no se distinguiría cuál es el objetivo de verdad.
+  function marcarObjetivoVisual() {
     elCarriles.forEach(function (carril, idx) {
-      carril.el.classList.toggle("is-seleccionado", idx === juego.seleccion && !juego.bloques[idx].lograda);
+      if (idx === juego.objetivo) {
+        carril.el.classList.add("es-objetivo");
+        carril.el.style.setProperty("--zona-tono", "var(--dp-tono-" + juego.bloques[idx].color.id + ")");
+      } else {
+        carril.el.classList.remove("es-objetivo");
+        carril.el.style.removeProperty("--zona-tono");
+      }
     });
   }
 
-  // Sortea un carril pendiente al azar como "activo". Se llama con cada
-  // pulsación corta (haya o no ya un carril activo — siempre vuelve a
-  // sortear), y es la ÚNICA forma de habilitar un carril: la pulsación
-  // larga no elige, solo mueve el que ya está activo.
-  function elegirCarrilAleatorio() {
-    var pendientes = indicesPendientes();
-    if (pendientes.length === 0) return;
-    juego.seleccion = pendientes[Math.floor(Math.random() * pendientes.length)];
-    marcarSeleccionVisual();
+  function marcarFocoVisual() {
+    elCarriles.forEach(function (carril, idx) {
+      carril.el.classList.toggle("is-seleccionado", idx === juego.foco);
+    });
+  }
+
+  // Barrido secuencial clásico: avanza el foco un paso, en orden fijo de
+  // carril (0→1→2→3→0…) — SIN saltear los ya logrados, para que el
+  // barrido siga siendo parejo y predecible aunque ya se haya ubicado
+  // algún bloque (un carril logrado se puede seguir "pasando" con el
+  // foco, simplemente no va a coincidir nunca con el objetivo). Es la
+  // ÚNICA forma de mover el foco — la pulsación larga nunca elige, solo
+  // actúa si el foco ya coincide con el objetivo (ver onPresionar).
+  function avanzarFoco() {
+    var total = elCarriles.length;
+    var actual = juego.foco === null ? -1 : juego.foco;
+    juego.foco = (actual + 1) % total;
+    marcarFocoVisual();
     actualizarHud();
   }
 
@@ -265,7 +308,7 @@ var EpeDuracionPulsacion = (function () {
   function iniciarMovimiento() {
     juego.moviendo = true;
     juego.intentos++;
-    elCarriles[juego.seleccion].el.classList.add("en-movimiento");
+    elCarriles[juego.foco].el.classList.add("en-movimiento");
     juego.tUltimoFrame = performance.now();
     juego.rafId = window.requestAnimationFrame(pasoMovimiento);
   }
@@ -275,9 +318,9 @@ var EpeDuracionPulsacion = (function () {
     var dt = (t - juego.tUltimoFrame) / 1000;
     juego.tUltimoFrame = t;
 
-    var bloque = juego.bloques[juego.seleccion];
+    var bloque = juego.bloques[juego.foco];
     bloque.pos = Math.min(1, bloque.pos + juego.velocidad * dt);
-    aplicarPosicionBloque(juego.seleccion, false);
+    aplicarPosicionBloque(juego.foco, false);
 
     if (bloque.pos < 1) {
       juego.rafId = window.requestAnimationFrame(pasoMovimiento);
@@ -291,7 +334,7 @@ var EpeDuracionPulsacion = (function () {
     if (juego.rafId) window.cancelAnimationFrame(juego.rafId);
     juego.rafId = null;
 
-    var idx = juego.seleccion;
+    var idx = juego.foco;
     var carril = elCarriles[idx];
     var bloque = juego.bloques[idx];
     carril.el.classList.remove("en-movimiento");
@@ -306,14 +349,20 @@ var EpeDuracionPulsacion = (function () {
       aplicarPosicionBloque(idx, true);
 
       if (juego.logrados === 4) {
+        juego.foco = null;
+        juego.objetivo = null;
+        marcarFocoVisual();
+        marcarObjetivoVisual();
         actualizarHud();
         window.setTimeout(mostrarFelicitacion, DURACION_SNAP_MS + 120);
         return;
       }
-      // Vuelve a "ningún carril activo" — la próxima pulsación larga no
-      // hace nada hasta que una pulsación corta sortee el siguiente.
-      juego.seleccion = null;
-      marcarSeleccionVisual();
+      // Vuelve a "ningún carril con foco" y se sortea un nuevo objetivo
+      // entre los pendientes — hay que barrer desde cero para llegar.
+      juego.foco = null;
+      sortearObjetivo();
+      marcarFocoVisual();
+      marcarObjetivoVisual();
     } else if (bloque.pos > zonaFin) {
       juego.animandoSnap = true;
       bloque.pos = 0;
@@ -328,11 +377,10 @@ var EpeDuracionPulsacion = (function () {
   }
 
   function actualizarHud() {
-    if (juego.seleccion === null) {
-      elHudSeleccion.textContent = "Pulsación corta para elegir un bloque";
+    if (juego.foco !== null && juego.foco === juego.objetivo) {
+      elHudSeleccion.textContent = "¡Llegaste! Mantené apretado para mover el bloque";
     } else {
-      var bloqueSel = juego.bloques[juego.seleccion];
-      elHudSeleccion.textContent = "Activo: " + bloqueSel.color.nombre;
+      elHudSeleccion.textContent = "Pulsación corta para barrer hasta el carril marcado";
     }
     elHudLogrados.textContent = "Logrados: " + juego.logrados + " / 4";
   }
@@ -351,11 +399,14 @@ var EpeDuracionPulsacion = (function () {
     if (!juegoActivo() || juego.animandoSnap || juego.presionando) return;
     juego.presionando = true;
     juego.holdTimeoutId = window.setTimeout(function () {
-      // Sin carril activo, la pulsación larga no hace nada: hace falta
-      // una corta primero (ver elegirCarrilAleatorio). El botón sigue
-      // "presionado" igual — si se suelta después de este punto sin
-      // haber un carril activo, onSoltar ya no la trata como corta.
-      if (juego && juego.presionando && juego.seleccion !== null) iniciarMovimiento();
+      // La pulsación larga SOLO mueve algo si el foco ya está sobre el
+      // carril objetivo (ver avanzarFoco/sortearObjetivo). Si el foco
+      // está en otro carril, o no hay foco, no pasa nada: el botón sigue
+      // "presionado" igual, y al soltar cuenta como pulsación corta
+      // (avanza el barrido) porque juego.moviendo nunca se puso en true.
+      if (juego && juego.presionando && juego.foco !== null && juego.foco === juego.objetivo) {
+        iniciarMovimiento();
+      }
     }, juego.umbralMs);
   }
 
@@ -367,10 +418,10 @@ var EpeDuracionPulsacion = (function () {
     if (juego.moviendo) {
       detenerMovimiento();
     } else {
-      // Sin carril activo: la pulsación corta lo habilita. Con uno ya
-      // activo (pulsación corta adicional, sin llegar a mover nada):
-      // vuelve a sortear uno al azar.
-      elegirCarrilAleatorio();
+      // No se movió nada (foco todavía no coincide con el objetivo, o no
+      // había foco): cuenta como pulsación corta, avanza un paso el
+      // barrido secuencial.
+      avanzarFoco();
     }
   }
 
