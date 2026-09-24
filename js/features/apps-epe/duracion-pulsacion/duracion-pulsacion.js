@@ -6,21 +6,29 @@
  * Mecánica (confirmada con el usuario antes de implementar):
  * - 4 bloques de colores, cada uno en su carril horizontal, arrancan
  *   pegados a la izquierda.
- * - Pulsación CORTA (se suelta antes del umbral configurado): avanza la
- *   selección al siguiente bloque pendiente, en barrido — no mueve nada.
- *   El bloque seleccionado "respira" (leve pulso de escala) para que se
- *   note cuál es sin depender solo del color del borde.
- * - Pulsación LARGA (se mantiene apretado más que el umbral): el bloque
- *   seleccionado arranca a moverse a la derecha EN VIVO mientras se
- *   mantiene apretado. Al soltar:
+ * - NINGÚN carril está seleccionado al arrancar la partida, ni apenas se
+ *   logra un bloque — es a propósito: si la selección pasara sola al
+ *   siguiente bloque pendiente, se podría resolver todo el nivel a pura
+ *   pulsación larga, sin usar nunca la corta.
+ * - Pulsación CORTA (se suelta antes del umbral configurado): habilita
+ *   UN carril pendiente al azar como "activo" (si ya había uno activo,
+ *   se sortea de nuevo — no es un barrido secuencial). No mueve nada.
+ *   El bloque activo "respira" (leve pulso de escala) para que se note
+ *   cuál es sin depender solo del color del borde.
+ * - Pulsación LARGA (se mantiene apretado más que el umbral): si hay un
+ *   carril activo, ese bloque arranca a moverse a la derecha EN VIVO
+ *   mientras se mantiene apretado (sin carril activo, la pulsación larga
+ *   no hace nada — hace falta una corta primero). Al soltar:
  *     - Si ya está dentro de la zona objetivo → queda "logrado" (se
- *       trava ahí, centrado en la zona) y la selección pasa al próximo
- *       bloque pendiente.
+ *       trava ahí, centrado en la zona) y la selección vuelve a "ninguno"
+ *       — hace falta otra pulsación corta para habilitar el próximo.
  *     - Si todavía no llegó → se queda parado exactamente donde soltó
- *       (NO se resetea) — la próxima pulsación larga lo sigue empujando
- *       desde ahí, así que el progreso entre intentos se conserva.
- *     - Si se pasó de la zona → vuelve animado a la posición inicial y
- *       hay que arrancar de nuevo con ese bloque.
+ *       (NO se resetea) y sigue siendo el carril activo — la próxima
+ *       pulsación larga lo sigue empujando desde ahí, así que el
+ *       progreso entre intentos se conserva.
+ *     - Si se pasó de la zona → vuelve animado a la posición inicial,
+ *       sigue siendo el carril activo, y hay que arrancar de nuevo con
+ *       ese bloque.
  * - Al lograr los 4 bloques: modal de felicitaciones (mismo tratamiento
  *   visual que el modal de configuración — overlay de pantalla completa,
  *   nunca visible durante el juego) con estadísticas de la ronda y la
@@ -166,7 +174,7 @@ var EpeDuracionPulsacion = (function () {
       bloques: colores.map(function (color) {
         return { color: color, pos: 0, lograda: false };
       }),
-      seleccion: 0,
+      seleccion: null, // ningún carril activo al arrancar — hace falta una pulsación corta
       presionando: false,
       moviendo: false,
       animandoSnap: false,
@@ -204,7 +212,7 @@ var EpeDuracionPulsacion = (function () {
     elFelicitacion.hidden = true;
   }
 
-  // ── Selección (barrido con pulsación corta) ─────────────────────────
+  // ── Selección (habilitación al azar con pulsación corta) ────────────
 
   function indicesPendientes() {
     var lista = [];
@@ -220,12 +228,14 @@ var EpeDuracionPulsacion = (function () {
     });
   }
 
-  function avanzarSeleccion() {
+  // Sortea un carril pendiente al azar como "activo". Se llama con cada
+  // pulsación corta (haya o no ya un carril activo — siempre vuelve a
+  // sortear), y es la ÚNICA forma de habilitar un carril: la pulsación
+  // larga no elige, solo mueve el que ya está activo.
+  function elegirCarrilAleatorio() {
     var pendientes = indicesPendientes();
     if (pendientes.length === 0) return;
-    var posActual = pendientes.indexOf(juego.seleccion);
-    var siguiente = posActual === -1 ? pendientes[0] : pendientes[(posActual + 1) % pendientes.length];
-    juego.seleccion = siguiente;
+    juego.seleccion = pendientes[Math.floor(Math.random() * pendientes.length)];
     marcarSeleccionVisual();
     actualizarHud();
   }
@@ -300,7 +310,10 @@ var EpeDuracionPulsacion = (function () {
         window.setTimeout(mostrarFelicitacion, DURACION_SNAP_MS + 120);
         return;
       }
-      avanzarSeleccion();
+      // Vuelve a "ningún carril activo" — la próxima pulsación larga no
+      // hace nada hasta que una pulsación corta sortee el siguiente.
+      juego.seleccion = null;
+      marcarSeleccionVisual();
     } else if (bloque.pos > zonaFin) {
       juego.animandoSnap = true;
       bloque.pos = 0;
@@ -315,8 +328,12 @@ var EpeDuracionPulsacion = (function () {
   }
 
   function actualizarHud() {
-    var bloqueSel = juego.bloques[juego.seleccion];
-    elHudSeleccion.textContent = "Seleccionado: " + bloqueSel.color.nombre;
+    if (juego.seleccion === null) {
+      elHudSeleccion.textContent = "Pulsación corta para elegir un bloque";
+    } else {
+      var bloqueSel = juego.bloques[juego.seleccion];
+      elHudSeleccion.textContent = "Activo: " + bloqueSel.color.nombre;
+    }
     elHudLogrados.textContent = "Logrados: " + juego.logrados + " / 4";
   }
 
@@ -334,7 +351,11 @@ var EpeDuracionPulsacion = (function () {
     if (!juegoActivo() || juego.animandoSnap || juego.presionando) return;
     juego.presionando = true;
     juego.holdTimeoutId = window.setTimeout(function () {
-      if (juego && juego.presionando) iniciarMovimiento();
+      // Sin carril activo, la pulsación larga no hace nada: hace falta
+      // una corta primero (ver elegirCarrilAleatorio). El botón sigue
+      // "presionado" igual — si se suelta después de este punto sin
+      // haber un carril activo, onSoltar ya no la trata como corta.
+      if (juego && juego.presionando && juego.seleccion !== null) iniciarMovimiento();
     }, juego.umbralMs);
   }
 
@@ -346,7 +367,10 @@ var EpeDuracionPulsacion = (function () {
     if (juego.moviendo) {
       detenerMovimiento();
     } else {
-      avanzarSeleccion();
+      // Sin carril activo: la pulsación corta lo habilita. Con uno ya
+      // activo (pulsación corta adicional, sin llegar a mover nada):
+      // vuelve a sortear uno al azar.
+      elegirCarrilAleatorio();
     }
   }
 
