@@ -1,0 +1,381 @@
+/*
+  duracion-pulsacion.css
+  "Duración de pulsación": 4 carriles horizontales, un bloque de color por
+  carril que se desliza con transform... en realidad con `left` (más
+  simple de animar a mano cuadro a cuadro desde el JS, sin pelearse con
+  transform + porcentajes). Colores rojo/verde ya existen como tokens de
+  estado (--red/--grn); azul y amarillo son nuevos, sumados acá nomás
+  (no se tocan los tokens globales) en tonos que combinan con la marca.
+*/
+
+:root {
+  --dp-azul: #2563eb;
+  --dp-azul-dim: #eff6ff;
+  --dp-amarillo: #ca8a04;
+  --dp-amarillo-dim: #fefce8;
+}
+
+[data-theme="dark"] {
+  --dp-azul: #3b82f6;
+  --dp-amarillo: #eab308;
+}
+
+.epe-dp-shell {
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--shell-bg);
+}
+
+.epe-dp-header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px clamp(16px, 4vw, 40px);
+}
+
+.epe-dp-main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 clamp(16px, 4vw, 40px) clamp(16px, 3vw, 28px);
+}
+
+/* ── Configuración: modal ── */
+.epe-dp-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 20, 20, 0.55);
+}
+
+.epe-dp-modal-overlay[hidden] {
+  display: none;
+}
+
+/* Sin scroll interno a propósito: el modal se dimensiona con su propio
+   contenido (nunca más alto que el viewport) en vez de recortarlo con
+   overflow — por eso el layout de acá abajo está pensado para ser
+   compacto (filas de 2 columnas, paddings chicos) en lugar de depender
+   de poder scrollear. */
+.epe-dp-modal {
+  width: min(560px, 94vw);
+  max-height: 96vh;
+  overflow: hidden;
+  background: var(--tile-bg);
+  border: 1px solid var(--tile-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.epe-dp-modal h1 {
+  font-size: 19px;
+  color: var(--text-strong);
+}
+
+.epe-dp-intro {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-dim);
+}
+
+.epe-dp-config-fila {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.epe-dp-config-grupo {
+  background: var(--shell-bg-2);
+  border: 1px solid var(--tile-border);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+}
+
+.epe-dp-config-grupo h2 {
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+
+.epe-dp-config-grupo > label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+
+.epe-dp-ayuda {
+  font-size: 10.5px;
+  line-height: 1.4;
+  color: var(--text-faint, var(--text-dim));
+  margin-top: 6px;
+}
+
+.epe-dp-modo-opciones {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--text-strong);
+}
+
+.epe-dp-modo-opciones label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.epe-dp-config-grupo select {
+  width: 100%;
+  border: 1px solid var(--tile-border);
+  background: var(--shell-bg);
+  color: var(--text-strong);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+/* Sliders de configuración (velocidad, ancho de zona, umbral) — mismo
+   look que el resto de la plataforma, con el color de acento de marca. */
+.epe-dp-config-grupo input[type="range"] {
+  width: 100%;
+  accent-color: var(--teal-600);
+}
+
+.epe-dp-capturar {
+  width: 100%;
+}
+
+.epe-dp-capturar.is-capturando {
+  border-color: var(--teal-600);
+  color: var(--teal-600);
+}
+
+@media (max-width: 420px) {
+  .epe-dp-config-fila {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Juego ── */
+.epe-dp-juego {
+  width: 100%;
+  max-width: 980px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.epe-dp-hud {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-strong);
+  background: var(--tile-bg);
+  border: 1px solid var(--tile-border);
+  border-radius: var(--radius-md);
+  padding: 10px 16px;
+}
+
+.epe-dp-carriles {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Cada carril es el "camino" completo, de punta a punta de la pantalla
+   de juego — el bloque arranca pegado a la izquierda (left: 0%) y se
+   desliza hacia la derecha con `left` en porcentaje (ver JS). */
+/* border-radius acá tiene que ser exactamente MARGEN_PX (ver JS) más el
+   border-radius del bloque, así los dos redondeos quedan concéntricos:
+   20px = 12px de margen + 8px (--radius-sm) del bloque. */
+.epe-dp-carril {
+  position: relative;
+  height: 88px;
+  background: var(--shell-bg-2);
+  border: 3px solid var(--tile-border);
+  border-radius: 20px;
+  overflow: hidden;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.epe-dp-carril.is-seleccionado {
+  border-color: var(--teal-600);
+  background: color-mix(in srgb, var(--teal-600) 8%, var(--shell-bg-2));
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--teal-600) 30%, transparent);
+}
+
+.epe-dp-carril.en-movimiento {
+  border-style: dashed;
+}
+
+.epe-dp-carril.is-logrado {
+  border-color: var(--grn);
+}
+
+/* Zona objetivo: una franja marcada dentro del carril, a la derecha. */
+.epe-dp-zona {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: color-mix(in srgb, var(--grn) 14%, transparent);
+  border-left: 2px dashed color-mix(in srgb, var(--grn) 50%, transparent);
+  border-right: 2px dashed color-mix(in srgb, var(--grn) 50%, transparent);
+}
+
+.epe-dp-bloque {
+  position: absolute;
+  top: 12px;
+  bottom: 12px;
+  left: 12px;
+  width: 96px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  transform-origin: center;
+}
+
+/* Bloque seleccionado (esperando pulsación): pulso marcado de escala +
+   brillo para que se note cuál es sin depender solo del color del
+   borde del carril. Se apaga mientras se está moviendo (en-movimiento)
+   para no pelearse con la animación cuadro a cuadro del JS. */
+@keyframes epe-dp-respirar {
+  0%,
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.14);
+    filter: brightness(1.15);
+  }
+}
+
+.epe-dp-carril.is-seleccionado:not(.en-movimiento) .epe-dp-bloque {
+  animation: epe-dp-respirar 1.1s ease-in-out infinite;
+}
+
+.epe-dp-bloque-rojo {
+  background: var(--red);
+}
+
+.epe-dp-bloque-verde {
+  background: var(--grn);
+}
+
+.epe-dp-bloque-azul {
+  background: var(--dp-azul);
+}
+
+.epe-dp-bloque-amarillo {
+  background: var(--dp-amarillo);
+}
+
+.epe-dp-carril.is-logrado .epe-dp-bloque::after {
+  content: "✓";
+  margin-left: 6px;
+}
+
+.epe-dp-boton-mouse {
+  align-self: center;
+  width: 100%;
+  max-width: 280px;
+  padding: 20px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--teal-600);
+  border-radius: var(--radius-lg);
+  transition: background 0.12s ease, transform 0.08s ease;
+  touch-action: none;
+  user-select: none;
+}
+
+.epe-dp-boton-mouse:hover {
+  background: var(--teal-700);
+}
+
+.epe-dp-boton-mouse:active {
+  transform: scale(0.98);
+}
+
+/* ── Felicitación: modal, mismo tratamiento que el de configuración ──
+   (reusa .epe-dp-modal-overlay / .epe-dp-modal — ver arriba). Así queda
+   garantizado que nunca se vea de fondo durante el juego: [hidden] la
+   saca del flujo igual que al modal de config. */
+.epe-dp-modal-felicitacion {
+  text-align: center;
+  align-items: center;
+}
+
+.epe-dp-modal-felicitacion h2 {
+  font-size: 20px;
+  color: var(--grn);
+}
+
+.epe-dp-modal-felicitacion .epe-dp-intro {
+  text-align: left;
+}
+
+.epe-dp-estadisticas-boton {
+  width: 100%;
+}
+
+.epe-dp-estadisticas-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+  background: var(--shell-bg-2);
+  border: 1px solid var(--tile-border);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+}
+
+.epe-dp-stat {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.epe-dp-stat-etiqueta {
+  color: var(--text-dim);
+}
+
+.epe-dp-stat-valor {
+  color: var(--text-strong);
+  font-weight: 600;
+  text-align: right;
+}
+
+.epe-dp-felicitacion-acciones {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}

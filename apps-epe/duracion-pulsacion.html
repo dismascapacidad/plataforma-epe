@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Duración de pulsación — Apps EpE</title>
+    <link rel="icon" href="../assets/img/logo-epe.png" />
+
+    <script src="../js/core/theme-boot.js"></script>
+
+    <link rel="stylesheet" href="../css/base/reset.css" />
+    <link rel="stylesheet" href="../css/base/tokens.css" />
+    <link rel="stylesheet" href="../css/base/theme.css" />
+    <link rel="stylesheet" href="../css/base/typography.css" />
+    <link rel="stylesheet" href="../css/components/buttons.css" />
+    <link rel="stylesheet" href="../css/components/app-nav.css" />
+    <link rel="stylesheet" href="../css/features/apps-epe/duracion-pulsacion.css" />
+  </head>
+  <body>
+    <div class="epe-dp-shell">
+      <header class="epe-dp-header">
+        <div class="epe-app-header-left">
+          <a class="epe-app-back" href="index.html">← Apps EpE</a>
+          <a href="../index.html"><img src="../assets/img/logo-epe.png" alt="Equipar para Equipar" height="26" /></a>
+        </div>
+        <button
+          class="epe-theme-toggle"
+          type="button"
+          id="theme-toggle"
+          aria-pressed="false"
+          aria-label="Cambiar a modo oscuro"
+        >
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4" />
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+          </svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" />
+          </svg>
+        </button>
+      </header>
+
+      <!-- ── Configuración: modal, se cierra solo al Empezar ── -->
+      <div class="epe-dp-modal-overlay" data-dp-config>
+        <div class="epe-dp-modal">
+          <h1>Duración de pulsación</h1>
+          <p class="epe-dp-intro">
+            Entrenamiento de pulsaciones cortas y largas con un solo botón. Corta: cambiás de
+            bloque. Larga (mantener apretado): el bloque seleccionado se mueve a la derecha —
+            soltá dentro del área marcada para dejarlo ahí.
+          </p>
+
+          <div class="epe-dp-config-fila">
+            <div class="epe-dp-config-grupo">
+              <h2>Tipo de entrada</h2>
+              <div class="epe-dp-modo-opciones">
+                <label>
+                  <input type="radio" name="dp-entrada" value="teclado" checked />
+                  Teclado
+                </label>
+                <label>
+                  <input type="radio" name="dp-entrada" value="mouse" />
+                  Mouse / pantalla
+                </label>
+              </div>
+            </div>
+
+            <div class="epe-dp-config-grupo" data-dp-tecla-wrap>
+              <label>Tecla asignada</label>
+              <button class="epe-btn-ghost epe-dp-capturar" type="button" data-dp-capturar-tecla>Espacio</button>
+            </div>
+          </div>
+
+          <div class="epe-dp-config-fila">
+            <div class="epe-dp-config-grupo">
+              <label for="dp-velocidad">
+                Velocidad inicial — <span data-dp-velocidad-valor>50%</span>
+              </label>
+              <input type="range" id="dp-velocidad" data-dp-velocidad min="0" max="100" step="5" value="50" />
+            </div>
+
+            <div class="epe-dp-config-grupo">
+              <label for="dp-ancho">
+                Ancho de zona — <span data-dp-ancho-valor>50%</span>
+              </label>
+              <input type="range" id="dp-ancho" data-dp-ancho min="0" max="100" step="5" value="50" />
+              <p class="epe-dp-ayuda">0% = igual al bloque (máxima dificultad) · 100% = el doble</p>
+            </div>
+          </div>
+
+          <div class="epe-dp-config-grupo">
+            <label for="dp-umbral">
+              Umbral de pulsación larga — <span data-dp-umbral-valor>450 ms</span>
+            </label>
+            <input type="range" id="dp-umbral" data-dp-umbral min="100" max="3000" step="50" value="450" />
+          </div>
+
+          <button class="epe-btn-acc" type="button" data-dp-empezar>Empezar</button>
+        </div>
+      </div>
+
+      <!-- ── Juego ── -->
+      <main class="epe-dp-main">
+        <div class="epe-dp-juego" data-dp-juego hidden>
+          <div class="epe-dp-hud">
+            <span data-dp-hud-seleccion></span>
+            <span data-dp-hud-logrados></span>
+          </div>
+
+          <div class="epe-dp-carriles">
+            <div class="epe-dp-carril" data-dp-carril>
+              <div class="epe-dp-zona" data-dp-zona></div>
+              <div class="epe-dp-bloque" data-dp-bloque></div>
+            </div>
+            <div class="epe-dp-carril" data-dp-carril>
+              <div class="epe-dp-zona" data-dp-zona></div>
+              <div class="epe-dp-bloque" data-dp-bloque></div>
+            </div>
+            <div class="epe-dp-carril" data-dp-carril>
+              <div class="epe-dp-zona" data-dp-zona></div>
+              <div class="epe-dp-bloque" data-dp-bloque></div>
+            </div>
+            <div class="epe-dp-carril" data-dp-carril>
+              <div class="epe-dp-zona" data-dp-zona></div>
+              <div class="epe-dp-bloque" data-dp-bloque></div>
+            </div>
+          </div>
+
+          <button class="epe-dp-boton-mouse" type="button" data-dp-boton-mouse hidden>
+            Mantené apretado
+          </button>
+        </div>
+
+      </main>
+
+      <!-- ── Felicitación: modal, mismo tratamiento que el de configuración ── -->
+      <div class="epe-dp-modal-overlay" data-dp-felicitacion hidden>
+        <div class="epe-dp-modal epe-dp-modal-felicitacion">
+          <h2 data-dp-felicitacion-nivel>¡Nivel completo!</h2>
+          <p class="epe-dp-intro" data-dp-felicitacion-texto></p>
+
+          <button class="epe-btn-ghost epe-dp-estadisticas-boton" type="button" data-dp-estadisticas-boton>
+            Ver estadísticas
+          </button>
+          <div class="epe-dp-estadisticas-panel" data-dp-estadisticas-panel hidden></div>
+
+          <div class="epe-dp-felicitacion-acciones">
+            <button class="epe-btn-acc" type="button" data-dp-siguiente-nivel>
+              Nuevo juego, más difícil
+            </button>
+            <a class="epe-btn-ghost" href="index.html">Volver a Apps EpE</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="../js/core/theme.js"></script>
+    <script src="../js/features/apps-epe/duracion-pulsacion/duracion-pulsacion.js"></script>
+    <script>
+      EpeTheme.initThemeToggle(document.getElementById("theme-toggle"));
+      EpeDuracionPulsacion.init(document.querySelector(".epe-dp-shell"));
+    </script>
+  </body>
+</html>
