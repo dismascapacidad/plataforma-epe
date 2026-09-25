@@ -54,6 +54,12 @@ var EpeCatalogo = (function () {
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 7 5 12l5 5" /><path d="M5 12h7" /><path d="M14 7l5 5-5 5" /><path d="M19 12h-7" /></svg>',
     "duracion-pulsacion":
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="10" width="12" height="4" rx="2" /><circle cx="20" cy="12" r="1.6" /><path d="M17.5 8.5a5 5 0 0 1 0 7" /></svg>',
+    hanoi:
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v17" /><rect x="9" y="9" width="6" height="3" rx="1.5" /><rect x="6" y="13.5" width="12" height="3" rx="1.5" /><rect x="3" y="18" width="18" height="2.4" rx="1.2" /></svg>',
+    nback:
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M3 15h18M9 3v18M15 3v18" /></svg>',
+    stroop:
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="9" r="5" /><circle cx="15" cy="15" r="5" /></svg>',
     generico:
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3" /><path d="M9 9h6v6H9z" /></svg>',
     externo:
