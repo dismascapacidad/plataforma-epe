@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+    <title>Arnés del núcleo del dispositivo — herramienta de desarrollo</title>
+    <link rel="icon" href="../assets/img/logo-epe.png" />
+
+    <script src="../js/core/theme-boot.js"></script>
+
+    <link rel="stylesheet" href="../css/base/reset.css" />
+    <link rel="stylesheet" href="../css/base/tokens.css" />
+    <link rel="stylesheet" href="../css/base/theme.css" />
+    <link rel="stylesheet" href="../css/base/typography.css" />
+    <link rel="stylesheet" href="../css/components/buttons.css" />
+    <link rel="stylesheet" href="arnes-dispositivo.css" />
+  </head>
+  <body>
+    <main class="arnes">
+      <header class="arnes-cabecera">
+        <p class="eyebrow">Herramienta de desarrollo · no forma parte del sitio</p>
+        <h1>Arnés del núcleo del dispositivo</h1>
+        <p class="arnes-sub">
+          Prueba con hardware real el módulo que va a usar el widget "Configurar dispositivo": conectar,
+          leer la configuración, aplicar cambios y volver atrás.
+        </p>
+      </header>
+
+      <section class="arnes-aviso" aria-labelledby="t-aviso">
+        <h2 id="t-aviso">Antes de empezar</h2>
+        <p>
+          <strong>Cada comando que se envía queda guardado en la memoria del dispositivo.</strong> No hay un modo de
+          prueba que se pierda al desenchufar. Por eso esta página:
+        </p>
+        <ul>
+          <li>te obliga a sacar un <strong>respaldo</strong> antes de tocar nada;</li>
+          <li>nunca manda <code>SAVE</code> ni <code>RESET</code>;</li>
+          <li>después de cada prueba <strong>restaura el respaldo y lo verifica</strong> volviendo a leer el dispositivo.</li>
+        </ul>
+        <p>
+          Además del respaldo en pantalla, guardá el archivo descargable y, si querés una red extra, anotá desde el
+          configurador de siempre cómo tenés hoy el dispositivo.
+        </p>
+      </section>
+
+      <div id="banner-simulado" class="arnes-simulado" hidden>
+        MODO SIMULADO: no hay hardware conectado. Todo lo que ves usa un firmware falso, para probar la página.
+      </div>
+
+      <div id="banner-error" class="arnes-error" role="alert" hidden></div>
+
+      <section class="arnes-card" aria-labelledby="t-entorno">
+        <h2 id="t-entorno">1. Entorno</h2>
+        <table class="arnes-tabla" id="tabla-entorno"></table>
+      </section>
+
+      <section class="arnes-card" aria-labelledby="t-conexion">
+        <h2 id="t-conexion">2. Conexión</h2>
+        <div class="arnes-fila">
+          <button class="epe-btn-acc" type="button" id="btn-usb">Conectar por USB</button>
+          <button class="epe-btn-acc" type="button" id="btn-ble">Conectar por Bluetooth</button>
+          <button class="epe-btn-ghost" type="button" id="btn-usb-silencioso">Reconectar USB sin selector</button>
+          <button class="epe-btn-ghost" type="button" id="btn-desconectar">Desconectar</button>
+        </div>
+        <p class="arnes-nota">
+          Por Bluetooth el navegador siempre muestra el selector. Si Windows tiene el dispositivo emparejado como mouse,
+          quitalo primero desde Configuración → Bluetooth.
+        </p>
+        <table class="arnes-tabla" id="tabla-info" hidden></table>
+      </section>
+
+      <section class="arnes-card" aria-labelledby="t-respaldo">
+        <h2 id="t-respaldo">3. Respaldo (obligatorio)</h2>
+        <div class="arnes-fila">
+          <button class="epe-btn-acc" type="button" id="btn-respaldo">Leer y guardar respaldo</button>
+        </div>
+        <div id="aviso-respaldo-guardado" class="arnes-nota" hidden>
+          <span id="texto-respaldo-guardado"></span>
+          <button class="epe-btn-ghost arnes-chico" type="button" id="btn-usar-guardado">Usar ese respaldo</button>
+        </div>
+
+        <div id="panel-respaldo" hidden>
+          <p class="arnes-ok" id="resumen-respaldo"></p>
+          <table class="arnes-tabla" id="tabla-respaldo"></table>
+          <div class="arnes-fila">
+            <button class="epe-btn-ghost" type="button" id="btn-desc-json">Descargar respaldo (.json)</button>
+            <button class="epe-btn-ghost" type="button" id="btn-desc-csv">Descargar como CSV del configurador</button>
+            <button class="epe-btn-ghost" type="button" id="btn-copiar-respaldo">Copiar respaldo</button>
+          </div>
+          <label class="arnes-etiqueta" for="txt-respaldo">Respaldo (JSON). También podés pegar acá uno guardado:</label>
+          <textarea id="txt-respaldo" rows="6" spellcheck="false"></textarea>
+          <div class="arnes-fila">
+            <button class="epe-btn-ghost" type="button" id="btn-cargar-pegado">Cargar el respaldo pegado</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="arnes-card" aria-labelledby="t-pruebas">
+        <h2 id="t-pruebas">4. Pruebas</h2>
+        <p class="arnes-nota">
+          Se habilitan con un dispositivo conectado y un respaldo cargado. Las dos pruebas escriben en el dispositivo y
+          terminan restaurando el respaldo.
+        </p>
+        <label class="arnes-check">
+          <input type="checkbox" id="chk-entiendo" />
+          <span>
+            Entiendo que las pruebas modifican la configuración guardada del dispositivo, que ya descargué el respaldo, y
+            que no debo usar ni desenchufar el dispositivo mientras corren.
+          </span>
+        </label>
+
+        <div class="arnes-prueba">
+          <h3>A. Ida y vuelta sin cambios</h3>
+          <p>
+            Vuelve a enviar al dispositivo exactamente lo que acaba de leer y comprueba que quedó idéntico. Verifica
+            que la lectura, la reconstrucción de comandos y la escritura son coherentes.
+          </p>
+          <button class="epe-btn-acc" type="button" id="btn-prueba-a">Correr prueba A</button>
+        </div>
+
+        <div class="arnes-prueba">
+          <h3>B. Con un cambio mínimo y reversible</h3>
+          <p>
+            Cambia el antirrebote de la primera entrada del dispositivo a 7 u 8 ms (imperceptible), comprueba que el
+            cambio se ve al releer, y restaura el respaldo. Confirma que escribir de verdad funciona y que volver atrás
+            también.
+          </p>
+          <button class="epe-btn-acc" type="button" id="btn-prueba-b">Correr prueba B</button>
+        </div>
+
+        <div class="arnes-prueba">
+          <h3>Restaurar el respaldo ahora</h3>
+          <p>Para usar si algo quedó distinto de lo esperado. No necesita la casilla de arriba.</p>
+          <button class="epe-btn-ghost" type="button" id="btn-restaurar">Restaurar respaldo</button>
+        </div>
+
+        <div id="resultado-prueba" class="arnes-resultado" hidden></div>
+      </section>
+
+      <section class="arnes-card" aria-labelledby="t-resumen">
+        <h2 id="t-resumen">5. Resumen para pasarme</h2>
+        <textarea id="txt-resumen" rows="14" readonly spellcheck="false"></textarea>
+        <div class="arnes-fila">
+          <button class="epe-btn-ghost" type="button" id="btn-copiar-resumen">Seleccionar y copiar</button>
+        </div>
+      </section>
+
+      <section class="arnes-card" aria-labelledby="t-log">
+        <h2 id="t-log">Registro</h2>
+        <pre id="log" class="arnes-log"></pre>
+      </section>
+    </main>
+
+    <script type="module" src="arnes-dispositivo.js"></script>
+  </body>
+</html>

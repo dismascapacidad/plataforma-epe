@@ -1,0 +1,239 @@
+/*
+  arnes-dispositivo.css
+  Estilos de la página de prueba con hardware (herramienta de desarrollo).
+  Usa los tokens de la plataforma (tokens.css / theme.css) para verse igual
+  que el resto y funcionar en claro y oscuro.
+*/
+
+.arnes {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 24px clamp(16px, 4vw, 32px) 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.arnes-cabecera .eyebrow {
+  color: var(--teal-600);
+}
+
+[data-theme="dark"] .arnes-cabecera .eyebrow {
+  color: var(--teal-500);
+}
+
+.arnes-cabecera h1 {
+  font-size: clamp(22px, 3vw, 28px);
+  margin-top: 6px;
+}
+
+.arnes-sub {
+  color: var(--text-dim);
+  margin-top: 6px;
+  max-width: 62ch;
+}
+
+.arnes h2 {
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+.arnes h3 {
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.arnes-card,
+.arnes-aviso {
+  background: var(--tile-bg);
+  border: 1px solid var(--tile-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--tile-shadow);
+  padding: 18px 20px;
+}
+
+.arnes-aviso {
+  border-color: var(--amb);
+  background: color-mix(in srgb, var(--amb) 8%, var(--tile-bg));
+}
+
+.arnes-aviso ul {
+  margin: 8px 0 8px 20px;
+  list-style: disc;
+}
+
+.arnes-aviso p,
+.arnes-aviso li {
+  color: var(--text-strong);
+  font-size: 14px;
+}
+
+.arnes-simulado {
+  background: color-mix(in srgb, var(--teal-600) 12%, var(--tile-bg));
+  border: 1px dashed var(--teal-600);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-weight: 600;
+}
+
+.arnes-error {
+  background: var(--red-dim);
+  border: 1px solid var(--red);
+  color: var(--red);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-weight: 600;
+  white-space: pre-wrap;
+}
+
+[data-theme="dark"] .arnes-error {
+  background: color-mix(in srgb, var(--red) 15%, transparent);
+}
+
+.arnes-fila {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.arnes button {
+  cursor: pointer;
+}
+
+.arnes button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.arnes-chico {
+  padding: 4px 10px;
+  margin-left: 8px;
+}
+
+.arnes-nota {
+  color: var(--text-dim);
+  font-size: 13px;
+  margin: 8px 0;
+}
+
+.arnes-ok {
+  color: var(--grn);
+  font-weight: 600;
+  margin: 8px 0;
+}
+
+.arnes-etiqueta {
+  display: block;
+  font-size: 13px;
+  color: var(--text-dim);
+  margin: 12px 0 4px;
+}
+
+.arnes-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin-top: 6px;
+}
+
+.arnes-tabla td {
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--tile-border);
+  vertical-align: top;
+}
+
+.arnes-tabla td:first-child {
+  color: var(--text-dim);
+  width: 38%;
+}
+
+.arnes-tabla .si {
+  color: var(--grn);
+  font-weight: 600;
+}
+
+.arnes-tabla .no {
+  color: var(--red);
+  font-weight: 600;
+}
+
+.arnes-tabla .punto {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+.arnes-check {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 14px;
+  margin: 10px 0 14px;
+}
+
+.arnes-check input {
+  margin-top: 4px;
+}
+
+.arnes-prueba {
+  border-top: 1px solid var(--tile-border);
+  padding: 12px 0;
+}
+
+.arnes-prueba p {
+  color: var(--text-dim);
+  font-size: 13px;
+  margin-bottom: 8px;
+  max-width: 68ch;
+}
+
+.arnes-resultado {
+  margin-top: 12px;
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-size: 14px;
+  white-space: pre-wrap;
+  border: 1px solid var(--tile-border);
+}
+
+.arnes-resultado.ok {
+  border-color: var(--grn);
+  background: color-mix(in srgb, var(--grn) 10%, var(--tile-bg));
+}
+
+.arnes-resultado.mal {
+  border-color: var(--red);
+  background: color-mix(in srgb, var(--red) 10%, var(--tile-bg));
+}
+
+.arnes textarea,
+.arnes-log {
+  width: 100%;
+  font: 12px/1.45 ui-monospace, Consolas, "Cascadia Mono", monospace;
+  background: var(--navy-900);
+  color: #e6e6e6;
+  border: 0;
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  resize: vertical;
+}
+
+.arnes-log {
+  max-height: 320px;
+  overflow: auto;
+  white-space: pre-wrap;
+}
+
+.arnes code {
+  font: 12px ui-monospace, Consolas, monospace;
+  background: var(--surf-2);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+[data-theme="dark"] .arnes code {
+  background: rgba(255, 255, 255, 0.08);
+}
