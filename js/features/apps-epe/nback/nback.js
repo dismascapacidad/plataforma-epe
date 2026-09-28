@@ -114,6 +114,9 @@ var EpeNback = (function () {
     var elStats = root.querySelector("[data-juego-stats]");
     var btnDeNuevo = root.querySelector("[data-juego-de-nuevo]");
     var btnConfigurar = root.querySelector("[data-juego-configurar]");
+    var btnConfigurarDispositivo = root.querySelector("[data-configurar-dispositivo]");
+    var btnRestaurarDispositivo = root.querySelector("[data-restaurar-dispositivo]");
+    var enlacesVolverApps = Array.prototype.slice.call(root.querySelectorAll("[data-volver-apps]"));
     var botones = {
       pos: root.querySelector('[data-resp="pos"]'),
       let: root.querySelector('[data-resp="let"]'),
@@ -150,6 +153,7 @@ var EpeNback = (function () {
     var conteo = null;
     var timers = [];
     var corriendo = false;
+    var restaurarDispositivo = null; // función lista para volver el dispositivo a como estaba, o null
 
     // ── Configuración guardada (solo los selectores del ejercicio) ────
     function cargarConfig() {
@@ -413,7 +417,9 @@ var EpeNback = (function () {
           return [];
         },
         alAccion: responder,
-        alEscape: salirAConfig,
+        alEscape: function () {
+          salirConfirmado(salirAConfig);
+        },
       });
       construirGrilla();
       prepararPantalla();
@@ -441,11 +447,97 @@ var EpeNback = (function () {
       elEmpezar.focus();
     }
 
+    // ── Configurar dispositivo físico ───────────────────────────────
+    // Usa la selección de teclas actual del panel (aunque todavía no se
+    // haya apretado "Empezar"), no depende de que haya una partida en curso.
+    function configurarDispositivo() {
+      if (!window.EpeConfigurarDispositivo) return; // widget.js no cargó
+      var cfgActual = panel.leer();
+      var entradas = EpeAcceso.entradasNecesarias(cfgActual, ACCIONES);
+      window.EpeConfigurarDispositivo
+        .abrir(entradas, { titulo: "Configurar dispositivo — N-back" })
+        .then(function (resultado) {
+          if (resultado && resultado.restaurar) restaurarDispositivo = resultado.restaurar;
+          actualizarBotonRestaurar();
+          // El usuario ya apretó "Empezar" dentro del propio modal: arrancamos
+          // directo, sin pedirle un segundo click acá.
+          if (resultado && resultado.continuar) empezar();
+        });
+    }
+
+    // Se puede volver a mostrar la pantalla de configuración por varias vías
+    // (Esc, "Salir", o "Cambiar configuración" después de terminar): todas
+    // pasan por salirAConfig, así que alcanza con un solo botón acá.
+    function actualizarBotonRestaurar() {
+      if (btnRestaurarDispositivo) btnRestaurarDispositivo.hidden = !restaurarDispositivo;
+    }
+
+    function restaurarDispositivoClick() {
+      if (!restaurarDispositivo) return;
+      var fn = restaurarDispositivo;
+      restaurarDispositivo = null;
+      btnRestaurarDispositivo.disabled = true;
+      btnRestaurarDispositivo.textContent = "Restaurando…";
+      fn()
+        .then(function (r) {
+          btnRestaurarDispositivo.textContent = r && r.ok ? "Listo" : "Quedó distinto en algún campo";
+        })
+        .catch(function () {
+          btnRestaurarDispositivo.textContent = "No se pudo restaurar";
+        })
+        .then(function () {
+          window.setTimeout(function () {
+            btnRestaurarDispositivo.disabled = false;
+            btnRestaurarDispositivo.textContent = "Restaurar dispositivo";
+            actualizarBotonRestaurar();
+          }, 2500);
+        });
+    }
+
+    // Antes de cualquier salida (volver a config, o irse de la página del
+    // todo) recuerda restaurar el dispositivo si quedó algo pendiente.
+    function salirConfirmado(luegoSalir) {
+      if (!(window.EpeConfigurarDispositivo && restaurarDispositivo)) {
+        luegoSalir();
+        return;
+      }
+      var fn = restaurarDispositivo;
+      window.EpeConfigurarDispositivo.confirmarSalida(fn).then(function (r) {
+        if (!r.salir) return;
+        if (r.restaurado) {
+          restaurarDispositivo = null;
+          actualizarBotonRestaurar();
+        }
+        luegoSalir();
+      });
+    }
+
+    function irAApps() {
+      window.location.href = "index.html";
+    }
+
     // ── Eventos ──────────────────────────────────────────────────────
     elEmpezar.addEventListener("click", empezar);
     btnDeNuevo.addEventListener("click", jugarDeNuevo);
-    btnConfigurar.addEventListener("click", salirAConfig);
-    btnSalir.addEventListener("click", salirAConfig);
+    btnConfigurar.addEventListener("click", function () {
+      salirConfirmado(salirAConfig);
+    });
+    btnSalir.addEventListener("click", function () {
+      salirConfirmado(salirAConfig);
+    });
+    enlacesVolverApps.forEach(function (a) {
+      a.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        salirConfirmado(irAApps);
+      });
+    });
+    if (btnConfigurarDispositivo) {
+      btnConfigurarDispositivo.addEventListener("click", configurarDispositivo);
+    }
+    if (btnRestaurarDispositivo) {
+      btnRestaurarDispositivo.addEventListener("click", restaurarDispositivoClick);
+      actualizarBotonRestaurar();
+    }
     Object.keys(botones).forEach(function (canal) {
       botones[canal].addEventListener("click", function () {
         responder(canal);

@@ -15,6 +15,8 @@
     <link rel="stylesheet" href="../css/components/buttons.css" />
     <link rel="stylesheet" href="../css/components/app-nav.css" />
     <link rel="stylesheet" href="../css/components/juego-base.css" />
+    <link rel="stylesheet" href="../css/components/modal.css" />
+    <link rel="stylesheet" href="../css/features/configurar-dispositivo/widget.css" />
     <link rel="stylesheet" href="../css/features/apps-epe/nback.css" />
   </head>
   <body>
@@ -95,7 +97,17 @@
             <div class="epe-juego-grupo" data-acceso-panel></div>
           </div>
 
-          <button class="epe-btn-acc" type="button" data-juego-empezar>Empezar</button>
+          <button class="epe-btn-ghost" type="button" data-configurar-dispositivo>
+            Configurar dispositivo…
+          </button>
+          <button class="epe-btn-ghost" type="button" data-restaurar-dispositivo hidden>
+            Restaurar dispositivo
+          </button>
+
+          <div class="epe-juego-pie">
+            <a class="epe-btn-ghost" href="index.html" data-volver-apps>Volver a Apps EpE</a>
+            <button class="epe-btn-acc" type="button" data-juego-empezar>Empezar</button>
+          </div>
         </div>
       </div>
 
@@ -137,13 +149,15 @@
           <div class="epe-juego-resumen-acciones">
             <button class="epe-btn-acc" type="button" data-juego-de-nuevo>Jugar de nuevo</button>
             <button class="epe-btn-ghost" type="button" data-juego-configurar>Cambiar configuración</button>
-            <a class="epe-btn-ghost" href="index.html">Volver a Apps EpE</a>
+            <a class="epe-btn-ghost" href="index.html" data-volver-apps>Volver a Apps EpE</a>
           </div>
         </div>
       </div>
     </div>
 
     <script src="../js/core/theme.js"></script>
+    <script src="../js/core/modal.js"></script>
+    <script type="module" src="../js/features/configurar-dispositivo/widget.js"></script>
     <script src="../js/features/apps-epe/_comun/teclas.js"></script>
     <script src="../js/features/apps-epe/_comun/entrada.js"></script>
     <script src="../js/features/apps-epe/_comun/acceso.js"></script>

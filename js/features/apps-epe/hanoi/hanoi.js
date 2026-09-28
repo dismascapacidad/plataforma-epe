@@ -57,6 +57,7 @@ var EpeHanoi = (function () {
     var btnConfigurar = root.querySelector("[data-juego-configurar]");
     var btnConfigurarDispositivo = root.querySelector("[data-configurar-dispositivo]");
     var btnRestaurarDispositivo = root.querySelector("[data-restaurar-dispositivo]");
+    var enlacesVolverApps = Array.prototype.slice.call(root.querySelectorAll("[data-volver-apps]"));
 
     var panel = EpeAcceso.crearPanel(root.querySelector("[data-acceso-panel]"), {
       id: "hanoi",
@@ -296,7 +297,9 @@ var EpeHanoi = (function () {
         cfg: cfg,
         getObjetivos: getObjetivos,
         alAccion: alAccion,
-        alEscape: salirAConfig,
+        alEscape: function () {
+          salirConfirmado(salirAConfig);
+        },
       });
       elConfig.hidden = true;
       elResumen.hidden = true;
@@ -340,6 +343,9 @@ var EpeHanoi = (function () {
         .then(function (resultado) {
           if (resultado && resultado.restaurar) restaurarDispositivo = resultado.restaurar;
           actualizarBotonRestaurar();
+          // El usuario ya apretó "Empezar" dentro del propio modal: arrancamos
+          // directo, sin pedirle un segundo click acá.
+          if (resultado && resultado.continuar) empezar();
         });
     }
 
@@ -372,6 +378,29 @@ var EpeHanoi = (function () {
         });
     }
 
+    // Antes de cualquier salida (volver a config, o irse de la página del
+    // todo) recuerda restaurar el dispositivo si quedó algo pendiente.
+    // `luegoSalir` es lo que hay que hacer una vez que es seguro seguir.
+    function salirConfirmado(luegoSalir) {
+      if (!(window.EpeConfigurarDispositivo && restaurarDispositivo)) {
+        luegoSalir();
+        return;
+      }
+      var fn = restaurarDispositivo;
+      window.EpeConfigurarDispositivo.confirmarSalida(fn).then(function (r) {
+        if (!r.salir) return;
+        if (r.restaurado) {
+          restaurarDispositivo = null;
+          actualizarBotonRestaurar();
+        }
+        luegoSalir();
+      });
+    }
+
+    function irAApps() {
+      window.location.href = "index.html";
+    }
+
     // ── Eventos ──────────────────────────────────────────────────────
     if (btnConfigurarDispositivo) {
       btnConfigurarDispositivo.addEventListener("click", configurarDispositivo);
@@ -380,11 +409,21 @@ var EpeHanoi = (function () {
       btnRestaurarDispositivo.addEventListener("click", restaurarDispositivoClick);
       actualizarBotonRestaurar();
     }
+    enlacesVolverApps.forEach(function (a) {
+      a.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        salirConfirmado(irAApps);
+      });
+    });
     elEmpezar.addEventListener("click", empezar);
     btnDeNuevo.addEventListener("click", jugarDeNuevo);
-    btnConfigurar.addEventListener("click", salirAConfig);
+    btnConfigurar.addEventListener("click", function () {
+      salirConfirmado(salirAConfig);
+    });
     btnReiniciar.addEventListener("click", reiniciar);
-    btnSalir.addEventListener("click", salirAConfig);
+    btnSalir.addEventListener("click", function () {
+      salirConfirmado(salirAConfig);
+    });
     btnDeshacer.addEventListener("click", deshacer);
     varillas.forEach(function (v, p) {
       v.addEventListener("click", function () {

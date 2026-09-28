@@ -112,13 +112,15 @@ function mostrarCabecera(cabecera, info) {
  *
  * @param {EntradaNecesaria[]} entradas Lo que la app necesita ahora mismo.
  * @param {{ titulo?: string }} [opciones]
- * @returns {Promise<{ ok: boolean, motivo?: string, snapshot?: object, restaurar?: () => Promise<{ok: boolean, diferencias: any[]}> }>}
+ * @returns {Promise<{ ok: boolean, motivo?: string, snapshot?: object, restaurar?: () => Promise<{ok: boolean, diferencias: any[]}>, continuar?: boolean }>}
  *   `ok:true` cuando se aplicó una configuración nueva y el usuario cerró el
  *   widget conforme. Si aplicó y no deshizo dentro del propio widget, viene
  *   también `restaurar`: una función ya lista (atada a esa conexión y a ese
  *   snapshot) para devolver el dispositivo a como estaba, pensada para que la
- *   app la llame más tarde (por ejemplo al salir del juego). `ok:false` si se
- *   canceló antes de aplicar nada.
+ *   app la llame más tarde (por ejemplo al salir del juego). `continuar:true`
+ *   cuando el usuario ya eligió "Empezar" desde el propio modal de éxito: la
+ *   app puede arrancar el juego directo, sin pedirle un segundo click. `ok:false`
+ *   si se canceló antes de aplicar nada.
  */
 export function abrir(entradas, opciones = {}) {
   return new Promise((resolve) => {
@@ -420,22 +422,31 @@ async function aplicar(raiz, cerrar, conexion, asignaciones, snapshot, necesitaM
   try {
     const { errorDispositivo } = await conexion.aplicar(comandos);
     raiz.innerHTML = '';
-    if (errorDispositivo) {
-      raiz.appendChild(el('p', 'epe-cd-error', `El dispositivo respondió: ${errorDispositivo}`));
-    } else {
-      raiz.appendChild(el('p', 'epe-cd-ok', 'Listo, el dispositivo ya está configurado para este juego.'));
-    }
+    const exito = !errorDispositivo;
+    raiz.appendChild(
+      el(
+        'p',
+        exito ? 'epe-cd-ok' : 'epe-cd-error',
+        exito
+          ? 'Listo, el dispositivo ya está configurado para este juego.'
+          : `El dispositivo respondió: ${errorDispositivo}`,
+      ),
+    );
     const filaBotones = el('div', 'epe-cd-botones');
     const btnDeshacer = el('button', 'epe-btn-ghost', 'Deshacer (volver a como estaba)');
     btnDeshacer.type = 'button';
     btnDeshacer.addEventListener('click', () => deshacer(raiz, cerrar, conexion, snapshot));
     filaBotones.appendChild(btnDeshacer);
-    const btnCerrar = el('button', 'epe-btn-acc', 'Cerrar');
-    btnCerrar.type = 'button';
-    btnCerrar.addEventListener('click', () =>
-      cerrar({ ok: true, snapshot, restaurar: () => conexion.restaurar(snapshot) }),
+    // Éxito: un solo click ("Empezar") cierra el widget Y arranca el juego —
+    // antes hacía falta cerrar el modal y encima apretar "Empezar" aparte.
+    // Si falló la aplicación, se deja "Cerrar" nomás: no tiene sentido
+    // arrancar como si el dispositivo ya estuviera listo.
+    const btnContinuar = el('button', 'epe-btn-acc', exito ? 'Empezar' : 'Cerrar');
+    btnContinuar.type = 'button';
+    btnContinuar.addEventListener('click', () =>
+      cerrar({ ok: true, snapshot, restaurar: () => conexion.restaurar(snapshot), continuar: exito }),
     );
-    filaBotones.appendChild(btnCerrar);
+    filaBotones.appendChild(btnContinuar);
     raiz.appendChild(filaBotones);
   } catch (e) {
     raiz.innerHTML = '';
@@ -490,7 +501,89 @@ function agregarVolver(raiz, onVolver) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────
+// Recordatorio antes de salir del juego (Esc/Salir, "Cambiar configuración"
+// o "Volver a Apps EpE"): si queda una `restaurar` pendiente (ver `abrir()`),
+// pregunta antes de dejar que la app siga con la salida. Cada app decide qué
+// significa "salir" (volver a su propia pantalla de config, o navegar afuera
+// de la página) — este modal no lo sabe ni le importa.
+// ─────────────────────────────────────────────────────────────────────────
+
+/**
+ * @param {(() => Promise<{ok: boolean, diferencias: any[]}>) | null | undefined} restaurar
+ *   La función que devolvió `abrir()`, o `null`/`undefined` si no hay nada
+ *   pendiente (en ese caso resuelve enseguida, sin mostrar nada).
+ * @returns {Promise<{ salir: boolean, restaurado: boolean }>} `salir:false`
+ *   si el usuario canceló (hay que quedarse). `restaurado:true` si se llegó
+ *   a restaurar antes de salir (la app puede descartar su `restaurar`).
+ */
+export function confirmarSalida(restaurar) {
+  return new Promise((resolve) => {
+    if (!restaurar || !window.EpeModal) {
+      resolve({ salir: true, restaurado: false });
+      return;
+    }
+
+    const contenido = el('div', 'epe-cd');
+    contenido.appendChild(
+      el(
+        'p',
+        'epe-cd-intro',
+        'Dejaste el dispositivo configurado para este juego. ¿Querés devolverlo a como estaba antes de salir?',
+      ),
+    );
+    const filaBotones = el('div', 'epe-cd-botones');
+    let terminado = false;
+
+    function cerrar(resultado) {
+      if (terminado) return;
+      terminado = true;
+      window.EpeModal.close();
+      resolve(resultado);
+    }
+
+    const btnRestaurar = el('button', 'epe-btn-acc', 'Restaurar y salir');
+    btnRestaurar.type = 'button';
+    btnRestaurar.addEventListener('click', () => {
+      btnRestaurar.disabled = true;
+      btnRestaurar.textContent = 'Restaurando…';
+      Promise.resolve(restaurar())
+        .catch(() => {})
+        .then(() => cerrar({ salir: true, restaurado: true }));
+    });
+    filaBotones.appendChild(btnRestaurar);
+
+    const btnSinRestaurar = el('button', 'epe-btn-ghost', 'Salir sin restaurar');
+    btnSinRestaurar.type = 'button';
+    btnSinRestaurar.addEventListener('click', () => cerrar({ salir: true, restaurado: false }));
+    filaBotones.appendChild(btnSinRestaurar);
+
+    const btnCancelar = el('button', 'epe-btn-ghost', 'Cancelar');
+    btnCancelar.type = 'button';
+    btnCancelar.addEventListener('click', () => cerrar({ salir: false, restaurado: false }));
+    filaBotones.appendChild(btnCancelar);
+
+    contenido.appendChild(filaBotones);
+
+    // Se difiere al siguiente tick: si esto se disparó por Esc (el juego lo
+    // usa como atajo de salida), el propio EpeModal también cierra modales
+    // con Esc — abrir en el mismo evento haría que ese mismo keydown, al
+    // seguir propagándose, cierre este modal apenas lo abrimos (parpadeo
+    // invisible, se ve como que "no pasa nada"). Con el modal ya abierto en
+    // el siguiente tick, un Esc posterior lo cierra normalmente (y cuenta
+    // como "Cancelar", que es lo esperado).
+    window.setTimeout(() => {
+      if (terminado) return;
+      window.EpeModal.open({
+        titulo: 'Antes de salir',
+        contenido,
+        onClose: () => cerrar({ salir: false, restaurado: false }),
+      });
+    }, 0);
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────
 // Puente para scripts clásicos (namespace, mismo criterio que el resto de
 // la plataforma mientras conviven módulos ES y scripts clásicos).
 // ─────────────────────────────────────────────────────────────────────────
-window.EpeConfigurarDispositivo = { abrir };
+window.EpeConfigurarDispositivo = { abrir, confirmarSalida };
