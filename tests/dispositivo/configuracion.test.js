@@ -71,13 +71,16 @@ test('compararConfiguraciones: null y undefined cuentan como "sin dato"', () => 
   expect(compararConfiguraciones(a, b)).toEqual([]);
 });
 
-test('comandosDeRestauracion: usa "-" sin espacio y conserva el modo O', () => {
+test('comandosDeRestauracion: usa "-" sin espacio, conserva el modo O y degrada el 2 (holdeable heredado) a P', () => {
   const { comandos, advertencias } = comandosDeRestauracion(cfgEjemplo());
   expect(advertencias).toEqual([]);
   expect(comandos).toContain('CFG:BR:K:P:0:s:-:-');
   expect(comandos).toContain('CFG:BA:K:R:50:215:-:-');
   expect(comandos).toContain('CFG:BN:K:O:0:c:C:-'); // modo 3 → O (antes se perdía)
-  expect(comandos).toContain('CFG:BC:M:H:0:1:-:D');
+  // modo 2 (holdeable heredado, "H") está retirado del protocolo: el firmware
+  // nuevo responde ERR:MODE si se manda. Se degrada a P, igual que el propio
+  // firmware al leerlo por GETALL.
+  expect(comandos).toContain('CFG:BC:M:P:0:1:-:D');
   expect(comandos).toContain('CFG:FU:X:P:0:0:-:-');
   expect(comandos).toContain('CFG:FD:M:P:0:SU:-:-');
   expect(comandos).toContain('FMODE:0');
@@ -166,6 +169,97 @@ test('describirBoton: desactivado', () => {
   expect(describirBoton({ tipo: 2, modo: 0, debounce: 0, accion: 0, mods: 0, flags: 0 })).toBe(
     'Desactivado',
   );
+});
+
+test('describirBoton: Tap-Hold describe la acción corta y la larga con su umbral (caso real: BR)', () => {
+  expect(
+    describirBoton({
+      tipo: 1,
+      modo: 4,
+      debounce: 0,
+      accion: 107, // 'k'
+      mods: 0,
+      flags: 0,
+      accionLarga: 108, // 'l'
+      modsLarga: 0,
+      flagsLarga: 0,
+      umbral: 500,
+    }),
+  ).toBe('Tap-Hold — corta: Teclado: K · larga (500 ms): Teclado: L');
+});
+
+test('describirBoton: Tap-Hold con umbral 0 muestra el default del firmware (1000 ms)', () => {
+  expect(
+    describirBoton({
+      tipo: 0,
+      modo: 4,
+      debounce: 0,
+      accion: 1,
+      mods: 0,
+      flags: 0,
+      accionLarga: 2,
+      modsLarga: 0,
+      flagsLarga: 0,
+      umbral: 0,
+    }),
+  ).toBe('Tap-Hold — corta: Mouse: clic izquierdo · larga (1000 ms): Mouse: clic derecho');
+});
+
+test('compararConfiguraciones: compara accionLarga/modsLarga/flagsLarga/umbral solo si alguno está en Tap-Hold', () => {
+  const a = cfgEjemplo();
+  a.btns[0] = {
+    tipo: 1,
+    modo: 4,
+    debounce: 0,
+    accion: 107,
+    mods: 0,
+    flags: 0,
+    accionLarga: 108,
+    modsLarga: 0,
+    flagsLarga: 0,
+    umbral: 500,
+  };
+  const b = clonarCfg(a);
+  b.btns[0].umbral = 400;
+  expect(compararConfiguraciones(a, b)).toEqual([
+    { campo: 'btns.0.umbral', antes: 500, despues: 400 },
+  ]);
+
+  // Un botón que NO está en Tap-Hold en ninguno de los dos lados: aunque el
+  // firmware -TH mande esos campos en 0, no se compara (ver comentario en
+  // CAMPOS_BOTON_TAPHOLD) — comparar de más generaría ruido en cada CFG normal.
+  const c = cfgEjemplo();
+  c.btns[1] = { ...c.btns[1], accionLarga: 0, modsLarga: 0, flagsLarga: 0, umbral: 0 };
+  const d = clonarCfg(c);
+  d.btns[1].accionLarga = 99; // "cambió" un campo que no importa fuera de modo T
+  expect(compararConfiguraciones(c, d)).toEqual([]);
+});
+
+test('comandosDeRestauracion: con { tapHold: true } reconstruye un botón en Tap-Hold (caso real: BR)', () => {
+  const cfg = {
+    btns: {
+      0: {
+        tipo: 1,
+        modo: 4,
+        debounce: 0,
+        accion: 107,
+        mods: 0,
+        flags: 0,
+        accionLarga: 108,
+        modsLarga: 0,
+        flagsLarga: 0,
+        umbral: 500,
+      },
+    },
+  };
+  const { comandos, advertencias } = comandosDeRestauracion(cfg, { tapHold: true });
+  expect(advertencias).toEqual([]);
+  expect(comandos).toEqual(['CFG:BR:K:T:0:k:-:-:l:0:0:500']);
+
+  // Sin tapHold (dispositivo no confirmó soporte): se degrada a P, sin acción
+  // larga — nunca se manda T a ciegas.
+  const sinTapHold = comandosDeRestauracion(cfg);
+  expect(sinTapHold.comandos).toEqual(['CFG:BR:K:P:0:k:-:-']);
 });
 
 test('resumirConfiguracion: una fila por entrada del producto, y el modo de flechas si aplica', () => {

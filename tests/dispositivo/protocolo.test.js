@@ -283,6 +283,7 @@ test('esComandoDeConfiguracion: rechaza SAVE, RESET, WHO, GETALL y lo mal formad
     'CFG:XX:K:P:0:s:-:-', // código inexistente
     'CFG:BR:Z:P:0:s:-:-', // tipo inválido
     'CFG:BR:K:Q:0:s:-:-', // modo inválido
+    'CFG:BR:K:H:0:s:-:-', // H retirado: nunca se envía
     'CFG:BR:K:P:0:s:-', // faltan campos
     'CFG:BR:K:P:0:::-:-', // acción ':' rompe el formato
     'CFG:BR:K:P:9999:s:-:-', // debounce fuera de rango
@@ -295,4 +296,211 @@ test('esComandoDeConfiguracion: rechaza SAVE, RESET, WHO, GETALL y lo mal formad
   ];
   for (const c of malos) expect(P.esComandoDeConfiguracion(c)).toBe(false);
   expect(P.esComandoDeConfiguracion(null)).toBe(false);
+});
+
+// ── Tap-Hold (firmware -TH) ─────────────────────────────────────────────────
+
+test('supportsTapHold: solo versiones con sufijo -TH<n>', () => {
+  expect(P.supportsTapHold('R013-TH1')).toBe(true);
+  expect(P.supportsTapHold('R019-TH1')).toBe(true);
+  expect(P.supportsTapHold('R019-TH12')).toBe(true);
+  expect(P.supportsTapHold('R013')).toBe(false);
+  expect(P.supportsTapHold('R019')).toBe(false);
+  expect(P.supportsTapHold('')).toBe(false);
+  expect(P.supportsTapHold(undefined)).toBe(false);
+  expect(P.supportsTapHold(null)).toBe(false);
+});
+
+test('isExtendedBtnLine: 11 campos (Tap-Hold) vs 7 (formato viejo)', () => {
+  expect(P.isExtendedBtnLine('BTN:0:1:4:0:107:0:0:108:0:0:500')).toBe(true);
+  expect(P.isExtendedBtnLine('BTN:1:1:0:0:99:0:0:255:15:3:5100')).toBe(true);
+  expect(P.isExtendedBtnLine('BTN:0:0:0:0:1:0:0')).toBe(false);
+  expect(P.isExtendedBtnLine('FMODE:0')).toBe(false);
+});
+
+test('buildButtonCfg: modo T agrega los 4 campos (ejemplos del protocolo real)', () => {
+  expect(
+    P.buildButtonCfg({
+      code: 'BR',
+      tipo: 'M',
+      modo: 'T',
+      mouseAction: '1',
+      largo: { mouseAction: '1', mantener: true },
+      umbral: 400,
+    }),
+  ).toBe('CFG:BR:M:T:0:1:-:-:1:0:M:400');
+  expect(
+    P.buildButtonCfg({
+      code: 'BC',
+      tipo: 'K',
+      modo: 'T',
+      key: 'ENTER',
+      largo: { key: 'ESC' },
+      umbral: 600,
+    }),
+  ).toBe('CFG:BC:K:T:0:215:-:-:216:0:0:600');
+});
+
+test('buildButtonCfg: T con mods largos, scroll y umbral vacío/fuera de rango', () => {
+  expect(
+    P.buildButtonCfg({
+      code: 'BN',
+      tipo: 'K',
+      modo: 'T',
+      key: 'a',
+      largo: { key: 'c', ctrl: true, shift: true },
+    }),
+  ).toBe('CFG:BN:K:T:0:a:-:-:c:CS:0:0');
+  expect(
+    P.buildButtonCfg({
+      code: 'BN',
+      tipo: 'M',
+      modo: 'T',
+      mouseAction: '1',
+      largo: { mouseAction: 'SU', mantener: true },
+      umbral: 9999,
+    }),
+  ).toBe('CFG:BN:M:T:0:1:-:-:SU:0:0:5000');
+  expect(P.normalizeThreshold('')).toBe(0);
+  expect(P.normalizeThreshold(50)).toBe(100);
+});
+
+test('buildButtonCfg: P/R/O siguen en 7 campos; H nunca se envía (se degrada a P)', () => {
+  for (const modo of /** @type {const} */ (['P', 'R', 'O'])) {
+    const n = P.buildButtonCfg({
+      code: 'BR',
+      tipo: 'M',
+      modo,
+      mouseAction: '1',
+      largo: { key: 'x' },
+      umbral: 500,
+    }).split(':').length;
+    expect(n).toBe(8); // CFG + 7 campos
+  }
+  expect(
+    P.buildButtonCfg({ code: 'BR', tipo: 'M', modo: /** @type {any} */ ('H'), mouseAction: '1' }),
+  ).toBe('CFG:BR:M:P:0:1:-:-');
+});
+
+test('parseDeviceLine: BTN de 11 campos (Tap-Hold) y de 7 conviven', () => {
+  const cfg = P.emptyCfg();
+  P.parseDeviceLine('BTN:0:0:4:0:1:0:0:1:0:2:400', cfg);
+  P.parseDeviceLine('BTN:1:0:0:0:1:0:0', cfg);
+  expect(cfg.btns[0]).toEqual({
+    tipo: 0,
+    modo: 4,
+    debounce: 0,
+    accion: 1,
+    mods: 0,
+    flags: 0,
+    accionLarga: 1,
+    modsLarga: 0,
+    flagsLarga: 2,
+    umbral: 400,
+  });
+  expect(cfg.btns[1]).toEqual({ tipo: 0, modo: 0, debounce: 0, accion: 1, mods: 0, flags: 0 });
+});
+
+test('parseDeviceLine: reproduce el respaldo real de BR (disMouse R019-TH1, Tap-Hold k/l a 500ms)', () => {
+  // Línea tal cual llegó en el arnés de hardware real (2026-09-27): tipo teclado,
+  // corto 'k' (107), largo 'l' (108), sin modificadores, umbral 500ms.
+  const cfg = P.emptyCfg();
+  P.parseDeviceLine('BTN:0:1:4:0:107:0:0:108:0:0:500', cfg);
+  expect(cfg.btns[0]).toEqual({
+    tipo: 1,
+    modo: 4,
+    debounce: 0,
+    accion: 107,
+    mods: 0,
+    flags: 0,
+    accionLarga: 108,
+    modsLarga: 0,
+    flagsLarga: 0,
+    umbral: 500,
+  });
+  // Y el round-trip con soporte Tap-Hold reconstruye la línea CFG correcta.
+  expect(P.cfgToCommands(cfg, { tapHold: true })[0]).toBe('CFG:BR:K:T:0:k:- :- :l:0:0:500');
+});
+
+test('parseDeviceLine: con requireTapHold se descartan las líneas BTN de 7 campos', () => {
+  const cfg = P.emptyCfg();
+  P.parseDeviceLine('BTN:1:0:0:0:1:0:0', cfg, { requireTapHold: true });
+  expect(cfg.btns).toEqual({});
+  P.parseDeviceLine('BTN:1:0:0:0:1:0:0:0:0:0:0', cfg, { requireTapHold: true });
+  expect(cfg.btns[1].umbral).toBe(0);
+});
+
+test('parseDeviceLine: modo 2 (holdeable heredado) se degrada a 0', () => {
+  const cfg = P.emptyCfg();
+  P.parseDeviceLine('BTN:0:0:2:0:1:0:0', cfg);
+  P.parseDeviceLine('BTN:1:0:2:0:1:0:0:0:0:0:0', cfg);
+  expect(cfg.btns[0].modo).toBe(0);
+  expect(cfg.btns[1].modo).toBe(0);
+});
+
+test('cfgToCommands: round-trip de un botón T y degradación sin soporte', () => {
+  const cfg = {
+    btns: {
+      3: {
+        tipo: 1,
+        modo: 4,
+        debounce: 0,
+        accion: 215,
+        mods: 0,
+        flags: 0,
+        accionLarga: 216,
+        modsLarga: 1,
+        flagsLarga: 0,
+        umbral: 600,
+      },
+      0: {
+        tipo: 0,
+        modo: 4,
+        debounce: 0,
+        accion: 1,
+        mods: 0,
+        flags: 0,
+        accionLarga: 1,
+        modsLarga: 0,
+        flagsLarga: 2,
+        umbral: 0,
+      },
+    },
+  };
+  expect(P.cfgToCommands(cfg, { tapHold: true })).toEqual([
+    'CFG:BR:M:T:0:1:- :- :1:0:M:0',
+    'CFG:BC:K:T:0:215:- :- :216:C:0:600',
+  ]);
+  // Sin { tapHold: true } (dispositivo no confirmó soporte): se degrada a P y se
+  // pierde la acción larga — nunca se manda T a un firmware que no lo demostró.
+  expect(P.cfgToCommands(cfg)).toEqual(['CFG:BR:M:P:0:1:- :- ', 'CFG:BC:K:P:0:215:- :- ']);
+});
+
+test('esComandoDeConfiguracion: acepta CFG en formato Tap-Hold bien formado', () => {
+  const buenos = [
+    'CFG:BR:M:T:0:1:-:-:1:0:M:400',
+    'CFG:BC:K:T:0:215:-:-:216:0:0:600',
+    'CFG:BR:M:T:0:1:- :- :1:0:M:0', // umbral 0 = default del firmware
+    'CFG:BN:K:T:0:a:-:-:c:CS:0:100', // umbral en el mínimo
+    'CFG:BN:M:T:0:1:-:-:SU:0:0:5000', // umbral en el máximo
+  ];
+  for (const c of buenos) expect(P.esComandoDeConfiguracion(c)).toBe(true);
+});
+
+test('esComandoDeConfiguracion: rechaza Tap-Hold mal formado o fuera de rango', () => {
+  const malos = [
+    'CFG:BR:M:T:0:1:-:-:1:0:M:50', // umbral bajo el mínimo (100) y != 0
+    'CFG:BR:M:T:0:1:-:-:1:0:M:5001', // umbral sobre el máximo
+    'CFG:BR:M:T:0:1:-:-:1:0:M', // faltan campos (umbral ausente)
+    'CFG:BR:M:T:0:1:-:-:1:0:M:400:extra', // campos de más
+  ];
+  for (const c of malos) expect(P.esComandoDeConfiguracion(c)).toBe(false);
+});
+
+test('describeDeviceError: errores de Tap-Hold legibles; el resto null', () => {
+  for (const e of ['MODE', 'ACTIONLARGA', 'MODSLARGA', 'FLAGSLARGA', 'THRESHOLD']) {
+    expect(typeof P.describeDeviceError('ERR:' + e)).toBe('string');
+  }
+  expect(P.describeDeviceError('ERR:FOO')).toBeNull();
+  expect(P.describeDeviceError('OK:CFG')).toBeNull();
 });

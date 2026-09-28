@@ -20,7 +20,15 @@
  *    atrás y RELEE el dispositivo para comprobar el resultado.
  */
 
-import { emptyCfg, parseWho, parseDeviceLine, esComandoDeConfiguracion } from './protocolo.js';
+import {
+  emptyCfg,
+  parseWho,
+  parseDeviceLine,
+  esComandoDeConfiguracion,
+  supportsTapHold,
+  isExtendedBtnLine,
+  describeDeviceError,
+} from './protocolo.js';
 import { estaDesactualizado } from './firmware.js';
 import { productoPorModelo, normalizarModelo } from './productos.js';
 import {
@@ -63,14 +71,22 @@ import {
  * @property {boolean} desactualizado
  * @property {boolean} sinWho              El dispositivo no contestó `WHO` (firmware viejo).
  * @property {number | null} latenciaWhoMs Cuánto tardó en contestar `WHO`.
+ * @property {boolean} soportaTapHold      El firmware soporta el modo Tap-Hold (versión
+ *   `-TH<n>`, ver `supportsTapHold()`). Se puede activar más tarde en caliente si
+ *   llega una línea `BTN:` de 11 campos aunque `WHO` no lo haya declarado — ver
+ *   la "red de seguridad" en `#alLineaDeConfig()`.
  */
 
 /**
  * @typedef {Object} ResultadoRestauracion
- * @property {boolean} ok                  Lo releído quedó idéntico al respaldo.
+ * @property {boolean} ok                  Lo releído quedó idéntico al respaldo Y el
+ *   dispositivo no rechazó ningún comando con `ERR:*`.
  * @property {Diferencia[]} diferencias    Qué quedó distinto (vacío si `ok`).
  * @property {string[]} advertencias       Entradas que no se pudieron restaurar.
  * @property {number} comandosEnviados
+ * @property {string | null} errorDispositivo  Último `ERR:*` que contestó el dispositivo
+ *   durante el envío, ya traducido (`null` si no rechazó nada). El protocolo no dice a
+ *   cuál comando corresponde — igual que en el configurador publicado.
  */
 
 export const ESTADOS = /** @type {const} */ ({
@@ -118,6 +134,13 @@ export class Conexion {
   #oyentesEstado = new Set();
   /** @type {Promise<unknown>} */
   #cola = Promise.resolve();
+  /** ¿El firmware conectado soporta Tap-Hold? Ver `InfoDispositivo.soportaTapHold`.
+   * @type {boolean} */
+  #soportaTapHold = false;
+  /** Último `ERR:*` recibido (ya traducido), para que `aplicar()`/`restaurar()` lo
+   * puedan reportar aunque el protocolo no confirme comando por comando.
+   * @type {string | null} */
+  #ultimoError = null;
 
   /**
    * @param {Transporte} transporte
@@ -211,6 +234,8 @@ export class Conexion {
       const who = await this.#pedirWho();
       const modelo = who ? who.model : null;
       const version = who ? who.version : null;
+      // Se recalcula en CADA conexión (nunca se hereda de una conexión anterior).
+      this.#soportaTapHold = supportsTapHold(version);
       this.#info = {
         modelo,
         version,
@@ -218,6 +243,7 @@ export class Conexion {
         desactualizado: modelo && version ? estaDesactualizado(modelo, version) : false,
         sinWho: !who,
         latenciaWhoMs: who ? Date.now() - inicio : null,
+        soportaTapHold: this.#soportaTapHold,
       };
       return this.#info;
     });
@@ -257,7 +283,7 @@ export class Conexion {
    * Manda comandos de configuración. Valida TODOS antes de enviar el primero:
    * si alguno no está permitido no se manda ninguno.
    * @param {string[]} comandos
-   * @returns {Promise<{ enviados: number }>}
+   * @returns {Promise<{ enviados: number, errorDispositivo: string | null }>}
    */
   aplicar(comandos) {
     return this.#enCola(() => this.#aplicarInterno(comandos));
@@ -283,18 +309,27 @@ export class Conexion {
           `El respaldo es de un ${snapshot.modelo} y hay un ${modeloActual} conectado: no se restaura.`,
         );
       }
-      const { comandos, advertencias } = comandosDeRestauracion(snapshot.cfg);
-      const { enviados } = await this.#aplicarInterno(comandos);
+      const { comandos, advertencias } = comandosDeRestauracion(snapshot.cfg, {
+        tapHold: this.#soportaTapHold,
+      });
+      const { enviados, errorDispositivo } = await this.#aplicarInterno(comandos);
       if (!verificar) {
-        return { ok: true, diferencias: [], advertencias, comandosEnviados: enviados };
+        return {
+          ok: !errorDispositivo,
+          diferencias: [],
+          advertencias,
+          comandosEnviados: enviados,
+          errorDispositivo,
+        };
       }
       const { cfg } = await this.#leerConfigInterno();
       const diferencias = compararConfiguraciones(snapshot.cfg, cfg);
       return {
-        ok: diferencias.length === 0,
+        ok: diferencias.length === 0 && !errorDispositivo,
         diferencias,
         advertencias,
         comandosEnviados: enviados,
+        errorDispositivo,
       };
     });
   }
@@ -379,6 +414,19 @@ export class Conexion {
       if (this.#resolverWho) this.#resolverWho(who);
       return;
     }
+    const errMsg = describeDeviceError(linea);
+    if (errMsg) {
+      this.#ultimoError = errMsg;
+      return;
+    }
+    // Red de seguridad (igual que el configurador publicado): una línea BTN de 11
+    // campos implica Tap-Hold aunque WHO no lo haya declarado (firmware cuya
+    // versión no sigue la convención `-TH<n>`). Nunca se "apaga" solo — sigue
+    // encendido hasta la próxima conexión.
+    if (!this.#soportaTapHold && isExtendedBtnLine(linea)) {
+      this.#soportaTapHold = true;
+      if (this.#info) this.#info = { ...this.#info, soportaTapHold: true };
+    }
     if (this.#recibirConfig) this.#recibirConfig(linea);
   }
 
@@ -387,6 +435,7 @@ export class Conexion {
     const pendientes = [...this.#pendientes];
     this.#pendientes.clear();
     this.#cambiarEstado(ESTADOS.DESCONECTADO);
+    this.#soportaTapHold = false;
     if (habiaConexion) {
       for (const rechazar of pendientes)
         rechazar(new ErrorDeConexion('El dispositivo se desconectó.'));
@@ -430,7 +479,10 @@ export class Conexion {
 
     this.#recibirConfig = (linea) => {
       if (!RE_LINEA_DE_CONFIG.test(linea)) return;
-      parseDeviceLine(linea, cfg);
+      // `requireTapHold` se lee en el momento: si la "red de seguridad" activó
+      // soporte Tap-Hold a mitad de este mismo GETALL, las líneas siguientes ya
+      // lo respetan (una línea BTN de 7 campos después de eso sería corrupta).
+      parseDeviceLine(linea, cfg, { requireTapHold: this.#soportaTapHold });
       crudas.push(linea);
       recibio = true;
       ultima = Date.now();
@@ -464,7 +516,7 @@ export class Conexion {
 
   /**
    * @param {string[]} comandos
-   * @returns {Promise<{ enviados: number }>}
+   * @returns {Promise<{ enviados: number, errorDispositivo: string | null }>}
    */
   async #aplicarInterno(comandos) {
     this.#exigirConectado();
@@ -474,6 +526,7 @@ export class Conexion {
         `Comandos no permitidos, no se envió ninguno: ${rechazados.map((c) => JSON.stringify(c)).join(', ')}`,
       );
     }
+    this.#ultimoError = null; // no confundir con un ERR de una tanda anterior
     let enviados = 0;
     for (const c of comandos) {
       this.#exigirConectado();
@@ -481,6 +534,6 @@ export class Conexion {
       enviados++;
       if (this.#op.pausaEntreComandosMs > 0) await esperar(this.#op.pausaEntreComandosMs);
     }
-    return { enviados };
+    return { enviados, errorDispositivo: this.#ultimoError };
   }
 }

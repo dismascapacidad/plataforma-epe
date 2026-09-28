@@ -8,7 +8,7 @@
  * para el "volver atrás" y para verificar que lo restaurado quedó igual.
  */
 
-import { cfgToCommands, esComandoDeConfiguracion, REV_KEY } from './protocolo.js';
+import { cfgToCommands, esComandoDeConfiguracion, REV_KEY, TH_DEFAULT_MS } from './protocolo.js';
 import { todasLasEntradas } from './productos.js';
 
 /** @typedef {import('./protocolo.js').DeviceCfg} DeviceCfg */
@@ -35,6 +35,15 @@ import { todasLasEntradas } from './productos.js';
 
 const CAMPOS_GLOBALES = /** @type {const} */ (['orient', 'vel', 'acel', 'fmode']);
 const CAMPOS_BOTON = /** @type {const} */ (['tipo', 'modo', 'debounce', 'accion', 'mods', 'flags']);
+// Campos Tap-Hold (solo presentes en firmware -TH, línea BTN de 11 campos). Ausentes
+// (`undefined`, dispositivo sin Tap-Hold) se tratan como "sin dato", igual que los
+// campos globales — ver `norm()` más abajo. `0` sigue siendo un valor real.
+const CAMPOS_BOTON_TAPHOLD = /** @type {const} */ ([
+  'accionLarga',
+  'modsLarga',
+  'flagsLarga',
+  'umbral',
+]);
 
 /**
  * Copia profunda de una configuración.
@@ -77,6 +86,22 @@ export function compararConfiguraciones(a, b) {
         dif.push({ campo: `btns.${i}.${campo}`, antes: ba[campo], despues: bb[campo] });
       }
     }
+    // Campos Tap-Hold: solo tienen sentido si el botón está en modo T (4) en algún
+    // lado de la comparación; si no, quedan en `undefined` en firmware sin Tap-Hold
+    // o en 0 en un botón que no está en T, y no se los compara (ver comentario en
+    // CAMPOS_BOTON_TAPHOLD). Comparar de más ahí generaría ruido: cualquier CFG
+    // sobre un botón no-T resetea esos campos a 0 en el firmware (ver protocolo).
+    if (ba.modo === 4 || bb.modo === 4) {
+      for (const campo of CAMPOS_BOTON_TAPHOLD) {
+        if (norm(ba[campo]) !== norm(bb[campo])) {
+          dif.push({
+            campo: `btns.${i}.${campo}`,
+            antes: norm(ba[campo]),
+            despues: norm(bb[campo]),
+          });
+        }
+      }
+    }
   }
   return dif;
 }
@@ -93,21 +118,26 @@ export function compararConfiguraciones(a, b) {
  *    para que se sepa que esa entrada no se pudo restaurar.
  *
  * @param {DeviceCfg} cfg
+ * @param {{ tapHold?: boolean }} [opts] `tapHold`: el dispositivo conectado soporta
+ *   modo Tap-Hold (`Conexion.info.soportaTapHold`). Sin esto, un botón leído en
+ *   modo 4 se restaura como pulsación simple (se pierde la acción larga) — nunca
+ *   se manda `T` a un firmware que no lo demostró soportar.
  * @returns {{ comandos: string[], advertencias: string[] }}
  */
-export function comandosDeRestauracion(cfg) {
+export function comandosDeRestauracion(cfg, opts = {}) {
   /** @type {string[]} */
   const comandos = [];
   /** @type {string[]} */
   const advertencias = [];
 
-  for (const crudo of cfgToCommands(cfg)) {
+  for (const crudo of cfgToCommands(cfg, opts)) {
     let linea = crudo;
     if (crudo.startsWith('CFG:')) {
       const p = crudo.split(':');
-      // p = ['CFG', code, tipo, modo, debounce, accion, mods, flags]. La acción
-      // puede ser un espacio literal: solo se recortan mods y flags.
-      if (p.length === 8) {
+      // p = ['CFG', code, tipo, modo, debounce, accion, mods, flags, ...Tap-Hold?].
+      // La acción puede ser un espacio literal: solo se recortan mods y flags (los
+      // dos campos que siguen a la acción, sea formato base de 8 o Tap-Hold de 12).
+      if (p.length === 8 || p.length === 12) {
         p[6] = p[6].trim() || '-';
         p[7] = p[7].trim() || '-';
         linea = p.join(':');
@@ -184,8 +214,11 @@ const ACCIONES_MOUSE = {
 const MODOS = {
   0: 'al presionar',
   1: 'al soltar',
-  2: 'pulsación larga',
   3: 'una vez por pulsación',
+  // 4 (Tap-Hold) no usa esta tabla: describirBoton() lo compone aparte, con la
+  // acción larga y el umbral. 2 (holdeable heredado) nunca debería llegar hasta
+  // acá — parseDeviceLine() lo degrada a 0 — pero se deja un fallback razonable.
+  2: 'al presionar',
 };
 
 /**
@@ -201,27 +234,50 @@ export function nombreDeTecla(accion) {
 }
 
 /**
+ * Frase legible de lo que hace una acción de mouse o teclado, sin el modo ni
+ * el antirrebote — la parte que comparten la acción corta y, en Tap-Hold, la
+ * acción larga.
+ * @param {number} tipo    0 mouse · 1 teclado (2/desactivado se maneja aparte).
+ * @param {number} accion
+ * @param {number} mods
+ * @param {number} flags   bit 0x01 doble clic · bit 0x02 mantener (solo acción corta).
+ * @returns {string}
+ */
+function describirAccion(tipo, accion, mods, flags) {
+  if (tipo === 0) {
+    let que = `Mouse: ${ACCIONES_MOUSE[accion] ?? `acción ${accion}`}`;
+    if (flags & 0x01) que += ' (doble clic)';
+    if (flags & 0x02) que += ' (mantener presionado)';
+    return que;
+  }
+  const nombresMods = [];
+  if (mods & 0x01) nombresMods.push('Ctrl');
+  if (mods & 0x02) nombresMods.push('Mayús');
+  if (mods & 0x04) nombresMods.push('Alt');
+  if (mods & 0x08) nombresMods.push('Win/⌘');
+  const tecla = accion === 0 ? '' : nombreDeTecla(accion);
+  return `Teclado: ${[...nombresMods, tecla].filter(Boolean).join(' + ') || '(sin tecla)'}`;
+}
+
+/**
  * Frase legible de lo que hace un botón, por ejemplo
- * `Teclado: Ctrl + C · una vez por pulsación · antirrebote 30 ms`.
+ * `Teclado: Ctrl + C · una vez por pulsación · antirrebote 30 ms`, o para
+ * Tap-Hold `Mouse: clic izquierdo · corta: clic izquierdo — larga (500 ms):
+ * clic derecho`.
  * @param {ButtonCfg} b
  * @returns {string}
  */
 export function describirBoton(b) {
   if (b.tipo === 2) return 'Desactivado';
 
-  let que;
-  if (b.tipo === 0) {
-    que = `Mouse: ${ACCIONES_MOUSE[b.accion] ?? `acción ${b.accion}`}`;
-    if (b.flags & 0x01) que += ' (doble clic)';
-    if (b.flags & 0x02) que += ' (mantener presionado)';
-  } else {
-    const mods = [];
-    if (b.mods & 0x01) mods.push('Ctrl');
-    if (b.mods & 0x02) mods.push('Mayús');
-    if (b.mods & 0x04) mods.push('Alt');
-    if (b.mods & 0x08) mods.push('Win/⌘');
-    const tecla = b.accion === 0 ? '' : nombreDeTecla(b.accion);
-    que = `Teclado: ${[...mods, tecla].filter(Boolean).join(' + ') || '(sin tecla)'}`;
+  const que = describirAccion(b.tipo, b.accion, b.mods, b.flags);
+
+  if (b.modo === 4) {
+    const umbral = b.umbral || TH_DEFAULT_MS;
+    const larga = describirAccion(b.tipo, b.accionLarga || 0, b.modsLarga || 0, b.flagsLarga || 0);
+    const partes = [`Tap-Hold — corta: ${que}`, `larga (${umbral} ms): ${larga}`];
+    if (b.debounce > 0) partes.push(`antirrebote ${b.debounce} ms`);
+    return partes.join(' · ');
   }
 
   const partes = [que, MODOS[b.modo] ?? `modo ${b.modo}`];

@@ -42,6 +42,13 @@ export {
   cfgToCommands,
   resolvePreset,
   esComandoDeConfiguracion,
+  supportsTapHold,
+  isExtendedBtnLine,
+  describeDeviceError,
+  normalizeThreshold,
+  TH_DEFAULT_MS,
+  TH_MIN_MS,
+  TH_MAX_MS,
 } from './protocolo.js';
 
 /**

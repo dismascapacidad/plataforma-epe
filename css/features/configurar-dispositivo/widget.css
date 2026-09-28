@@ -1,0 +1,117 @@
+/* Widget "Configurar dispositivo" — contenido que se dibuja dentro del
+   modal genérico (.epe-modal-body, ver css/components/modal.css). Usa los
+   tokens semánticos de theme.css (no colores crudos) para verse bien en
+   claro y oscuro. */
+
+.epe-cd {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.epe-cd-cuerpo {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.epe-cd-detectado {
+  margin: 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--tile-border);
+  color: var(--text-faint);
+  font-size: 0.85em;
+}
+
+.epe-cd-intro {
+  margin: 0;
+  color: var(--text-dim);
+}
+
+.epe-cd-error {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--red-dim);
+  color: var(--red);
+}
+
+.epe-cd-ok {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--grn-dim);
+  color: var(--grn);
+}
+
+.epe-cd-aviso {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--amb-dim);
+  color: var(--amb);
+}
+
+.epe-cd-botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.epe-cd-cancelar {
+  align-self: flex-start;
+}
+
+.epe-cd-lista-entradas {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.epe-cd-entrada {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--tile-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: border-color 0.15s var(--ease);
+}
+
+.epe-cd-entrada:hover {
+  border-color: var(--teal-600);
+}
+
+.epe-cd-entrada.is-deshabilitada {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.epe-cd-color {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  flex: none;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
+}
+
+.epe-cd-entrada-texto {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.epe-cd-entrada-texto small {
+  color: var(--text-faint);
+}
+
+.epe-cd-resumen {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--text-strong);
+}
+
+.epe-cd-resumen li {
+  margin-bottom: 4px;
+}

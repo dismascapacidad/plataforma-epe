@@ -55,6 +55,8 @@ var EpeHanoi = (function () {
     var elStats = root.querySelector("[data-juego-stats]");
     var btnDeNuevo = root.querySelector("[data-juego-de-nuevo]");
     var btnConfigurar = root.querySelector("[data-juego-configurar]");
+    var btnConfigurarDispositivo = root.querySelector("[data-configurar-dispositivo]");
+    var btnRestaurarDispositivo = root.querySelector("[data-restaurar-dispositivo]");
 
     var panel = EpeAcceso.crearPanel(root.querySelector("[data-acceso-panel]"), {
       id: "hanoi",
@@ -73,6 +75,7 @@ var EpeHanoi = (function () {
     var usosDeshacer = 0;
     var terminado = false;
     var timerFin = null;
+    var restaurarDispositivo = null; // función lista para volver el dispositivo a como estaba, o null
 
     // ── Mensajes ─────────────────────────────────────────────────────
     function mensaje(texto, tipo) {
@@ -325,7 +328,58 @@ var EpeHanoi = (function () {
       elEmpezar.focus();
     }
 
+    // ── Configurar dispositivo físico ───────────────────────────────
+    // Usa la selección de teclas actual del panel (aunque todavía no se
+    // haya apretado "Empezar"), no depende de que haya una partida en curso.
+    function configurarDispositivo() {
+      if (!window.EpeConfigurarDispositivo) return; // widget.js no cargó
+      var cfgActual = panel.leer();
+      var entradas = EpeAcceso.entradasNecesarias(cfgActual, ACCIONES);
+      window.EpeConfigurarDispositivo
+        .abrir(entradas, { titulo: "Configurar dispositivo — Torre de Hanói" })
+        .then(function (resultado) {
+          if (resultado && resultado.restaurar) restaurarDispositivo = resultado.restaurar;
+          actualizarBotonRestaurar();
+        });
+    }
+
+    // Se puede volver a mostrar la pantalla de configuración por varias vías
+    // (Esc, "Salir", o "Cambiar configuración" después de ganar): todas pasan
+    // por salirAConfig/empezar, así que alcanza con un solo botón acá.
+    function actualizarBotonRestaurar() {
+      if (btnRestaurarDispositivo) btnRestaurarDispositivo.hidden = !restaurarDispositivo;
+    }
+
+    function restaurarDispositivoClick() {
+      if (!restaurarDispositivo) return;
+      var fn = restaurarDispositivo;
+      restaurarDispositivo = null;
+      btnRestaurarDispositivo.disabled = true;
+      btnRestaurarDispositivo.textContent = "Restaurando…";
+      fn()
+        .then(function (r) {
+          btnRestaurarDispositivo.textContent = r && r.ok ? "Listo" : "Quedó distinto en algún campo";
+        })
+        .catch(function () {
+          btnRestaurarDispositivo.textContent = "No se pudo restaurar";
+        })
+        .then(function () {
+          window.setTimeout(function () {
+            btnRestaurarDispositivo.disabled = false;
+            btnRestaurarDispositivo.textContent = "Restaurar dispositivo";
+            actualizarBotonRestaurar();
+          }, 2500);
+        });
+    }
+
     // ── Eventos ──────────────────────────────────────────────────────
+    if (btnConfigurarDispositivo) {
+      btnConfigurarDispositivo.addEventListener("click", configurarDispositivo);
+    }
+    if (btnRestaurarDispositivo) {
+      btnRestaurarDispositivo.addEventListener("click", restaurarDispositivoClick);
+      actualizarBotonRestaurar();
+    }
     elEmpezar.addEventListener("click", empezar);
     btnDeNuevo.addEventListener("click", jugarDeNuevo);
     btnConfigurar.addEventListener("click", salirAConfig);

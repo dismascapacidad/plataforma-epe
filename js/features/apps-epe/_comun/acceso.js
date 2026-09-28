@@ -305,5 +305,34 @@ var EpeAcceso = (function () {
     ];
   }
 
-  return { crearPanel: crearPanel, resumenTeclas: resumenTeclas };
+  // Para el widget "Configurar dispositivo": qué teclas están activas AHORA
+  // (según `cfg`, la salida de `panel.leer()`), en formato
+  // [{ id, etiqueta, tecla }] — a diferencia de `resumenTeclas()`, acá
+  // `tecla` va cruda (formato `EpeTeclas`, sin traducir a etiqueta legible),
+  // porque el widget la necesita para armar el comando del dispositivo.
+  function entradasNecesarias(cfg, acciones) {
+    if (cfg.modo === "directo") {
+      return acciones.map(function (a) {
+        return { id: a.id, etiqueta: a.etiqueta, tecla: cfg.teclas[a.id] };
+      });
+    }
+    if (cfg.modo === "manual") {
+      return [
+        { id: "avanzar", etiqueta: "Avanzar el resaltado", tecla: cfg.avanzar },
+        { id: "seleccionar", etiqueta: "Seleccionar", tecla: cfg.seleccionar },
+      ];
+    }
+    // auto: con un solo pulsador, cualquiera de las dos teclas selecciona
+    // (ver entrada.js) — igual criterio que resumenTeclas().
+    return [
+      { id: "seleccionar", etiqueta: "Seleccionar", tecla: cfg.seleccionar },
+      { id: "avanzar", etiqueta: "Seleccionar (alternativa)", tecla: cfg.avanzar },
+    ];
+  }
+
+  return {
+    crearPanel: crearPanel,
+    resumenTeclas: resumenTeclas,
+    entradasNecesarias: entradasNecesarias,
+  };
 })();

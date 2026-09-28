@@ -204,6 +204,23 @@
   font-size: 14px;
 }
 
+/* Pie del modal de configuración: "Volver" a la izquierda, la acción
+   principal (p. ej. "Empezar") a la derecha, misma estética/tamaño que el
+   botón suelto de arriba. Reusable por los demás juegos de Apps EpE. */
+.epe-juego-pie {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.epe-juego-pie .epe-btn-acc,
+.epe-juego-pie .epe-btn-ghost {
+  padding: 10px 28px;
+  font-size: 14px;
+}
+
 /* ── HUD y ayuda de teclas ── */
 .epe-juego-hud {
   flex: 0 0 auto;

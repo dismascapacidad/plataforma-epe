@@ -16,7 +16,10 @@
  * Parámetros opcionales: `&ble=1` (simula Bluetooth), `&ignora=BR` (el
  * firmware falso ignora los CFG de ese botón, para ver cómo se ve un fallo),
  * `&omite=5,6` (el firmware falso no manda esos botones en GETALL), `&sinwho=1`,
- * `&modelo=disHub%20BLE&firmware=R013`.
+ * `&modelo=disHub%20BLE&firmware=R013`, `&taphold=1` (BR arranca en Tap-Hold,
+ * corto 'k' / largo 'l' a 500ms — reproduce el caso real que falló en
+ * hardware el 2026-09-27; el firmware por defecto ya es `R019-TH1`, así que
+ * alcanza con este flag para tener también el botón en modo T).
  */
 
 import {
@@ -34,7 +37,7 @@ import {
   snapshotDeTexto,
   snapshotACsvDelConfigurador,
 } from '../js/features/dispositivo/index.js';
-import { TransporteSimulado } from './transporte-simulado.js';
+import { TransporteSimulado, cfgConTapHoldEnBR } from './transporte-simulado.js';
 
 /** @typedef {import('../js/features/dispositivo/configuracion.js').Snapshot} Snapshot */
 
@@ -166,6 +169,7 @@ function crearConexion(tipo) {
     const t = new TransporteSimulado({
       modelo: params.get('modelo') ?? 'disMouse',
       firmware: params.get('firmware') ?? 'R019-TH1',
+      cfg: params.has('taphold') ? cfgConTapHoldEnBR() : undefined,
       respondeWho: !params.has('sinwho'),
       ignoraCodigos: ignora,
       omiteBotones: (params.get('omite') ?? '').split(',').filter(Boolean).map(Number),
@@ -236,6 +240,7 @@ function pintarInfo(info, tipo) {
     ],
     ['Tiempo de respuesta a WHO', info.latenciaWhoMs != null ? `${info.latenciaWhoMs} ms` : '—'],
     ['¿Firmware desactualizado?', info.desactualizado ? 'sí' : 'no'],
+    ['¿Soporta Tap-Hold?', info.soportaTapHold ? 'sí' : 'no', info.soportaTapHold ? 'si' : 'no'],
   ];
   if (vidpid) {
     filas.push([
@@ -385,6 +390,20 @@ function copiar(ta) {
 /* ─────────────── pruebas ─────────────── */
 
 /**
+ * Detalle de las diferencias (campo + valor de respaldo + valor actual) en
+ * una sola línea, para que quede en el resumen copiable sin tener que ir a
+ * buscarlo al panel de resultado o al log crudo.
+ * @param {import('../js/features/dispositivo/configuracion.js').Diferencia[]} diferencias
+ */
+function detalleDiferencias(diferencias) {
+  return diferencias
+    .map(
+      (d) => `${d.campo} (respaldo=${JSON.stringify(d.antes)} actual=${JSON.stringify(d.despues)})`,
+    )
+    .join('; ');
+}
+
+/**
  * @param {string} etiqueta
  * @param {import('../js/features/dispositivo/conexion.js').ResultadoRestauracion} r
  * @param {number} ms
@@ -393,6 +412,7 @@ function textoDeRestauracion(etiqueta, r, ms) {
   const lineas = [
     `${etiqueta}: ${r.ok ? 'OK — quedó idéntico al respaldo' : 'QUEDÓ DISTINTO'} (${r.comandosEnviados} comandos, ${ms} ms)`,
   ];
+  if (r.errorDispositivo) lineas.push(`  · el dispositivo respondió: ${r.errorDispositivo}`);
   for (const d of r.diferencias) {
     lineas.push(
       `  · ${d.campo}: respaldo=${JSON.stringify(d.antes)} actual=${JSON.stringify(d.despues)}`,
@@ -413,7 +433,7 @@ async function pruebaA() {
       'prueba A (ida y vuelta)',
       r.ok
         ? `OK — ${r.comandosEnviados} comandos, ${ms} ms, ${r.advertencias.length} avisos`
-        : `DIFERENCIAS: ${r.diferencias.map((d) => d.campo).join(', ')}`,
+        : `DIFERENCIAS: ${detalleDiferencias(r.diferencias)}${r.errorDispositivo ? ` — dispositivo: ${r.errorDispositivo}` : ''}`,
     );
     mostrarResultado(textoDeRestauracion('Prueba A', r, ms), r.ok);
   });
@@ -431,9 +451,10 @@ async function pruebaB() {
     const idx = indices[0];
     const original = snap.cfg.btns[idx];
     const nuevo = original.debounce === 7 ? 8 : 7;
-    const { comandos } = comandosDeRestauracion({
-      btns: { [idx]: { ...original, debounce: nuevo } },
-    });
+    const { comandos } = comandosDeRestauracion(
+      { btns: { [idx]: { ...original, debounce: nuevo } } },
+      { tapHold: con.info?.soportaTapHold },
+    );
     if (comandos.length !== 1) throw new Error('No se pudo armar el comando de prueba.');
 
     let cambioVisible = null;
@@ -479,7 +500,9 @@ async function pruebaB() {
       'prueba B (cambio mínimo)',
       ok
         ? `OK — cambio visible al releer y restauración idéntica (${ms} ms)`
-        : `PROBLEMA — cambio visible: ${cambioVisible}; restauración ok: ${r.ok}; fallo: ${falloIntermedio ?? 'ninguno'}`,
+        : `PROBLEMA — cambio visible: ${cambioVisible}; restauración ok: ${r.ok}; fallo: ${falloIntermedio ?? 'ninguno'}` +
+            (r.diferencias.length ? `; diferencias: ${detalleDiferencias(r.diferencias)}` : '') +
+            (r.errorDispositivo ? `; dispositivo: ${r.errorDispositivo}` : ''),
     );
     mostrarResultado(lineas.join('\n'), ok);
   });
@@ -494,7 +517,9 @@ async function restaurarAhora() {
     const ms = Math.round(performance.now() - t0);
     registrar(
       'restauración manual',
-      r.ok ? `OK (${ms} ms)` : `DIFERENCIAS: ${r.diferencias.map((d) => d.campo).join(', ')}`,
+      r.ok
+        ? `OK (${ms} ms)`
+        : `DIFERENCIAS: ${detalleDiferencias(r.diferencias)}${r.errorDispositivo ? ` — dispositivo: ${r.errorDispositivo}` : ''}`,
     );
     mostrarResultado(textoDeRestauracion('Restauración', r, ms), r.ok);
   });
