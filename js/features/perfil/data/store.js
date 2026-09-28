@@ -37,7 +37,7 @@ var EpeStore = (function () {
       if (userRes.error) throw userRes.error;
       var uid = userRes.data.user.id;
       return EpeSupabase.from("profiles")
-        .select("nombre, profesion, institucion")
+        .select("nombre, profesion, institucion, telefono, localidad, email_contacto")
         .eq("id", uid)
         .maybeSingle()
         .then(function (res) {
@@ -47,6 +47,9 @@ var EpeStore = (function () {
               nombre: "",
               profesion: "",
               institucion: "",
+              telefono: "",
+              localidad: "",
+              email_contacto: "",
             }
           );
         });
@@ -62,10 +65,13 @@ var EpeStore = (function () {
           nombre: datos.nombre,
           profesion: datos.profesion,
           institucion: datos.institucion,
+          telefono: datos.telefono,
+          localidad: datos.localidad,
+          email_contacto: datos.email_contacto,
           actualizado_en: new Date().toISOString(),
         })
         .eq("id", uid)
-        .select("nombre, profesion, institucion")
+        .select("nombre, profesion, institucion, telefono, localidad, email_contacto")
         .single()
         .then(function (res) {
           lanzarSiError(res);

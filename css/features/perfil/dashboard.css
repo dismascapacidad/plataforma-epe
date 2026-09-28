@@ -118,12 +118,49 @@
   white-space: nowrap;
 }
 
-/* ── Perfil: formulario simple ── */
+/* ── Perfil: formulario ──
+   Grilla de 2 columnas desde 640px para que quepan los 6 campos (datos
+   profesionales + datos de contacto) sin que el form se alargue de más.
+   .epe-form-section y .epe-form-actions ocupan las 2 columnas. */
 .epe-form-grid {
   margin-top: 20px;
   display: grid;
-  gap: 14px;
-  max-width: 420px;
+  grid-template-columns: 1fr;
+  gap: 16px 20px;
+  max-width: 640px;
+}
+
+@media (min-width: 640px) {
+  .epe-form-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.epe-form-section {
+  grid-column: 1 / -1;
+  margin-top: 4px;
+  padding-top: 18px;
+  border-top: 1px solid var(--tile-border);
+}
+
+.epe-form-section h3 {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.epe-form-section .epe-field-hint {
+  margin-top: 6px;
+}
+
+.epe-form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
 }
 
 .epe-form-status {

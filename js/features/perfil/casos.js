@@ -151,11 +151,11 @@ var EpeCasos = (function () {
       var del = document.createElement("button");
       del.type = "button";
       del.className = "epe-caso-card-del";
-      del.setAttribute("aria-label", "Borrar caso " + caso.nombre);
+      del.setAttribute("aria-label", "Borrar colección " + caso.nombre);
       del.textContent = "×";
       del.addEventListener("click", function (ev) {
         ev.stopPropagation();
-        if (!window.confirm('Borrar el caso "' + caso.nombre + '" y todo su contenido?')) return;
+        if (!window.confirm('Borrar la colección "' + caso.nombre + '" y todo su contenido?')) return;
         del.disabled = true;
         EpeStore.deleteCaso(caso.id)
           .then(function () {
@@ -164,7 +164,7 @@ var EpeCasos = (function () {
             renderDetalleCaso();
           })
           .catch(function (err) {
-            window.alert("No se pudo borrar el caso." + detalleError(err));
+            window.alert("No se pudo borrar la colección." + detalleError(err));
             del.disabled = false;
           });
       });
@@ -207,16 +207,16 @@ var EpeCasos = (function () {
       .catch(function () {
         listaPropios.innerHTML = "";
         vacioPropios.hidden = false;
-        vacioPropios.textContent = "No se pudieron cargar tus casos. Recargá la página.";
+        vacioPropios.textContent = "No se pudieron cargar tus colecciones. Recargá la página.";
         listaCompartidos.innerHTML = "";
         headerCompartidos.hidden = true;
       });
   }
 
   function onCrearCaso() {
-    var nombre = window.prompt("Nombre del caso (podés usar cualquier criterio: iniciales, tipo de actividad, lo que te sirva a vos):");
+    var nombre = window.prompt("Nombre de la colección (podés usar cualquier criterio: iniciales, tipo de actividad, lo que te sirva a vos):");
     if (nombre === null) return;
-    EpeStore.createCaso({ nombre: nombre.trim() || "Caso sin nombre" })
+    EpeStore.createCaso({ nombre: nombre.trim() || "Colección sin nombre" })
       .then(function (caso) {
         casoSeleccionadoId = caso.id;
         resetSubtabActividades();
@@ -224,7 +224,7 @@ var EpeCasos = (function () {
         renderDetalleCaso();
       })
       .catch(function (err) {
-        window.alert("No se pudo crear el caso." + detalleError(err));
+        window.alert("No se pudo crear la colección." + detalleError(err));
       });
   }
 
@@ -243,15 +243,15 @@ var EpeCasos = (function () {
 
   function mostrarBanner(duenoId) {
     var banner = root.querySelector("[data-caso-banner]");
-    banner.textContent = "Caso compartido — cargando…";
+    banner.textContent = "Colección compartida — cargando…";
     banner.hidden = false;
     EpeStore.getColegaLabel(duenoId)
       .then(function (label) {
         banner.textContent =
-          "Caso compartido por " + label + " — podés ver Recursos y participar del Espacio compartido, pero no editarlo ni ver sus notas personales.";
+          "Colección compartida por " + label + " — podés ver Recursos y participar del Espacio compartido, pero no editarla ni ver sus notas personales.";
       })
       .catch(function () {
-        banner.textContent = "Caso compartido con vos — podés ver Recursos y participar del Espacio compartido, pero no editarlo.";
+        banner.textContent = "Colección compartida con vos — podés ver Recursos y participar del Espacio compartido, pero no editarla.";
       });
   }
 
@@ -266,7 +266,7 @@ var EpeCasos = (function () {
 
     if (!casoSeleccionadoId) {
       vacio.hidden = false;
-      vacio.textContent = "Elegí un caso de la lista, o creá uno nuevo.";
+      vacio.textContent = "Elegí una colección de la lista, o creá una nueva.";
       detalle.hidden = true;
       return;
     }
@@ -280,7 +280,7 @@ var EpeCasos = (function () {
 
         if (!caso) {
           vacio.hidden = false;
-          vacio.textContent = "Este caso ya no existe.";
+          vacio.textContent = "Esta colección ya no existe.";
           detalle.hidden = true;
           return;
         }
@@ -307,7 +307,7 @@ var EpeCasos = (function () {
       .catch(function () {
         if (casoId !== casoSeleccionadoId) return;
         vacio.hidden = false;
-        vacio.textContent = "No se pudo cargar el caso. Revisá tu conexión.";
+        vacio.textContent = "No se pudo cargar la colección. Revisá tu conexión.";
         detalle.hidden = true;
       });
   }
@@ -376,7 +376,7 @@ var EpeCasos = (function () {
         grid.innerHTML = "";
 
         if (unificadas.length === 0) {
-          mensajeVacio(grid, "Todavía no vinculaste actividades a este caso.");
+          mensajeVacio(grid, "Todavía no vinculaste actividades a esta colección.");
           return;
         }
 
@@ -404,7 +404,7 @@ var EpeCasos = (function () {
             autor.className = "epe-actividad-card-autor";
             if (entrada.privada) {
               autor.classList.add("epe-actividad-card-autor-privada");
-              autor.textContent = "Privada de este caso";
+              autor.textContent = "Privada de esta colección";
             } else {
               autor.textContent = app.tipo === "app-epe" ? "App EpE" : "De terceros: " + app.autor;
             }
@@ -508,8 +508,8 @@ var EpeCasos = (function () {
           vacio.className = "epe-vacio";
           vacio.textContent =
             tabActiva === "app-epe"
-              ? "Ya vinculaste todas las Apps EpE a este caso."
-              : "Ya vinculaste todas las apps de terceros del catálogo público a este caso.";
+              ? "Ya vinculaste todas las Apps EpE a esta colección."
+              : "Ya vinculaste todas las apps de terceros del catálogo público a esta colección.";
           seccion.appendChild(vacio);
         } else {
           var grid = document.createElement("div");
@@ -526,7 +526,7 @@ var EpeCasos = (function () {
           var crear = document.createElement("button");
           crear.type = "button";
           crear.className = "epe-btn-ghost epe-btn-sm epe-picker-crear";
-          crear.textContent = "+ Crear app de terceros para este caso";
+          crear.textContent = "+ Crear app de terceros para esta colección";
           crear.addEventListener("click", function () {
             renderFormNuevaAppTercero();
           });
@@ -596,7 +596,7 @@ var EpeCasos = (function () {
       item.addEventListener("click", function () {
         EpeTerceroDetalle.abrir(app, {
           accionExtra: {
-            etiqueta: "Vincular a este caso",
+            etiqueta: "Vincular a esta colección",
             onClick: function () {
               vincular().catch(function (err) {
                 window.alert("No se pudo vincular la actividad." + detalleError(err));
@@ -616,7 +616,7 @@ var EpeCasos = (function () {
 
     var intro = document.createElement("p");
     intro.className = "epe-panel-sub";
-    intro.textContent = "Esta app solo va a ser visible en este caso — no se suma al catálogo público.";
+    intro.textContent = "Esta app solo va a ser visible en esta colección — no se suma al catálogo público.";
     contenido.appendChild(intro);
 
     var form = document.createElement("form");
@@ -685,7 +685,7 @@ var EpeCasos = (function () {
     contenido.appendChild(form);
 
     EpeModal.open({
-      titulo: "Crear app de terceros para este caso",
+      titulo: "Crear app de terceros para esta colección",
       contenido: contenido,
     });
   }
@@ -803,7 +803,7 @@ var EpeCasos = (function () {
 
         listaColegas.innerHTML = "";
         if (colegas.length === 0) {
-          mensajeVacio(listaColegas, "Todavía no compartiste este caso con ningún colega.", "li");
+          mensajeVacio(listaColegas, "Todavía no compartiste esta colección con ningún colega.", "li");
         } else {
           colegas.forEach(function (share) {
             var li = document.createElement("li");
@@ -952,7 +952,7 @@ var EpeCasos = (function () {
 
         ul.innerHTML = "";
         if (comentarios.length === 0) {
-          mensajeVacio(ul, "Sin comentarios todavía. Van a aparecer acá los que dejen las personas con las que compartas este caso.", "li");
+          mensajeVacio(ul, "Sin comentarios todavía. Van a aparecer acá los que dejen las personas con las que compartas esta colección.", "li");
           return;
         }
 

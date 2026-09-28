@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="../css/base/theme.css" />
     <link rel="stylesheet" href="../css/base/typography.css" />
     <link rel="stylesheet" href="../css/components/buttons.css" />
+    <link rel="stylesheet" href="../css/components/form-field.css" />
     <link rel="stylesheet" href="../css/components/modal.css" />
     <link rel="stylesheet" href="../css/components/catalogo-tienda.css" />
     <link rel="stylesheet" href="../css/components/tercero-detalle.css" />
@@ -56,7 +57,7 @@
 
         <nav class="epe-tabs" role="tablist" aria-label="Secciones del espacio personal">
           <button class="epe-tab is-active" type="button" data-tab="perfil" role="tab" aria-selected="true">Perfil</button>
-          <button class="epe-tab" type="button" data-tab="casos" role="tab" aria-selected="false">Gestión de casos</button>
+          <button class="epe-tab" type="button" data-tab="casos" role="tab" aria-selected="false">Mis colecciones</button>
           <button class="epe-tab" type="button" data-tab="dispositivos" role="tab" aria-selected="false">Mis dispositivos</button>
         </nav>
 
@@ -71,7 +72,7 @@
           </div>
 
           <h2>Editar perfil</h2>
-          <p class="epe-panel-sub">Estos datos van a identificarte en los casos que compartas.</p>
+          <p class="epe-panel-sub">Estos datos van a identificarte en las colecciones que compartas.</p>
 
           <form class="epe-form-grid" data-perfil-form>
             <div class="epe-field">
@@ -86,7 +87,30 @@
               <label for="perfil-institucion">Institución</label>
               <input type="text" id="perfil-institucion" name="institucion" />
             </div>
-            <div>
+
+            <div class="epe-form-section">
+              <h3>Datos de contacto</h3>
+              <p class="epe-field-hint">
+                Opcionales. Si los completás, dis+capacidad puede usarlos para
+                contactarte y contarte sobre sus desarrollos — nunca los
+                compartimos con terceros.
+              </p>
+            </div>
+
+            <div class="epe-field">
+              <label for="perfil-telefono">Teléfono</label>
+              <input type="tel" id="perfil-telefono" name="telefono" autocomplete="tel" />
+            </div>
+            <div class="epe-field">
+              <label for="perfil-localidad">Localidad</label>
+              <input type="text" id="perfil-localidad" name="localidad" autocomplete="address-level2" />
+            </div>
+            <div class="epe-field">
+              <label for="perfil-email-contacto">Correo electrónico</label>
+              <input type="email" id="perfil-email-contacto" name="email_contacto" autocomplete="email" />
+            </div>
+
+            <div class="epe-form-actions">
               <button class="epe-btn-acc" type="submit">Guardar</button>
               <span class="epe-form-status" data-perfil-status></span>
             </div>
@@ -95,20 +119,20 @@
 
         <!-- ── Gestión de casos ── -->
         <section class="epe-panel" data-panel="casos" hidden>
-          <h2>Gestión de casos</h2>
+          <h2>Mis colecciones</h2>
           <p class="epe-panel-sub">
-            Un caso es cualquier entrada que quieras organizar a tu manera — no
+            Una colección es cualquier entrada que quieras organizar a tu manera — no
             necesariamente identifica a una persona.
           </p>
 
           <div class="epe-casos-layout">
             <div>
               <div class="epe-casos-col-header">
-                <h3>Tus casos</h3>
+                <h3>Tus colecciones</h3>
                 <button class="epe-btn-ghost epe-btn-sm" type="button" data-caso-nuevo>+ Nuevo</button>
               </div>
               <ul class="epe-casos-lista" data-casos-lista-propios></ul>
-              <p class="epe-vacio" data-casos-vacio-propios hidden>Todavía no creaste ningún caso.</p>
+              <p class="epe-vacio" data-casos-vacio-propios hidden>Todavía no creaste ninguna colección.</p>
 
               <div class="epe-casos-col-header epe-casos-col-header-compartidos" data-casos-compartidos-header hidden>
                 <h3>Compartidos con vos</h3>
@@ -117,13 +141,13 @@
             </div>
 
             <div>
-              <p class="epe-detalle-vacio" data-detalle-vacio>Elegí un caso de la lista, o creá uno nuevo.</p>
+              <p class="epe-detalle-vacio" data-detalle-vacio>Elegí una colección de la lista, o creá una nueva.</p>
 
               <div class="epe-detalle" data-detalle hidden>
                 <h3 data-detalle-nombre></h3>
                 <p class="epe-caso-banner" data-caso-banner hidden></p>
 
-                <nav class="epe-subtabs" role="tablist" aria-label="Secciones del caso">
+                <nav class="epe-subtabs" role="tablist" aria-label="Secciones de la colección">
                   <button class="epe-subtab is-active" type="button" data-subtab="actividades" role="tab" aria-selected="true">Recursos</button>
                   <button class="epe-subtab" type="button" data-subtab="entradas" role="tab" aria-selected="false" data-solo-dueno>Notas personales</button>
                   <button class="epe-subtab" type="button" data-subtab="compartido" role="tab" aria-selected="false">Espacio compartido</button>
@@ -140,7 +164,7 @@
                 <div class="epe-subpanel" data-subpanel="entradas" hidden>
                   <p class="epe-panel-sub">
                     Documentación privada tuya — nadie más la ve, ni siquiera
-                    las personas con las que compartís este caso.
+                    las personas con las que compartís esta colección.
                   </p>
                   <ul class="epe-entradas-lista" data-entradas-lista></ul>
                   <form class="epe-inline-form" data-entrada-form>
@@ -156,7 +180,7 @@
 
                 <div class="epe-subpanel" data-subpanel="compartido" hidden>
                   <p class="epe-panel-sub">
-                    Mini foro entre las personas con acceso a este caso —
+                    Mini foro entre las personas con acceso a esta colección —
                     para consultas y acompañamiento. No reemplaza tus notas
                     personales, que siguen siendo privadas.
                   </p>
@@ -171,8 +195,8 @@
                   <h4 class="epe-compartir-titulo">Personas con acceso</h4>
                   <p class="epe-panel-sub">
                     Pueden ver Recursos y participar del Espacio compartido,
-                    pero nunca tus notas personales ni editar o borrar el
-                    caso — eso queda siempre para vos.
+                    pero nunca tus notas personales ni editar o borrar la
+                    colección — eso queda siempre para vos.
                   </p>
 
                   <ul class="epe-compartir-lista" data-colegas-lista></ul>
@@ -194,7 +218,7 @@
                   <div class="epe-compartir-grupo">
                     <div class="epe-compartir-grupo-info">
                       <strong>dis+capacidad</strong>
-                      <span>Para que el equipo de soporte pueda ayudarte con este caso si hace falta.</span>
+                      <span>Para que el equipo de soporte pueda ayudarte con esta colección si hace falta.</span>
                     </div>
                     <label class="epe-switch">
                       <input type="checkbox" data-share-toggle value="dismascapacidad" />

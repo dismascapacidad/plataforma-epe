@@ -1,0 +1,85 @@
+/*
+  form-field.css
+  Estilos compartidos de ".epe-field" (label + input/select/textarea) para
+  cualquier formulario de la plataforma. Antes vivían solo en
+  features/perfil/login.css y el dashboard del espacio personal no los
+  cargaba — por eso el formulario de Perfil se veía sin estilo. Separado
+  acá, por funcionalidad transversal, para que login.html y dashboard.html
+  usen la misma definición sin duplicarla.
+*/
+
+.epe-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.epe-field label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+
+.epe-field input,
+.epe-field select,
+.epe-field textarea {
+  width: 100%;
+  border: 1px solid var(--tile-border);
+  background: var(--shell-bg);
+  color: var(--text-strong);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color 0.15s var(--ease), box-shadow 0.15s var(--ease);
+}
+
+.epe-field select {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--text-dim) 50%), linear-gradient(135deg, var(--text-dim) 50%, transparent 50%);
+  background-position: calc(100% - 18px) center, calc(100% - 13px) center;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 30px;
+}
+
+.epe-field textarea {
+  min-height: 84px;
+  resize: vertical;
+}
+
+.epe-field input::placeholder,
+.epe-field textarea::placeholder {
+  color: var(--text-faint);
+}
+
+.epe-field input:hover,
+.epe-field select:hover,
+.epe-field textarea:hover {
+  border-color: var(--tile-border-hover);
+}
+
+.epe-field input:focus-visible,
+.epe-field select:focus-visible,
+.epe-field textarea:focus-visible {
+  outline: none;
+  border-color: var(--teal-600);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--teal-600) 20%, transparent);
+}
+
+.epe-field input:disabled,
+.epe-field select:disabled,
+.epe-field textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Texto de ayuda debajo de un campo — p. ej. aclarar que es opcional o para
+   qué se usa. No es un error (ver .epe-form-status), es contexto. */
+.epe-field-hint {
+  margin-top: 5px;
+  font-size: 12px;
+  color: var(--text-faint);
+  line-height: 1.4;
+}

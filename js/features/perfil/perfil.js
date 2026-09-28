@@ -57,6 +57,9 @@ var EpePerfil = (function () {
         form.elements.nombre.value = datos.nombre || "";
         form.elements.profesion.value = datos.profesion || "";
         form.elements.institucion.value = datos.institucion || "";
+        form.elements.telefono.value = datos.telefono || "";
+        form.elements.localidad.value = datos.localidad || "";
+        form.elements.email_contacto.value = datos.email_contacto || "";
         actualizarResumen(root, datos, email);
         status.textContent = "";
       })
@@ -74,6 +77,9 @@ var EpePerfil = (function () {
         nombre: form.elements.nombre.value.trim(),
         profesion: form.elements.profesion.value.trim(),
         institucion: form.elements.institucion.value.trim(),
+        telefono: form.elements.telefono.value.trim(),
+        localidad: form.elements.localidad.value.trim(),
+        email_contacto: form.elements.email_contacto.value.trim(),
       };
 
       EpeStore.saveProfile(datos)
