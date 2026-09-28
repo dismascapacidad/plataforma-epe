@@ -100,6 +100,8 @@ var EpeDuracionPulsacion = (function () {
   var elVelocidadInput, elVelocidadValor;
   var elAnchoInput, elAnchoValor;
   var elEstadisticasBoton, elEstadisticasPanel;
+  var btnConfigurarDispositivo, btnRestaurarDispositivo, elDispositivoWrap, enlacesVolverApps;
+  var restaurarDispositivo = null; // función pendiente para devolver el dispositivo a como estaba
 
   var config = {
     tipoEntrada: "teclado",
@@ -509,6 +511,8 @@ var EpeDuracionPulsacion = (function () {
   function actualizarVisibilidadEntrada() {
     var esTeclado = root.querySelector('input[name="dp-entrada"]:checked').value === "teclado";
     root.querySelector("[data-dp-tecla-wrap]").hidden = !esTeclado;
+    // Con mouse/pantalla no hay tecla que mapear a un botón del dispositivo.
+    if (elDispositivoWrap) elDispositivoWrap.hidden = !esTeclado;
   }
 
   function leerConfigDesdeForm() {
@@ -516,6 +520,82 @@ var EpeDuracionPulsacion = (function () {
     config.velocidadPct = parseInt(elVelocidadInput.value, 10);
     config.anchoZonaPct = parseInt(elAnchoInput.value, 10);
     config.umbralMs = parseInt(elUmbralInput.value, 10);
+  }
+
+  function empezar() {
+    leerConfigDesdeForm();
+    elBotonMouse.hidden = config.tipoEntrada !== "mouse";
+    iniciarPartida(1);
+  }
+
+  // ── Configurar dispositivo físico ─────────────────────────────────
+  // Acá tampoco hay panel de reasignación: una sola tecla, la que ya se
+  // haya capturado en "Tecla asignada".
+  function entradasDispositivo() {
+    if (config.tipoEntrada !== "teclado") return [];
+    return [{ id: "dp", etiqueta: "Pulsador", tecla: config.tecla.toLowerCase() }];
+  }
+
+  function configurarDispositivo() {
+    if (!window.EpeConfigurarDispositivo) return; // widget.js no cargó
+    window.EpeConfigurarDispositivo
+      .abrir(entradasDispositivo(), { titulo: "Configurar dispositivo — Duración de pulsación" })
+      .then(function (resultado) {
+        if (resultado && resultado.restaurar) restaurarDispositivo = resultado.restaurar;
+        actualizarBotonRestaurar();
+        // El usuario ya apretó "Empezar" dentro del propio modal: arrancamos
+        // directo, sin pedirle un segundo click acá.
+        if (resultado && resultado.continuar) empezar();
+      });
+  }
+
+  function actualizarBotonRestaurar() {
+    if (btnRestaurarDispositivo) btnRestaurarDispositivo.hidden = !restaurarDispositivo;
+  }
+
+  function restaurarDispositivoClick() {
+    if (!restaurarDispositivo) return;
+    var fn = restaurarDispositivo;
+    restaurarDispositivo = null;
+    btnRestaurarDispositivo.disabled = true;
+    btnRestaurarDispositivo.textContent = "Restaurando…";
+    fn()
+      .then(function (r) {
+        btnRestaurarDispositivo.textContent = r && r.ok ? "Listo" : "Quedó distinto en algún campo";
+      })
+      .catch(function () {
+        btnRestaurarDispositivo.textContent = "No se pudo restaurar";
+      })
+      .then(function () {
+        window.setTimeout(function () {
+          btnRestaurarDispositivo.disabled = false;
+          btnRestaurarDispositivo.textContent = "Restaurar dispositivo";
+          actualizarBotonRestaurar();
+        }, 2500);
+      });
+  }
+
+  // Antes de cualquier salida (volver a Apps EpE, desde donde sea) recuerda
+  // restaurar el dispositivo si quedó algo pendiente. `luegoSalir` es lo
+  // que hay que hacer una vez que es seguro seguir.
+  function salirConfirmado(luegoSalir) {
+    if (!(window.EpeConfigurarDispositivo && restaurarDispositivo)) {
+      luegoSalir();
+      return;
+    }
+    var fn = restaurarDispositivo;
+    window.EpeConfigurarDispositivo.confirmarSalida(fn).then(function (r) {
+      if (!r.salir) return;
+      if (r.restaurado) {
+        restaurarDispositivo = null;
+        actualizarBotonRestaurar();
+      }
+      luegoSalir();
+    });
+  }
+
+  function irAApps() {
+    window.location.href = "index.html";
   }
 
   function init(rootEl) {
@@ -538,6 +618,10 @@ var EpeDuracionPulsacion = (function () {
     elAnchoValor = root.querySelector("[data-dp-ancho-valor]");
     elEstadisticasBoton = root.querySelector("[data-dp-estadisticas-boton]");
     elEstadisticasPanel = root.querySelector("[data-dp-estadisticas-panel]");
+    btnConfigurarDispositivo = root.querySelector("[data-configurar-dispositivo]");
+    btnRestaurarDispositivo = root.querySelector("[data-restaurar-dispositivo]");
+    elDispositivoWrap = root.querySelector("[data-dp-dispositivo-wrap]");
+    enlacesVolverApps = Array.prototype.slice.call(root.querySelectorAll("[data-volver-apps]"));
 
     root.querySelectorAll("[data-dp-carril]").forEach(function (el) {
       elCarriles.push({
@@ -573,11 +657,7 @@ var EpeDuracionPulsacion = (function () {
     });
     elAnchoValor.textContent = elAnchoInput.value + "%";
 
-    root.querySelector("[data-dp-empezar]").addEventListener("click", function () {
-      leerConfigDesdeForm();
-      elBotonMouse.hidden = config.tipoEntrada !== "mouse";
-      iniciarPartida(1);
-    });
+    root.querySelector("[data-dp-empezar]").addEventListener("click", empezar);
 
     root.querySelector("[data-dp-siguiente-nivel]").addEventListener("click", function () {
       var proximoNivel = juego ? juego.nivel + 1 : 1;
@@ -585,6 +665,20 @@ var EpeDuracionPulsacion = (function () {
     });
 
     elEstadisticasBoton.addEventListener("click", alternarEstadisticas);
+
+    if (btnConfigurarDispositivo) {
+      btnConfigurarDispositivo.addEventListener("click", configurarDispositivo);
+    }
+    if (btnRestaurarDispositivo) {
+      btnRestaurarDispositivo.addEventListener("click", restaurarDispositivoClick);
+      actualizarBotonRestaurar();
+    }
+    enlacesVolverApps.forEach(function (a) {
+      a.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        salirConfirmado(irAApps);
+      });
+    });
 
     document.addEventListener("keydown", onKeydown);
     document.addEventListener("keyup", onKeyup);

@@ -38,6 +38,15 @@
   background: var(--shell-bg);
 }
 
+/* `hidden` pierde contra cualquier display: flex/inline-flex de una clase
+   con la misma especificidad (p. ej. .epe-btn-ghost) — se fuerza acá para
+   que hidden funcione en todo lo que vive dentro del shell. Con esto, la
+   regla puntual de abajo (:not([hidden]) en data-dp-dispositivo-wrap) ya
+   no hace falta, pero se deja igual: es inofensiva y documenta el caso. */
+.epe-dp-shell [hidden] {
+  display: none !important;
+}
+
 .epe-dp-header {
   flex: 0 0 auto;
   display: flex;
@@ -106,6 +115,14 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
+}
+
+/* :not([hidden]) — si no, esta regla (misma especificidad que [hidden])
+   le gana al `hidden` nativo y el bloque nunca se oculta de verdad. */
+[data-dp-dispositivo-wrap]:not([hidden]) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .epe-dp-config-grupo {

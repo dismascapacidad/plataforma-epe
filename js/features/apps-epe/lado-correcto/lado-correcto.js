@@ -40,13 +40,23 @@ var EpeLadoCorrecto = (function () {
 
   var LARGO_FILA = 4; // cuántas frutas se ven a la vez en la fila (índice 0 = la más cerca)
 
+  // Entradas fijas: acá no hay panel de reasignación de teclas (a diferencia
+  // de Hanói/N-back/Stroop), las flechas son fijas. Se le pasan directo al
+  // widget de configuración de dispositivo.
+  var ENTRADAS_DISPOSITIVO = [
+    { id: "izquierda", etiqueta: "Fruta izquierda", tecla: "arrowleft" },
+    { id: "derecha", etiqueta: "Fruta derecha", tecla: "arrowright" },
+  ];
+
   var root, elConfig, elJuego, elResumen, elCarril;
   var elHudObjetivo, elHudErrores;
   var elFrutaIzq, elFrutaDer, elContadorIzq, elContadorDer;
   var elFlechaIzq, elFlechaDer;
   var elResumenTexto, elEstadisticasBoton, elEstadisticasPanel;
+  var btnConfigurarDispositivo, btnRestaurarDispositivo, enlacesVolverApps;
 
   var estado = null; // null = no hay partida en curso
+  var restaurarDispositivo = null; // función pendiente para devolver el dispositivo a como estaba
 
   function elegirDosFrutas() {
     var banco = FRUTAS_BANCO.slice();
@@ -305,6 +315,71 @@ var EpeLadoCorrecto = (function () {
     };
   }
 
+  // ── Configurar dispositivo físico ─────────────────────────────────────
+  // Acá las flechas son fijas (no hay panel de reasignación): se le pasan
+  // directo al widget, sin pasar por EpeAcceso.entradasNecesarias.
+  function configurarDispositivo() {
+    if (!window.EpeConfigurarDispositivo) return; // widget.js no cargó
+    window.EpeConfigurarDispositivo
+      .abrir(ENTRADAS_DISPOSITIVO, { titulo: "Configurar dispositivo — Lado Correcto" })
+      .then(function (resultado) {
+        if (resultado && resultado.restaurar) restaurarDispositivo = resultado.restaurar;
+        actualizarBotonRestaurar();
+        // El usuario ya apretó "Empezar" dentro del propio modal: arrancamos
+        // directo, sin pedirle un segundo click acá.
+        if (resultado && resultado.continuar) iniciarPartida(leerConfig());
+      });
+  }
+
+  function actualizarBotonRestaurar() {
+    if (btnRestaurarDispositivo) btnRestaurarDispositivo.hidden = !restaurarDispositivo;
+  }
+
+  function restaurarDispositivoClick() {
+    if (!restaurarDispositivo) return;
+    var fn = restaurarDispositivo;
+    restaurarDispositivo = null;
+    btnRestaurarDispositivo.disabled = true;
+    btnRestaurarDispositivo.textContent = "Restaurando…";
+    fn()
+      .then(function (r) {
+        btnRestaurarDispositivo.textContent = r && r.ok ? "Listo" : "Quedó distinto en algún campo";
+      })
+      .catch(function () {
+        btnRestaurarDispositivo.textContent = "No se pudo restaurar";
+      })
+      .then(function () {
+        window.setTimeout(function () {
+          btnRestaurarDispositivo.disabled = false;
+          btnRestaurarDispositivo.textContent = "Restaurar dispositivo";
+          actualizarBotonRestaurar();
+        }, 2500);
+      });
+  }
+
+  // Antes de cualquier salida (volver a Apps EpE, desde donde sea) recuerda
+  // restaurar el dispositivo si quedó algo pendiente. `luegoSalir` es lo que
+  // hay que hacer una vez que es seguro seguir.
+  function salirConfirmado(luegoSalir) {
+    if (!(window.EpeConfigurarDispositivo && restaurarDispositivo)) {
+      luegoSalir();
+      return;
+    }
+    var fn = restaurarDispositivo;
+    window.EpeConfigurarDispositivo.confirmarSalida(fn).then(function (r) {
+      if (!r.salir) return;
+      if (r.restaurado) {
+        restaurarDispositivo = null;
+        actualizarBotonRestaurar();
+      }
+      luegoSalir();
+    });
+  }
+
+  function irAApps() {
+    window.location.href = "index.html";
+  }
+
   function init(rootEl) {
     root = rootEl;
     if (!root) return;
@@ -324,6 +399,9 @@ var EpeLadoCorrecto = (function () {
     elResumenTexto = root.querySelector("[data-lado-resumen-texto]");
     elEstadisticasBoton = root.querySelector("[data-lado-estadisticas-boton]");
     elEstadisticasPanel = root.querySelector("[data-lado-estadisticas-panel]");
+    btnConfigurarDispositivo = root.querySelector("[data-configurar-dispositivo]");
+    btnRestaurarDispositivo = root.querySelector("[data-restaurar-dispositivo]");
+    enlacesVolverApps = Array.prototype.slice.call(root.querySelectorAll("[data-volver-apps]"));
 
     var cantidadWrap = root.querySelector("[data-lado-cantidad-wrap]");
     var tiempoWrap = root.querySelector("[data-lado-tiempo-wrap]");
@@ -343,6 +421,20 @@ var EpeLadoCorrecto = (function () {
       elResumen.hidden = true;
     });
     elEstadisticasBoton.addEventListener("click", alternarEstadisticas);
+
+    if (btnConfigurarDispositivo) {
+      btnConfigurarDispositivo.addEventListener("click", configurarDispositivo);
+    }
+    if (btnRestaurarDispositivo) {
+      btnRestaurarDispositivo.addEventListener("click", restaurarDispositivoClick);
+      actualizarBotonRestaurar();
+    }
+    enlacesVolverApps.forEach(function (a) {
+      a.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        salirConfirmado(irAApps);
+      });
+    });
 
     elFlechaIzq.addEventListener("pointerdown", function () {
       responder("izquierda");

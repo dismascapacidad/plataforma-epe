@@ -148,6 +148,10 @@ var EpeBarrido = (function () {
     var elPalabraNueva = root.querySelector("[data-barrido-palabra-nueva]");
     var elPalabraAgregar = root.querySelector("[data-barrido-palabra-agregar]");
     var elBtnReiniciar = root.querySelector("[data-barrido-reiniciar]");
+    var btnConfigurarDispositivo = root.querySelector("[data-configurar-dispositivo]");
+    var btnRestaurarDispositivo = root.querySelector("[data-restaurar-dispositivo]");
+    var enlacesVolverApps = Array.prototype.slice.call(root.querySelectorAll("[data-volver-apps]"));
+    var restaurarDispositivo = null; // función pendiente para devolver el dispositivo a como estaba
 
     function construirGrilla(disposicion) {
       var celdas = DISPOSICIONES[disposicion];
@@ -265,12 +269,114 @@ var EpeBarrido = (function () {
     // de las Apps EpE, donde Escape no hace nada.
     var iniciado = false; // true después del primer "Empezar" — cambia el label a "Continuar"
 
-    elEmpezar.addEventListener("click", function () {
+    function empezar() {
       elConfig.hidden = true;
       if (!iniciado) {
         iniciado = true;
         elEmpezar.textContent = "Continuar";
       }
+    }
+
+    elEmpezar.addEventListener("click", empezar);
+
+    // ── Configurar dispositivo físico ─────────────────────────────────
+    // Acá tampoco hay panel de reasignación: las teclas (K/L/P) son fijas.
+    // Qué entradas hacen falta depende del modo de barrido y de si la
+    // reproducción de la palabra es por tecla — se arma con el mismo
+    // criterio que renderTeclas().
+    function entradasDispositivo() {
+      var lista = [];
+      if (state.modo === "tiempo") {
+        lista.push({ id: "k", etiqueta: "Seleccionar (barrido automático)", tecla: "k" });
+      } else if (state.modo === "auto-filacol") {
+        lista.push({ id: "k", etiqueta: "Confirmar fila / seleccionar celda", tecla: "k" });
+      } else if (state.modo === "manual-lineal") {
+        lista.push({ id: "k", etiqueta: "Avanzar", tecla: "k" });
+        lista.push({ id: "l", etiqueta: "Seleccionar", tecla: "l" });
+      } else {
+        lista.push({ id: "k", etiqueta: "Avanzar (fila o columna)", tecla: "k" });
+        lista.push({ id: "l", etiqueta: "Confirmar fila / seleccionar celda", tecla: "l" });
+      }
+      if (state.reproduccion === "tecla") {
+        lista.push({ id: "p", etiqueta: "Reproducir la palabra escrita", tecla: "p" });
+      }
+      return lista;
+    }
+
+    function configurarDispositivo() {
+      if (!window.EpeConfigurarDispositivo) return; // widget.js no cargó
+      window.EpeConfigurarDispositivo
+        .abrir(entradasDispositivo(), { titulo: "Configurar dispositivo — Barrido" })
+        .then(function (resultado) {
+          if (resultado && resultado.restaurar) restaurarDispositivo = resultado.restaurar;
+          actualizarBotonRestaurar();
+          // El usuario ya apretó "Empezar" dentro del propio modal: arrancamos
+          // directo, sin pedirle un segundo click acá.
+          if (resultado && resultado.continuar) empezar();
+        });
+    }
+
+    function actualizarBotonRestaurar() {
+      if (btnRestaurarDispositivo) btnRestaurarDispositivo.hidden = !restaurarDispositivo;
+    }
+
+    function restaurarDispositivoClick() {
+      if (!restaurarDispositivo) return;
+      var fn = restaurarDispositivo;
+      restaurarDispositivo = null;
+      btnRestaurarDispositivo.disabled = true;
+      btnRestaurarDispositivo.textContent = "Restaurando…";
+      fn()
+        .then(function (r) {
+          btnRestaurarDispositivo.textContent = r && r.ok ? "Listo" : "Quedó distinto en algún campo";
+        })
+        .catch(function () {
+          btnRestaurarDispositivo.textContent = "No se pudo restaurar";
+        })
+        .then(function () {
+          window.setTimeout(function () {
+            btnRestaurarDispositivo.disabled = false;
+            btnRestaurarDispositivo.textContent = "Restaurar dispositivo";
+            actualizarBotonRestaurar();
+          }, 2500);
+        });
+    }
+
+    // Antes de cualquier salida (volver a Apps EpE, desde donde sea) recuerda
+    // restaurar el dispositivo si quedó algo pendiente. `luegoSalir` es lo
+    // que hay que hacer una vez que es seguro seguir.
+    function salirConfirmado(luegoSalir) {
+      if (!(window.EpeConfigurarDispositivo && restaurarDispositivo)) {
+        luegoSalir();
+        return;
+      }
+      var fn = restaurarDispositivo;
+      window.EpeConfigurarDispositivo.confirmarSalida(fn).then(function (r) {
+        if (!r.salir) return;
+        if (r.restaurado) {
+          restaurarDispositivo = null;
+          actualizarBotonRestaurar();
+        }
+        luegoSalir();
+      });
+    }
+
+    function irAApps() {
+      window.location.href = "index.html";
+    }
+
+    if (btnConfigurarDispositivo) {
+      btnConfigurarDispositivo.addEventListener("click", configurarDispositivo);
+    }
+    if (btnRestaurarDispositivo) {
+      btnRestaurarDispositivo.addEventListener("click", restaurarDispositivoClick);
+      actualizarBotonRestaurar();
+    }
+    enlacesVolverApps.forEach(function (a) {
+      a.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        salirConfirmado(irAApps);
+      });
     });
 
     document.addEventListener("keydown", function (ev) {

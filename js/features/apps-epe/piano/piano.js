@@ -14,6 +14,12 @@
  * Sonido con Web Audio (osciladores) — sin archivos de audio: no depende
  * de assets, funciona offline y no pesa.
  *
+ * Mismo esquema que el resto de las Apps EpE: modal de configuración
+ * primero (acá, solo el dispositivo — las 7 teclas son fijas), después el
+ * juego (el teclado). Con el juego iniciado, Escape vuelve a abrir la
+ * configuración sin perder nada — mismo criterio que Vincular Imagen,
+ * porque acá tampoco hay una "partida" que termine.
+ *
  * Script clásico (ver theme.js). Namespace: EpePiano.
  */
 
@@ -80,10 +86,19 @@ var EpePiano = (function () {
   function init(root) {
     if (!root) return;
 
+    var elTeclado = root.querySelector("[data-piano-teclado]") || root;
+    var elConfig = root.querySelector("[data-piano-config]");
+    var btnEmpezar = root.querySelector("[data-piano-empezar]");
+    var btnConfigurarDispositivo = root.querySelector("[data-configurar-dispositivo]");
+    var btnRestaurarDispositivo = root.querySelector("[data-restaurar-dispositivo]");
+    var enlacesVolverApps = Array.prototype.slice.call(root.querySelectorAll("[data-volver-apps]"));
+    var restaurarDispositivo = null; // función pendiente para devolver el dispositivo a como estaba
+    var iniciado = false; // true después del primer "Empezar"
+
     var teclas = {}; // tecla física -> elemento <button>
     var blancas = document.createElement("div");
     blancas.className = "epe-piano-blancas";
-    root.appendChild(blancas);
+    elTeclado.appendChild(blancas);
 
     NOTAS.forEach(function (nota, idx) {
       var btn = document.createElement("button");
@@ -135,17 +150,130 @@ var EpePiano = (function () {
 
     document.addEventListener("keydown", function (ev) {
       if (ev.repeat) return; // no re-disparar mientras se mantiene apretada
-      var nota = notaPorTecla[ev.key.toLowerCase()];
+      var tecla = ev.key.toLowerCase();
+
+      if (tecla === "escape") {
+        if (iniciado && elConfig.hidden) volverAConfig();
+        return;
+      }
+
+      // Mientras la configuración está abierta (al arrancar, o reabierta con
+      // Escape) las teclas no tocan notas — si no, una pulsación mientras se
+      // está configurando el dispositivo tocaría una nota sin querer.
+      if (!elConfig.hidden) return;
+
+      var nota = notaPorTecla[tecla];
       if (!nota) return;
       teclas[nota.tecla].classList.add("is-active");
       tocarNota(nota.tecla, nota.freq);
     });
 
     document.addEventListener("keyup", function (ev) {
+      if (!elConfig.hidden) return;
       var nota = notaPorTecla[ev.key.toLowerCase()];
       if (!nota) return;
       teclas[nota.tecla].classList.remove("is-active");
       soltarNota(nota.tecla);
+    });
+
+    // ── Configuración ↔ juego ───────────────────────────────────────────
+    function empezar() {
+      iniciado = true;
+      elConfig.hidden = true;
+      elTeclado.hidden = false;
+    }
+
+    function volverAConfig() {
+      elTeclado.hidden = true;
+      elConfig.hidden = false;
+    }
+
+    // ── Configurar dispositivo físico ─────────────────────────────────
+    // Las 7 notas son fijas (A S D F G H J): se le pasan directo al widget,
+    // sin panel de reasignación.
+    function entradasDispositivo() {
+      return NOTAS.map(function (n) {
+        return { id: n.tecla, etiqueta: n.nombre, tecla: n.tecla };
+      });
+    }
+
+    function configurarDispositivo() {
+      if (!window.EpeConfigurarDispositivo) return; // widget.js no cargó
+      window.EpeConfigurarDispositivo
+        .abrir(entradasDispositivo(), { titulo: "Configurar dispositivo — Piano" })
+        .then(function (resultado) {
+          if (resultado && resultado.restaurar) restaurarDispositivo = resultado.restaurar;
+          actualizarBotonRestaurar();
+          // El usuario ya apretó "Empezar" dentro del propio modal: arrancamos
+          // directo, sin pedirle un segundo click acá.
+          if (resultado && resultado.continuar) empezar();
+        });
+    }
+
+    function actualizarBotonRestaurar() {
+      if (btnRestaurarDispositivo) btnRestaurarDispositivo.hidden = !restaurarDispositivo;
+    }
+
+    function restaurarDispositivoClick() {
+      if (!restaurarDispositivo) return;
+      var fn = restaurarDispositivo;
+      restaurarDispositivo = null;
+      btnRestaurarDispositivo.disabled = true;
+      btnRestaurarDispositivo.textContent = "Restaurando…";
+      fn()
+        .then(function (r) {
+          btnRestaurarDispositivo.textContent = r && r.ok ? "Listo" : "Quedó distinto en algún campo";
+        })
+        .catch(function () {
+          btnRestaurarDispositivo.textContent = "No se pudo restaurar";
+        })
+        .then(function () {
+          window.setTimeout(function () {
+            btnRestaurarDispositivo.disabled = false;
+            btnRestaurarDispositivo.textContent = "Restaurar dispositivo";
+            actualizarBotonRestaurar();
+          }, 2500);
+        });
+    }
+
+    // Antes de cualquier salida (volver a Apps EpE, desde donde sea) recuerda
+    // restaurar el dispositivo si quedó algo pendiente. `luegoSalir` es lo
+    // que hay que hacer una vez que es seguro seguir.
+    function salirConfirmado(luegoSalir) {
+      if (!(window.EpeConfigurarDispositivo && restaurarDispositivo)) {
+        luegoSalir();
+        return;
+      }
+      var fn = restaurarDispositivo;
+      window.EpeConfigurarDispositivo.confirmarSalida(fn).then(function (r) {
+        if (!r.salir) return;
+        if (r.restaurado) {
+          restaurarDispositivo = null;
+          actualizarBotonRestaurar();
+        }
+        luegoSalir();
+      });
+    }
+
+    function irAApps() {
+      window.location.href = "index.html";
+    }
+
+    if (btnEmpezar) {
+      btnEmpezar.addEventListener("click", empezar);
+    }
+    if (btnConfigurarDispositivo) {
+      btnConfigurarDispositivo.addEventListener("click", configurarDispositivo);
+    }
+    if (btnRestaurarDispositivo) {
+      btnRestaurarDispositivo.addEventListener("click", restaurarDispositivoClick);
+      actualizarBotonRestaurar();
+    }
+    enlacesVolverApps.forEach(function (a) {
+      a.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        salirConfirmado(irAApps);
+      });
     });
   }
 

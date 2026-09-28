@@ -14,13 +14,16 @@
     <link rel="stylesheet" href="../css/base/typography.css" />
     <link rel="stylesheet" href="../css/components/buttons.css" />
     <link rel="stylesheet" href="../css/components/app-nav.css" />
+    <link rel="stylesheet" href="../css/components/juego-base.css" />
+    <link rel="stylesheet" href="../css/components/modal.css" />
     <link rel="stylesheet" href="../css/features/apps-epe/piano.css" />
+    <link rel="stylesheet" href="../css/features/configurar-dispositivo/widget.css" />
   </head>
   <body>
     <div class="epe-piano-shell">
       <header class="epe-piano-header">
         <div class="epe-app-header-left">
-          <a class="epe-app-back" href="index.html">← Apps EpE</a>
+          <a class="epe-app-back" href="index.html" data-volver-apps>← Apps EpE</a>
           <a href="../index.html"><img src="../assets/img/logo-epe.png" alt="Equipar para Equipar" height="26" /></a>
         </div>
         <button
@@ -40,19 +43,43 @@
         </button>
       </header>
 
-      <div class="epe-piano-intro">
-        <h1>Piano de 7 notas</h1>
-        <p>Tocá con el mouse, el dedo, o las teclas A S D F G H J del teclado.</p>
+      <!-- ── Configuración: modal, se cierra solo al Empezar; con el juego
+           iniciado, Escape vuelve a abrirlo sin perder nada — mismo criterio
+           que Vincular Imagen, porque acá tampoco hay una "partida" que
+           termine. ── -->
+      <div class="epe-juego-overlay" data-piano-config>
+        <div class="epe-juego-modal">
+          <h1>Piano de 7 notas</h1>
+          <p class="epe-juego-intro">Tocá con el mouse, el dedo, o las teclas A S D F G H J del teclado.</p>
+
+          <div class="epe-piano-dispositivo">
+            <button class="epe-btn-ghost" type="button" data-configurar-dispositivo>
+              Configurar dispositivo…
+            </button>
+            <button class="epe-btn-ghost" type="button" data-restaurar-dispositivo hidden>
+              Restaurar dispositivo
+            </button>
+          </div>
+
+          <div class="epe-juego-pie">
+            <a class="epe-btn-ghost" href="index.html" data-volver-apps>Volver a Apps EpE</a>
+            <button class="epe-btn-acc" type="button" data-piano-empezar>Empezar</button>
+          </div>
+        </div>
       </div>
 
-      <div class="epe-piano-teclado" data-piano-teclado></div>
+      <main class="epe-juego-main">
+        <div class="epe-piano-teclado" data-piano-teclado hidden></div>
+      </main>
     </div>
 
     <script src="../js/core/theme.js"></script>
+    <script src="../js/core/modal.js"></script>
+    <script type="module" src="../js/features/configurar-dispositivo/widget.js"></script>
     <script src="../js/features/apps-epe/piano/piano.js"></script>
     <script>
       EpeTheme.initThemeToggle(document.getElementById("theme-toggle"));
-      EpePiano.init(document.querySelector("[data-piano-teclado]"));
+      EpePiano.init(document.querySelector(".epe-piano-shell"));
     </script>
   </body>
 </html>

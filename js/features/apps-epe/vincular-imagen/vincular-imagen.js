@@ -8,10 +8,12 @@
  * usuario asigna presionándola (no hay un mapeo fijo: cada instalación de
  * switches puede tener sus propias teclas emuladas).
  *
- * Cada casillero es a la vez su propia zona de edición y de juego: el
- * área grande de la imagen ES el botón que se activa (con mouse, switch-
- * mouse, touch o la tecla asignada); los controles chicos alrededor
- * (imagen / texto / tecla) son para configurarlo.
+ * Mismo esquema que el resto de las Apps EpE: modal de configuración
+ * primero (acá, cantidad + imagen/texto/tecla de cada casillero), después
+ * el juego (la grilla de botones grandes, ya sin controles de edición
+ * encima). Con el juego iniciado, Escape vuelve a abrir la configuración
+ * sin perder lo cargado — mismo criterio que Barrido, porque acá tampoco
+ * hay una "partida" que termine.
  *
  * Script clásico. Namespace: EpeVincularImagen.
  */
@@ -23,14 +25,24 @@ var EpeVincularImagen = (function () {
   function init(root) {
     var casillas = []; // { imagen: dataURL|null, texto: string, tecla: string|null }
     var esperandoTeclaIdx = null;
+    var iniciado = false; // true después del primer "Empezar"
 
+    var elConfig = root.querySelector("[data-vi-config]");
     var elCantidad = root.querySelector("[data-vi-cantidad]");
+    var elEditor = root.querySelector("[data-vi-editor]");
+    var elEmpezar = root.querySelector("[data-vi-empezar]");
     var elGrilla = root.querySelector("[data-vi-grilla]");
+    var btnConfigurarDispositivo = root.querySelector("[data-configurar-dispositivo]");
+    var btnRestaurarDispositivo = root.querySelector("[data-restaurar-dispositivo]");
+    var enlacesVolverApps = Array.prototype.slice.call(root.querySelectorAll("[data-volver-apps]"));
+    var restaurarDispositivo = null; // función pendiente para devolver el dispositivo a como estaba
 
     elCantidad.addEventListener("change", function () {
       ajustarCantidad(Number(elCantidad.value));
-      render();
+      renderConfig();
     });
+
+    elEmpezar.addEventListener("click", empezar);
 
     document.addEventListener("keydown", function (ev) {
       if (ev.repeat) return;
@@ -39,9 +51,19 @@ var EpeVincularImagen = (function () {
       if (esperandoTeclaIdx !== null) {
         if (tecla !== "escape") asignarTecla(esperandoTeclaIdx, tecla);
         esperandoTeclaIdx = null;
-        render();
+        renderConfig();
         return;
       }
+
+      if (tecla === "escape") {
+        if (iniciado && elConfig.hidden) volverAConfig();
+        return;
+      }
+
+      // Mientras la configuración está abierta (al arrancar, o reabierta
+      // con Escape) las teclas de juego no activan casilleros — si no, una
+      // pulsación mientras se está reconfigurando activaría uno sin querer.
+      if (!elConfig.hidden) return;
 
       var idx = casillas.findIndex(function (c) {
         return c.tecla === tecla;
@@ -85,6 +107,110 @@ var EpeVincularImagen = (function () {
       hablar(casillas[idx].texto);
     }
 
+    // ── Configuración ↔ juego ───────────────────────────────────────────
+    function empezar() {
+      iniciado = true;
+      elConfig.hidden = true;
+      elGrilla.hidden = false;
+      renderJuego();
+    }
+
+    function volverAConfig() {
+      elGrilla.hidden = true;
+      elConfig.hidden = false;
+      renderConfig();
+    }
+
+    // ── Configurar dispositivo físico ─────────────────────────────────
+    // Acá tampoco hay panel de reasignación: las entradas son las teclas ya
+    // asignadas a cada casillero desde el editor. Los casilleros sin tecla
+    // asignada quedan afuera (no hay nada del lado del juego a lo que
+    // mapearlos todavía).
+    function entradasDispositivo() {
+      var lista = [];
+      casillas.forEach(function (c, idx) {
+        if (!c.tecla) return;
+        lista.push({ id: String(idx), etiqueta: c.texto || "Casillero " + (idx + 1), tecla: c.tecla });
+      });
+      return lista;
+    }
+
+    function configurarDispositivo() {
+      if (!window.EpeConfigurarDispositivo) return; // widget.js no cargó
+      window.EpeConfigurarDispositivo
+        .abrir(entradasDispositivo(), { titulo: "Configurar dispositivo — Vincular imagen" })
+        .then(function (resultado) {
+          if (resultado && resultado.restaurar) restaurarDispositivo = resultado.restaurar;
+          actualizarBotonRestaurar();
+          // El usuario ya apretó "Empezar" dentro del propio modal: arrancamos
+          // directo, sin pedirle un segundo click acá.
+          if (resultado && resultado.continuar) empezar();
+        });
+    }
+
+    function actualizarBotonRestaurar() {
+      if (btnRestaurarDispositivo) btnRestaurarDispositivo.hidden = !restaurarDispositivo;
+    }
+
+    function restaurarDispositivoClick() {
+      if (!restaurarDispositivo) return;
+      var fn = restaurarDispositivo;
+      restaurarDispositivo = null;
+      btnRestaurarDispositivo.disabled = true;
+      btnRestaurarDispositivo.textContent = "Restaurando…";
+      fn()
+        .then(function (r) {
+          btnRestaurarDispositivo.textContent = r && r.ok ? "Listo" : "Quedó distinto en algún campo";
+        })
+        .catch(function () {
+          btnRestaurarDispositivo.textContent = "No se pudo restaurar";
+        })
+        .then(function () {
+          window.setTimeout(function () {
+            btnRestaurarDispositivo.disabled = false;
+            btnRestaurarDispositivo.textContent = "Restaurar dispositivo";
+            actualizarBotonRestaurar();
+          }, 2500);
+        });
+    }
+
+    // Antes de cualquier salida (volver a Apps EpE, desde donde sea) recuerda
+    // restaurar el dispositivo si quedó algo pendiente. `luegoSalir` es lo
+    // que hay que hacer una vez que es seguro seguir.
+    function salirConfirmado(luegoSalir) {
+      if (!(window.EpeConfigurarDispositivo && restaurarDispositivo)) {
+        luegoSalir();
+        return;
+      }
+      var fn = restaurarDispositivo;
+      window.EpeConfigurarDispositivo.confirmarSalida(fn).then(function (r) {
+        if (!r.salir) return;
+        if (r.restaurado) {
+          restaurarDispositivo = null;
+          actualizarBotonRestaurar();
+        }
+        luegoSalir();
+      });
+    }
+
+    function irAApps() {
+      window.location.href = "index.html";
+    }
+
+    if (btnConfigurarDispositivo) {
+      btnConfigurarDispositivo.addEventListener("click", configurarDispositivo);
+    }
+    if (btnRestaurarDispositivo) {
+      btnRestaurarDispositivo.addEventListener("click", restaurarDispositivoClick);
+      actualizarBotonRestaurar();
+    }
+    enlacesVolverApps.forEach(function (a) {
+      a.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        salirConfirmado(irAApps);
+      });
+    });
+
     // Cuántas columnas usar según cuántos casilleros hay y el ancho de
     // pantalla (en una pantalla angosta, menos columnas para que cada
     // casillero no quede demasiado chico). Las filas salen de dividir la
@@ -99,9 +225,12 @@ var EpeVincularImagen = (function () {
       elGrilla.style.setProperty("--vi-filas", String(filas));
     }
 
-    window.addEventListener("resize", actualizarLayout);
+    window.addEventListener("resize", function () {
+      if (!elGrilla.hidden) actualizarLayout();
+    });
 
-    function render() {
+    // ── Juego: solo la grilla de botones grandes, sin controles ────────
+    function renderJuego() {
       elGrilla.innerHTML = "";
       actualizarLayout();
 
@@ -109,7 +238,6 @@ var EpeVincularImagen = (function () {
         var card = document.createElement("div");
         card.className = "epe-vi-card";
 
-        // ── Zona de juego: la imagen misma es el botón ──
         var playArea = document.createElement("button");
         playArea.type = "button";
         playArea.className = "epe-vi-play";
@@ -131,9 +259,33 @@ var EpeVincularImagen = (function () {
         });
         card.appendChild(playArea);
 
-        // ── Controles de edición ──
-        var controles = document.createElement("div");
-        controles.className = "epe-vi-controles";
+        elGrilla.appendChild(card);
+      });
+    }
+
+    // ── Configuración: una fila compacta por casillero ──────────────────
+    function renderConfig() {
+      elEditor.innerHTML = "";
+
+      casillas.forEach(function (c, idx) {
+        var fila = document.createElement("div");
+        fila.className = "epe-vi-editor-fila";
+
+        // ── Miniatura de lo ya cargado ──
+        var miniatura = document.createElement("div");
+        miniatura.className = "epe-vi-editor-miniatura";
+        if (c.imagen) {
+          var img = document.createElement("img");
+          img.src = c.imagen;
+          img.alt = "";
+          miniatura.appendChild(img);
+        } else {
+          var vacio = document.createElement("span");
+          vacio.className = "epe-vi-vacio";
+          vacio.textContent = "Sin imagen";
+          miniatura.appendChild(vacio);
+        }
+        fila.appendChild(miniatura);
 
         var fileId = "vi-file-" + idx;
         var fileLabel = document.createElement("label");
@@ -152,7 +304,7 @@ var EpeVincularImagen = (function () {
           var reader = new FileReader();
           reader.onload = function (e) {
             casillas[idx].imagen = e.target.result;
-            render();
+            renderConfig();
           };
           reader.readAsDataURL(file);
         });
@@ -164,7 +316,6 @@ var EpeVincularImagen = (function () {
         textoInput.value = c.texto;
         textoInput.addEventListener("input", function () {
           casillas[idx].texto = textoInput.value;
-          playArea.setAttribute("aria-label", textoInput.value || "Casillero " + (idx + 1));
         });
 
         var teclaBtn = document.createElement("button");
@@ -174,21 +325,20 @@ var EpeVincularImagen = (function () {
           esperandoTeclaIdx === idx ? "Presioná una tecla…" : c.tecla ? "Tecla: " + c.tecla.toUpperCase() : "Asignar tecla";
         teclaBtn.addEventListener("click", function () {
           esperandoTeclaIdx = idx;
-          render();
+          renderConfig();
         });
 
-        controles.appendChild(fileLabel);
-        controles.appendChild(fileInput);
-        controles.appendChild(textoInput);
-        controles.appendChild(teclaBtn);
-        card.appendChild(controles);
+        fila.appendChild(fileLabel);
+        fila.appendChild(fileInput);
+        fila.appendChild(textoInput);
+        fila.appendChild(teclaBtn);
 
-        elGrilla.appendChild(card);
+        elEditor.appendChild(fila);
       });
     }
 
     ajustarCantidad(Number(elCantidad.value) || 4);
-    render();
+    renderConfig();
   }
 
   return { init: init };

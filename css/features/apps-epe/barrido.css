@@ -18,6 +18,13 @@
   background: var(--shell-bg);
 }
 
+/* `hidden` pierde contra cualquier display: flex/inline-flex de una clase
+   con la misma especificidad (p. ej. .epe-btn-ghost) — se fuerza acá para
+   que hidden funcione en todo lo que vive dentro del shell. */
+.epe-barrido-shell [hidden] {
+  display: none !important;
+}
+
 .epe-barrido-header {
   flex: 0 0 auto;
   display: flex;

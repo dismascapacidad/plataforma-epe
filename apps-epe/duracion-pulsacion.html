@@ -14,13 +14,16 @@
     <link rel="stylesheet" href="../css/base/typography.css" />
     <link rel="stylesheet" href="../css/components/buttons.css" />
     <link rel="stylesheet" href="../css/components/app-nav.css" />
+    <link rel="stylesheet" href="../css/components/juego-base.css" />
+    <link rel="stylesheet" href="../css/components/modal.css" />
     <link rel="stylesheet" href="../css/features/apps-epe/duracion-pulsacion.css" />
+    <link rel="stylesheet" href="../css/features/configurar-dispositivo/widget.css" />
   </head>
   <body>
     <div class="epe-dp-shell">
       <header class="epe-dp-header">
         <div class="epe-app-header-left">
-          <a class="epe-app-back" href="index.html">← Apps EpE</a>
+          <a class="epe-app-back" href="index.html" data-volver-apps>← Apps EpE</a>
           <a href="../index.html"><img src="../assets/img/logo-epe.png" alt="Equipar para Equipar" height="26" /></a>
         </div>
         <button
@@ -95,7 +98,19 @@
             <input type="range" id="dp-umbral" data-dp-umbral min="100" max="3000" step="50" value="450" />
           </div>
 
-          <button class="epe-btn-acc" type="button" data-dp-empezar>Empezar</button>
+          <div data-dp-dispositivo-wrap>
+            <button class="epe-btn-ghost" type="button" data-configurar-dispositivo>
+              Configurar dispositivo…
+            </button>
+            <button class="epe-btn-ghost" type="button" data-restaurar-dispositivo hidden>
+              Restaurar dispositivo
+            </button>
+          </div>
+
+          <div class="epe-juego-pie">
+            <a class="epe-btn-ghost" href="index.html" data-volver-apps>Volver a Apps EpE</a>
+            <button class="epe-btn-acc" type="button" data-dp-empezar>Empezar</button>
+          </div>
         </div>
       </div>
 
@@ -148,13 +163,15 @@
             <button class="epe-btn-acc" type="button" data-dp-siguiente-nivel>
               Nuevo juego, más difícil
             </button>
-            <a class="epe-btn-ghost" href="index.html">Volver a Apps EpE</a>
+            <a class="epe-btn-ghost" href="index.html" data-volver-apps>Volver a Apps EpE</a>
           </div>
         </div>
       </div>
     </div>
 
     <script src="../js/core/theme.js"></script>
+    <script src="../js/core/modal.js"></script>
+    <script type="module" src="../js/features/configurar-dispositivo/widget.js"></script>
     <script src="../js/features/apps-epe/duracion-pulsacion/duracion-pulsacion.js"></script>
     <script>
       EpeTheme.initThemeToggle(document.getElementById("theme-toggle"));

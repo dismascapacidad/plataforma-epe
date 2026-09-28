@@ -14,13 +14,16 @@
     <link rel="stylesheet" href="../css/base/typography.css" />
     <link rel="stylesheet" href="../css/components/buttons.css" />
     <link rel="stylesheet" href="../css/components/app-nav.css" />
+    <link rel="stylesheet" href="../css/components/juego-base.css" />
+    <link rel="stylesheet" href="../css/components/modal.css" />
     <link rel="stylesheet" href="../css/features/apps-epe/vincular-imagen.css" />
+    <link rel="stylesheet" href="../css/features/configurar-dispositivo/widget.css" />
   </head>
   <body>
     <div class="epe-vi-shell">
       <header class="epe-vi-header">
         <div class="epe-app-header-left">
-          <a class="epe-app-back" href="index.html">← Apps EpE</a>
+          <a class="epe-app-back" href="index.html" data-volver-apps>← Apps EpE</a>
           <a href="../index.html"><img src="../assets/img/logo-epe.png" alt="Equipar para Equipar" height="26" /></a>
         </div>
         <button
@@ -40,24 +43,53 @@
         </button>
       </header>
 
-      <div class="epe-vi-config">
-        <label for="vi-cantidad">Cantidad de casilleros</label>
-        <select id="vi-cantidad" data-vi-cantidad>
-          <option value="1">1</option>
-          <option value="2">2</option>
-          <option value="3">3</option>
-          <option value="4" selected>4</option>
-          <option value="5">5</option>
-          <option value="6">6</option>
-          <option value="7">7</option>
-          <option value="8">8</option>
-        </select>
+      <!-- ── Configuración: modal. Se cierra con "Empezar"; con el juego ya
+           iniciado, Escape la vuelve a abrir (ver vincular-imagen.js) sin
+           perder lo cargado — mismo criterio que Barrido. ── -->
+      <div class="epe-juego-overlay" data-vi-config>
+        <div class="epe-juego-modal" role="dialog" aria-modal="true" aria-labelledby="vi-titulo">
+          <h1 id="vi-titulo">Vincular imagen</h1>
+          <p class="epe-juego-intro">
+            Asigná una imagen, un texto y una tecla a cada casillero. Al activarlo —con mouse, touch o
+            la tecla asignada— se lee el texto en voz alta.
+          </p>
+
+          <div class="epe-juego-grupo">
+            <label for="vi-cantidad">Cantidad de casilleros</label>
+            <select id="vi-cantidad" data-vi-cantidad>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4" selected>4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+              <option value="7">7</option>
+              <option value="8">8</option>
+            </select>
+          </div>
+
+          <div class="epe-vi-editor-lista" data-vi-editor></div>
+
+          <button class="epe-btn-ghost" type="button" data-configurar-dispositivo>
+            Configurar dispositivo…
+          </button>
+          <button class="epe-btn-ghost" type="button" data-restaurar-dispositivo hidden>
+            Restaurar dispositivo
+          </button>
+
+          <div class="epe-juego-pie">
+            <a class="epe-btn-ghost" href="index.html" data-volver-apps>Volver a Apps EpE</a>
+            <button class="epe-btn-acc" type="button" data-vi-empezar>Empezar</button>
+          </div>
+        </div>
       </div>
 
-      <div class="epe-vi-grilla" data-vi-grilla></div>
+      <div class="epe-vi-grilla" data-vi-grilla data-vi-juego hidden></div>
     </div>
 
     <script src="../js/core/theme.js"></script>
+    <script src="../js/core/modal.js"></script>
+    <script type="module" src="../js/features/configurar-dispositivo/widget.js"></script>
     <script src="../js/features/apps-epe/vincular-imagen/vincular-imagen.js"></script>
     <script>
       EpeTheme.initThemeToggle(document.getElementById("theme-toggle"));
