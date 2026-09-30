@@ -170,7 +170,7 @@ function pasoConectar(raiz, entradas, cerrar, cabecera) {
     el(
       'p',
       'epe-cd-intro',
-      'Conectá el dispositivo (disMouse, disHub…) para asignarle los botones que necesita este juego.',
+      'Conectá el dispositivo de dis+capacidad (disMouse, disHub…) para asignarle los botones que necesita este juego.',
     ),
   );
 

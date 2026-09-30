@@ -1,0 +1,70 @@
+/*
+  acerca.css
+  Página "Acerca de": qué es la plataforma, quién la desarrolla, contacto y
+  créditos de terceros. Lectura corta en tarjetas, mismo lenguaje visual
+  que los tiles (tokens de rol de theme.css, sin colores propios).
+*/
+
+.epe-acerca {
+  width: 100%;
+  max-width: 760px;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.6vw, 16px);
+  padding: 20px clamp(16px, 4vw, 40px) 8px;
+}
+
+.epe-acerca-seccion {
+  background: var(--tile-bg);
+  border: 1px solid var(--tile-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--tile-shadow);
+  padding: clamp(18px, 3vw, 24px);
+}
+
+.epe-acerca-seccion h2 {
+  font-size: 16px;
+  color: var(--text-strong);
+}
+
+.epe-acerca-seccion p {
+  margin-top: 8px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-dim);
+}
+
+.epe-acerca-marca {
+  display: inline-block;
+  margin: 18px 8px 2px;
+}
+
+.epe-acerca-marca img {
+  display: block;
+  height: 28px;
+  width: auto;
+}
+
+.epe-acerca-contacto {
+  list-style: none;
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--text-dim);
+}
+
+.epe-acerca-enlace {
+  color: var(--teal-700);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+[data-theme="dark"] .epe-acerca-enlace {
+  color: var(--teal-500);
+}
+
+.epe-acerca-enlace:hover {
+  color: var(--text-strong);
+}

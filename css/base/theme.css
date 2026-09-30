@@ -39,6 +39,9 @@
   --btn-ghost-bg-hover: var(--surf-2);
 
   --header-icon: var(--txt-2);
+
+  /* Fondo de los logos (PNG transparentes con texto azul marino). */
+  --logo-chip-bg: transparent;
 }
 
 [data-theme="dark"] {
@@ -69,4 +72,6 @@
   --btn-ghost-bg-hover: rgba(255, 255, 255, 0.04);
 
   --header-icon: var(--txt-on-navy-dim);
+
+  --logo-chip-bg: var(--surf);
 }

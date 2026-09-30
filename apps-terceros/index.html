@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="../css/base/theme.css" />
     <link rel="stylesheet" href="../css/base/typography.css" />
     <link rel="stylesheet" href="../css/components/buttons.css" />
+    <link rel="stylesheet" href="../css/components/atribucion.css" />
     <link rel="stylesheet" href="../css/components/modal.css" />
     <link rel="stylesheet" href="../css/components/catalogo-tienda.css" />
     <link rel="stylesheet" href="../css/components/tercero-detalle.css" />
@@ -29,7 +30,7 @@
       <header class="epe-header">
         <div class="epe-app-header-left">
           <a class="epe-app-back" href="../index.html">← Inicio</a>
-          <a href="../index.html"><img src="../assets/img/logo-epe.png" alt="Equipar para Equipar" height="28" /></a>
+          <a href="../index.html"><img class="epe-logo-chip" src="../assets/img/logo-epe.png" alt="Equipar para Equipar" height="28" /></a>
         </div>
         <div class="epe-header-actions">
           <button
@@ -51,7 +52,7 @@
       </header>
 
       <div class="epe-intro">
-        <p class="eyebrow">dis+capacidad</p>
+        <p class="eyebrow">Equipar para Equipar</p>
         <h1>Apps y recursos de terceros</h1>
         <p>
           Herramientas que no son de dis+capacidad (MakeyMakey, AsTeRICS,
@@ -62,11 +63,14 @@
 
       <div class="epe-catalogo-grid" data-tienda-grid></div>
       <p class="epe-vacio" data-tienda-vacio hidden>Todavía no hay recursos cargados en esta sección.</p>
+
+      <div data-atribucion="pie"></div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="../js/core/supabase-client.js"></script>
     <script src="../js/core/theme.js"></script>
+    <script src="../js/core/atribucion.js"></script>
     <script src="../js/core/modal.js"></script>
     <script src="../js/core/tercero-detalle.js"></script>
     <script src="../js/data/catalogo-actividades.js"></script>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Acerca de — Equipar para Equipar</title>
+    <meta
+      name="description"
+      content="Equipar para Equipar es un espacio de trabajo para profesionales de rehabilitación que usan tecnología asistiva. Un desarrollo de dis+capacidad."
+    />
+    <meta name="author" content="dis+capacidad" />
+    <link rel="icon" href="../assets/img/logo-epe.png" />
+
+    <script src="../js/core/theme-boot.js"></script>
+
+    <link rel="stylesheet" href="../css/base/reset.css" />
+    <link rel="stylesheet" href="../css/base/tokens.css" />
+    <link rel="stylesheet" href="../css/base/theme.css" />
+    <link rel="stylesheet" href="../css/base/typography.css" />
+    <link rel="stylesheet" href="../css/components/buttons.css" />
+    <link rel="stylesheet" href="../css/components/atribucion.css" />
+    <link rel="stylesheet" href="../css/components/app-nav.css" />
+    <link rel="stylesheet" href="../css/layout/shell.css" />
+    <link rel="stylesheet" href="../css/features/acerca/acerca.css" />
+  </head>
+  <body>
+    <div class="epe-shell">
+      <header class="epe-header">
+        <div class="epe-app-header-left">
+          <a class="epe-app-back" href="../index.html">← Inicio</a>
+          <a href="../index.html"><img class="epe-logo-chip" src="../assets/img/logo-epe.png" alt="Equipar para Equipar" height="28" /></a>
+        </div>
+        <div class="epe-header-actions">
+          <button
+            class="epe-theme-toggle"
+            type="button"
+            id="theme-toggle"
+            aria-pressed="false"
+            aria-label="Cambiar a modo oscuro"
+          >
+            <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="4" />
+              <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+            </svg>
+            <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" />
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="epe-intro">
+        <p class="eyebrow">Equipar para Equipar</p>
+        <h1>Acerca de esta plataforma</h1>
+        <p>Un espacio de trabajo para profesionales de rehabilitación que usan tecnología asistiva.</p>
+      </div>
+
+      <main class="epe-acerca">
+        <section class="epe-acerca-seccion">
+          <h2>Qué encontrás acá</h2>
+          <p>
+            Un configurador para dispositivos de acceso como el disMouse y el disJoystick; juegos y
+            ejercicios propios (Apps EpE) pensados para usarse con teclado, pulsadores o seguimiento de
+            cabeza; una selección de apps y recursos de terceros con guía de configuración; y un espacio
+            personal para organizar tus colecciones de actividades.
+          </p>
+        </section>
+
+        <section class="epe-acerca-seccion">
+          <h2>Quién la desarrolla</h2>
+          <p>
+            Equipar para Equipar es un desarrollo de dis+capacidad, una empresa argentina dedicada al
+            desarrollo y la comercialización de tecnología asistiva, con foco en dispositivos de acceso a
+            las TIC.
+          </p>
+          <a class="epe-acerca-marca" href="https://www.dismascapacidad.com.ar" target="_blank" rel="noopener">
+            <img class="epe-logo-chip" src="../assets/img/logo-dismascapacidad.png" alt="dis+capacidad" height="28" />
+          </a>
+          <p>
+            <a class="epe-acerca-enlace" href="https://www.dismascapacidad.com.ar" target="_blank" rel="noopener">www.dismascapacidad.com.ar</a>
+          </p>
+        </section>
+
+        <section class="epe-acerca-seccion">
+          <h2>Contacto</h2>
+          <p>Para consultas sobre la plataforma, los dispositivos o cómo sumar equipamiento:</p>
+          <ul class="epe-acerca-contacto">
+            <li>
+              Correo:
+              <a class="epe-acerca-enlace" href="mailto:dismascapacidad@gmail.com">dismascapacidad@gmail.com</a>
+            </li>
+            <li>
+              WhatsApp:
+              <a class="epe-acerca-enlace" href="https://wa.me/5493512926315" target="_blank" rel="noopener">escribinos por WhatsApp</a>
+            </li>
+          </ul>
+        </section>
+
+        <section class="epe-acerca-seccion">
+          <h2>Créditos y licencias de terceros</h2>
+          <p>
+            El seguimiento de cabeza por cámara usa
+            <a class="epe-acerca-enlace" href="https://trackymouse.js.org/" target="_blank" rel="noopener">Tracky Mouse</a>
+            3.0.0, de Isaiah Odhner (licencia MIT), que a su vez incluye componentes de Google
+            (TensorFlow.js y MediaPipe, Apache 2.0) y otros de código abierto. Los sonidos de pausa y
+            reanudación de Tracky son de Michel Baradari (OpenGameArt), bajo licencia
+            <a class="epe-acerca-enlace" href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">CC-BY 3.0</a>.
+          </p>
+          <p>
+            Detalle completo:
+            <a class="epe-acerca-enlace" href="../vendor/tracky-mouse/AVISOS-TERCEROS.md">aviso de licencias</a>
+            y
+            <a class="epe-acerca-enlace" href="../vendor/tracky-mouse/LICENCIAS-TERCEROS.md">textos de licencia</a>.
+          </p>
+        </section>
+      </main>
+
+      <div data-atribucion="pie"></div>
+    </div>
+
+    <script src="../js/core/theme.js"></script>
+    <script src="../js/core/atribucion.js"></script>
+    <script>
+      EpeTheme.initThemeToggle(document.getElementById("theme-toggle"));
+    </script>
+  </body>
+</html>

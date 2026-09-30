@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="../css/base/theme.css" />
     <link rel="stylesheet" href="../css/base/typography.css" />
     <link rel="stylesheet" href="../css/components/buttons.css" />
+    <link rel="stylesheet" href="../css/components/atribucion.css" />
     <link rel="stylesheet" href="../css/components/app-nav.css" />
     <link rel="stylesheet" href="../css/components/juego-base.css" />
     <link rel="stylesheet" href="../css/components/modal.css" />
@@ -25,7 +26,7 @@
       <header class="epe-cc-header">
         <div class="epe-app-header-left">
           <a class="epe-app-back" href="index.html" data-volver-apps>← Apps EpE</a>
-          <a href="../index.html"><img src="../assets/img/logo-epe.png" alt="Equipar para Equipar" height="26" /></a>
+          <a href="../index.html"><img class="epe-logo-chip" src="../assets/img/logo-epe.png" alt="Equipar para Equipar" height="26" /></a>
         </div>
         <div class="epe-cc-header-der">
           <span class="epe-cc-chip" data-cc-chip role="status" aria-live="polite"></span>
@@ -160,6 +161,7 @@
             <button class="epe-btn-ghost" type="button" data-cc-abrir-resumen hidden>Ver resumen de la sesión</button>
             <button class="epe-btn-acc" type="button" data-cc-empezar>Empezar</button>
           </div>
+          <div data-atribucion="by"></div>
           <p class="epe-cc-estado" data-cc-aviso-empezar></p>
         </div>
       </div>
@@ -229,6 +231,7 @@
     </div>
 
     <script src="../js/core/theme.js"></script>
+    <script src="../js/core/atribucion.js"></script>
     <script src="../js/core/modal.js"></script>
     <script type="module" src="../js/features/configurar-dispositivo/widget.js"></script>
     <script type="module" src="../js/features/apps-epe/comunicacion-cabeza/main.js"></script>

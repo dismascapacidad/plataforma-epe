@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="../css/base/theme.css" />
     <link rel="stylesheet" href="../css/base/typography.css" />
     <link rel="stylesheet" href="../css/components/buttons.css" />
+    <link rel="stylesheet" href="../css/components/atribucion.css" />
     <link rel="stylesheet" href="../css/components/form-field.css" />
     <link rel="stylesheet" href="../css/components/modal.css" />
     <link rel="stylesheet" href="../css/components/catalogo-tienda.css" />
@@ -26,7 +27,7 @@
     <div class="epe-shell">
       <header class="epe-header">
         <div class="epe-brand">
-          <a href="../index.html"><img src="../assets/img/logo-epe.png" alt="Equipar para Equipar" /></a>
+          <a href="../index.html"><img class="epe-logo-chip" src="../assets/img/logo-epe.png" alt="Equipar para Equipar" /></a>
         </div>
         <div class="epe-header-actions">
           <span class="epe-dash-header-meta" data-sesion-email></span>
@@ -51,7 +52,7 @@
 
       <div class="epe-dash-body">
         <div class="epe-intro" style="padding-left: 0; padding-right: 0;">
-          <p class="eyebrow">dis+capacidad</p>
+          <p class="eyebrow">Equipar para Equipar</p>
           <h1 data-saludo>Tu espacio personal</h1>
         </div>
 
@@ -238,11 +239,14 @@
           <p class="epe-placeholder">Próximamente. Todavía no definimos cómo se vincula un dispositivo a tu perfil.</p>
         </section>
       </div>
+
+      <div data-atribucion="pie"></div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="../js/core/supabase-client.js"></script>
     <script src="../js/core/theme.js"></script>
+    <script src="../js/core/atribucion.js"></script>
     <script src="../js/core/modal.js"></script>
     <script src="../js/core/tercero-detalle.js"></script>
     <script src="../js/data/catalogo-actividades.js"></script>

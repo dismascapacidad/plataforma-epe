@@ -8,6 +8,10 @@
       name="description"
       content="Juegos y ejercicios propios de Equipar para Equipar, organizados por objetivo clínico."
     />
+    <meta name="author" content="dis+capacidad" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Equipar para Equipar" />
+    <meta property="og:locale" content="es_AR" />
     <link rel="icon" href="../assets/img/logo-epe.png" />
 
     <script src="../js/core/theme-boot.js"></script>
@@ -17,6 +21,7 @@
     <link rel="stylesheet" href="../css/base/theme.css" />
     <link rel="stylesheet" href="../css/base/typography.css" />
     <link rel="stylesheet" href="../css/components/buttons.css" />
+    <link rel="stylesheet" href="../css/components/atribucion.css" />
     <link rel="stylesheet" href="../css/components/tile-card.css" />
     <link rel="stylesheet" href="../css/components/app-nav.css" />
     <link rel="stylesheet" href="../css/layout/shell.css" />
@@ -26,7 +31,7 @@
       <header class="epe-header">
         <div class="epe-app-header-left">
           <a class="epe-app-back" href="../index.html">← Inicio</a>
-          <a href="../index.html"><img src="../assets/img/logo-epe.png" alt="Equipar para Equipar" height="28" /></a>
+          <a href="../index.html"><img class="epe-logo-chip" src="../assets/img/logo-epe.png" alt="Equipar para Equipar" height="28" /></a>
         </div>
         <div class="epe-header-actions">
           <button
@@ -48,7 +53,7 @@
       </header>
 
       <div class="epe-intro">
-        <p class="eyebrow">dis+capacidad</p>
+        <p class="eyebrow">Equipar para Equipar</p>
         <h1>Apps EpE</h1>
         <p>Juegos y ejercicios propios, para probar y usar en sesión.</p>
       </div>
@@ -150,7 +155,7 @@
           <span class="epe-tile-desc">Control inhibitorio: respondé al color de la tinta, no a la palabra escrita. Teclado o barrido.</span>
         </a>
 
-        <a class="epe-tile" href="comunicacion-cabeza.html" data-section="comunicacion-cabeza" data-beta>
+        <a class="epe-tile" href="comunicacion-cabeza.html" data-section="comunicacion-cabeza">
           <span class="epe-tile-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="8" r="4" />
@@ -159,12 +164,15 @@
             </svg>
           </span>
           <span class="epe-tile-label">Comunicación con seguimiento de cabeza</span>
-          <span class="epe-tile-desc">Escribir con la cabeza (cámara web) y un pulsador o permanencia, con texto a voz. En prueba: usala con acompañamiento profesional.</span>
+          <span class="epe-tile-desc">Escribir con la cabeza (cámara web) y un pulsador o permanencia, y reproducir el texto por voz.</span>
         </a>
       </nav>
+
+      <div data-atribucion="pie"></div>
     </div>
 
     <script src="../js/core/theme.js"></script>
+    <script src="../js/core/atribucion.js"></script>
     <script>
       EpeTheme.initThemeToggle(document.getElementById("theme-toggle"));
     </script>

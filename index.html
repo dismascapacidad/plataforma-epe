@@ -6,8 +6,32 @@
     <title>Equipar para Equipar — Plataforma</title>
     <meta
       name="description"
-      content="Espacio de trabajo del profesional de rehabilitación: recursos terapéuticos, configurador de dispositivos y formación de dis+capacidad."
+      content="Espacio de trabajo del profesional de rehabilitación: recursos terapéuticos, configurador de dispositivos y formación. Un desarrollo de dis+capacidad."
     />
+    <meta name="author" content="dis+capacidad" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Equipar para Equipar" />
+    <meta property="og:title" content="Equipar para Equipar — Plataforma" />
+    <meta
+      property="og:description"
+      content="Espacio de trabajo del profesional de rehabilitación en tecnología asistiva. Un desarrollo de dis+capacidad."
+    />
+    <meta property="og:url" content="https://espacio.equiparparaequipar.com.ar/" />
+    <meta property="og:locale" content="es_AR" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Equipar para Equipar",
+        "url": "https://espacio.equiparparaequipar.com.ar/",
+        "inLanguage": "es-AR",
+        "publisher": {
+          "@type": "Organization",
+          "name": "dis+capacidad",
+          "url": "https://www.dismascapacidad.com.ar"
+        }
+      }
+    </script>
     <link rel="icon" href="assets/img/logo-epe.png" />
 
     <!-- Sin type="module" a propósito: tiene que correr ya, antes del CSS,
@@ -19,6 +43,7 @@
     <link rel="stylesheet" href="css/base/theme.css" />
     <link rel="stylesheet" href="css/base/typography.css" />
     <link rel="stylesheet" href="css/components/buttons.css" />
+    <link rel="stylesheet" href="css/components/atribucion.css" />
     <link rel="stylesheet" href="css/components/tile-card.css" />
     <link rel="stylesheet" href="css/layout/shell.css" />
   </head>
@@ -26,7 +51,7 @@
     <div class="epe-shell">
       <header class="epe-header">
         <div class="epe-brand">
-          <img src="assets/img/logo-epe.png" alt="Equipar para Equipar" />
+          <img class="epe-logo-chip" src="assets/img/logo-epe.png" alt="Equipar para Equipar" />
         </div>
         <div class="epe-header-actions">
           <button
@@ -50,7 +75,7 @@
       </header>
 
       <div class="epe-intro">
-        <p class="eyebrow">dis+capacidad</p>
+        <p class="eyebrow">Equipar para Equipar</p>
         <h1>Tu espacio de trabajo en tecnología asistiva</h1>
         <p>
           Recursos terapéuticos, configurador de dispositivos y formación,
@@ -130,7 +155,7 @@
             </svg>
           </span>
           <span class="epe-tile-label">Tienda EpE</span>
-          <span class="epe-tile-desc">Sumá equipamiento para tu institución o consultorio.</span>
+          <span class="epe-tile-desc">Sumá equipamiento de dis+capacidad para tu institución o consultorio.</span>
         </a>
 
         <a class="epe-tile" href="#" data-section="comunidad" data-soon>
@@ -143,9 +168,12 @@
           <span class="epe-tile-desc">Sumate al grupo de WhatsApp de profesionales.</span>
         </a>
       </nav>
+
+      <div data-atribucion="pie"></div>
     </div>
 
     <script src="js/core/theme.js"></script>
+    <script src="js/core/atribucion.js"></script>
     <script src="js/core/main.js"></script>
   </body>
 </html>
