@@ -63,3 +63,11 @@
   margin-top: 4px;
   font-size: 12px;
 }
+
+/* Dentro del pie de un modal (Volver · by · Empezar) la línea "by" va en la
+   misma fila que los botones: no suma alto, así el modal no necesita scroll. */
+.epe-juego-pie > .epe-atribucion-by {
+  margin-top: 0;
+  flex: 0 1 auto;
+  flex-wrap: nowrap;
+}

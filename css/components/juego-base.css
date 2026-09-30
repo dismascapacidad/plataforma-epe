@@ -96,10 +96,10 @@
   border: 1px solid var(--tile-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
-  padding: 20px 22px;
+  padding: 16px 20px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 /* Con un fondo semitransparente (--tile-bg en oscuro), el texto del modal
@@ -442,4 +442,41 @@
    presionarlos, con el mismo :active que las flechas de Lado Correcto. */
 .epe-juego-blanco:active {
   transform: scale(0.97);
+}
+
+/* ── Compactación de los modales de configuración ──
+   Regla de la plataforma: un modal no tiene scroll (ver js/core/ajuste-modal.js,
+   que achica lo justo lo que igual no entre). Acá se reordena el contenido en
+   pantallas anchas para que, en un notebook común, no haga falta achicar nada:
+   el modal se ensancha y las listas (modos de acceso, teclas) pasan a
+   columnas en vez de apilarse. */
+@media (min-width: 720px) {
+  .epe-juego-modal:has(.epe-juego-columnas) {
+    width: min(880px, 96vw);
+  }
+
+  .epe-acceso-modos {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .epe-acceso-modo {
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .epe-acceso-teclas {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 14px;
+  }
+
+  .epe-acceso-fila {
+    min-width: 0;
+  }
+
+  .epe-acceso-tecla {
+    min-width: 88px;
+  }
 }

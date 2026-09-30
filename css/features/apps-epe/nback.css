@@ -144,3 +144,33 @@
     display: none;
   }
 }
+
+/* ── Compactación del modal de configuración ──
+   Regla de la plataforma: un modal no tiene scroll (ver juego-base.css y
+   js/core/ajuste-modal.js). Acá hay cuatro selectores y una caja de
+   opciones: en pantallas anchas van en dos columnas, y el panel de teclas
+   (solo dos) queda angosto a la derecha. */
+@media (min-width: 720px) {
+  .epe-juego-columnas {
+    grid-template-columns: 1.7fr 1fr;
+  }
+
+  .epe-juego-columnas > div:not([data-acceso-panel]) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    align-content: start;
+  }
+
+  .epe-juego-columnas > div:not([data-acceso-panel]) > .epe-juego-grupo + .epe-juego-grupo {
+    margin-top: 0;
+  }
+
+  .epe-juego-columnas .epe-juego-grupo:has(.epe-juego-opciones) {
+    grid-column: 1 / -1;
+  }
+
+  .epe-acceso-teclas {
+    grid-template-columns: 1fr;
+  }
+}

@@ -71,10 +71,10 @@
   border: 1px solid var(--tile-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
-  padding: 20px 22px;
+  padding: 16px 20px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .epe-barrido-modal h1 {
@@ -409,4 +409,38 @@
   border-color: var(--teal-600);
   background: color-mix(in srgb, var(--teal-600) 26%, var(--tile-bg));
   transform: scale(1.05);
+}
+
+/* ── Compactación (ver js/core/ajuste-modal.js y juego-base.css) ──
+   En pantallas anchas el modal se ensancha y sus grupos de configuración
+   pasan a una grilla de dos columnas (las dos "filas" dejan de ser filas
+   propias con display: contents), así entra sin scroll ni achicarse. */
+@media (min-width: 720px) {
+  .epe-barrido-modal {
+    width: min(880px, 94vw);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 12px;
+    align-content: start;
+  }
+
+  .epe-barrido-modal > h1,
+  .epe-barrido-modal > .epe-barrido-intro,
+  .epe-barrido-modal > .epe-juego-pie {
+    grid-column: 1 / -1;
+  }
+
+  .epe-barrido-config-fila {
+    display: contents;
+  }
+
+  .epe-barrido-modal > .epe-barrido-acciones {
+    align-self: center;
+  }
+}
+
+/* En oscuro --tile-bg es casi transparente y el juego de atrás se veía a
+   través del modal: mismo fondo sólido que el resto de los modales. */
+[data-theme="dark"] .epe-barrido-modal {
+  background: var(--shell-bg-2);
 }
