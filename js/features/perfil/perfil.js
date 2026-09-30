@@ -20,6 +20,17 @@ var EpePerfil = (function () {
     return (email || "?").charAt(0).toUpperCase();
   }
 
+  // Saludo de la parte de arriba del dashboard ("Hola, Gon") — no es parte
+  // del panel Perfil en sí (vive en el <h1> de .epe-intro), pero se actualiza
+  // acá porque es este módulo el que primero tiene el nombre cargado. Usa
+  // solo el nombre de pila: más natural que el nombre completo en un saludo.
+  function actualizarSaludo(datos) {
+    var saludo = document.querySelector("[data-saludo]");
+    if (!saludo) return;
+    var nombrePila = (datos.nombre || "").trim().split(/\s+/)[0];
+    saludo.textContent = nombrePila ? "Hola, " + nombrePila : "Tu espacio personal";
+  }
+
   function actualizarResumen(root, datos, email) {
     var avatar = root.querySelector("[data-perfil-avatar]");
     var nombreEl = root.querySelector("[data-perfil-resumen-nombre]");
@@ -61,6 +72,7 @@ var EpePerfil = (function () {
         form.elements.localidad.value = datos.localidad || "";
         form.elements.email_contacto.value = datos.email_contacto || "";
         actualizarResumen(root, datos, email);
+        actualizarSaludo(datos);
         status.textContent = "";
       })
       .catch(function () {
@@ -85,6 +97,7 @@ var EpePerfil = (function () {
       EpeStore.saveProfile(datos)
         .then(function () {
           actualizarResumen(root, datos, email);
+          actualizarSaludo(datos);
           status.textContent = "Guardado.";
           window.clearTimeout(status._epeTimeout);
           status._epeTimeout = window.setTimeout(function () {

@@ -5,17 +5,38 @@
  * HTML) — antes solo existía login mock, ahora que hay Auth real hace
  * falta poder registrarse de verdad.
  *
- * Con "Confirm email" activado en Supabase (nuestro caso), crear cuenta NO
- * deja una sesión activa al toque: hay que confirmar el mail primero. Por
- * eso signUp() puede terminar sin sesión — ahí se lo avisamos a la persona
- * en vez de mandarla al dashboard.
+ * El modo "signup" además pide los datos del perfil (nombre, profesión,
+ * institución y los de contacto opcionales — ver data-signup-fields en el
+ * HTML), para que "Crear cuenta" deje a la persona con el perfil cargado
+ * en el mismo paso, sin tener que repetir esos datos en la pestaña Perfil.
  *
- * Script clásico. Depende de auth.js (EpeAuth).
+ * Con "Confirm email" activado en Supabase (nuestro caso), crear cuenta NO
+ * deja una sesión activa al toque: hay que confirmar el mail primero, y sin
+ * sesión no se puede guardar el perfil (EpeStore.saveProfile necesita
+ * auth.uid()). Por eso el perfil cargado se guarda temporalmente en
+ * localStorage y es dashboard.js quien lo aplica solo, la primera vez que
+ * la persona entra ya con sesión real (ver aplicarPerfilPendienteSiCorresponde
+ * en dashboard.js) — así no hay que volver a tipearlo.
+ *
+ * Script clásico. Depende de auth.js (EpeAuth) y data/store.js (EpeStore).
  */
 
 (function () {
+  var CLAVE_PERFIL_PENDIENTE = "epePerfilPendiente";
+
+  function guardarPerfilPendiente(email, datosPerfil) {
+    try {
+      window.localStorage.setItem(CLAVE_PERFIL_PENDIENTE, JSON.stringify({ email: email.toLowerCase(), datos: datosPerfil }));
+    } catch (e) {
+      // localStorage puede fallar (modo privado, cuota llena) — no es
+      // crítico, la persona puede cargar estos datos a mano en Perfil.
+    }
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
+    var card = document.querySelector(".epe-login-card");
     var form = document.querySelector("[data-login-form]");
+    var camposSignup = document.querySelector("[data-signup-fields]");
     var toggle = document.querySelector("[data-login-toggle]");
     var olvide = document.querySelector("[data-login-olvide]");
     var status = document.querySelector("[data-login-status]");
@@ -28,9 +49,17 @@
 
     function setModo(nuevo) {
       modo = nuevo;
+      camposSignup.hidden = modo !== "signup";
+      card.classList.toggle("is-signup", modo === "signup");
       submitBtn.textContent = modo === "login" ? "Ingresar" : "Crear cuenta";
       toggle.textContent = modo === "login" ? "¿No tenés cuenta? Creá una" : "¿Ya tenés cuenta? Ingresá";
       status.textContent = "";
+    }
+
+    // "Crear cuenta" en la página principal linkea acá con ?modo=signup
+    // para abrir directo en modo registro.
+    if (new URLSearchParams(window.location.search).get("modo") === "signup") {
+      setModo("signup");
     }
 
     toggle.addEventListener("click", function (ev) {
@@ -63,19 +92,47 @@
       if (!email || !password) return;
 
       submitBtn.disabled = true;
-      status.textContent = modo === "login" ? "Ingresando…" : "Creando cuenta…";
 
-      var accion = modo === "login" ? EpeAuth.signIn(email, password) : EpeAuth.signUp(email, password);
-
-      accion
-        .then(function (resultado) {
-          if (modo === "signup" && !resultado.session) {
-            status.textContent = "Cuenta creada. Revisá tu email para confirmarla y después ingresá.";
+      if (modo === "login") {
+        status.textContent = "Ingresando…";
+        EpeAuth.signIn(email, password)
+          .then(function () {
+            window.location.href = "dashboard.html";
+          })
+          .catch(function (err) {
+            status.textContent = traducirError(err);
             submitBtn.disabled = false;
-            setModo("login");
-            return;
+          });
+        return;
+      }
+
+      // modo === "signup"
+      var datosPerfil = {
+        nombre: form.elements.nombre.value.trim(),
+        profesion: form.elements.profesion.value.trim(),
+        institucion: form.elements.institucion.value.trim(),
+        telefono: form.elements.telefono.value.trim(),
+        localidad: form.elements.localidad.value.trim(),
+        email_contacto: form.elements.email_contacto.value.trim(),
+      };
+
+      status.textContent = "Creando cuenta…";
+      EpeAuth.signUp(email, password)
+        .then(function (resultado) {
+          if (resultado.session) {
+            // "Confirm email" desactivado: ya hay sesión, guardamos el
+            // perfil directo y entramos al espacio personal.
+            return EpeStore.saveProfile(datosPerfil).then(function () {
+              window.location.href = "dashboard.html";
+            });
           }
-          window.location.href = "dashboard.html";
+          // Sin sesión todavía: guardamos el perfil para que dashboard.js lo
+          // aplique solo la primera vez que la persona confirme el mail y
+          // entre.
+          guardarPerfilPendiente(email, datosPerfil);
+          status.textContent = "Cuenta creada. Revisá tu email para confirmarla — cuando ingreses, tu perfil ya va a estar cargado.";
+          submitBtn.disabled = false;
+          setModo("login");
         })
         .catch(function (err) {
           status.textContent = traducirError(err);

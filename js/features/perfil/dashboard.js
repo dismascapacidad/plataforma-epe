@@ -12,6 +12,50 @@
  */
 
 (function () {
+  var CLAVE_PERFIL_PENDIENTE = "epePerfilPendiente";
+
+  // Si la persona cargó datos de perfil al crear la cuenta (ver login.js),
+  // pero en ese momento no había sesión todavía (Confirm email activado en
+  // Supabase), quedaron guardados en localStorage. Acá, ya con sesión real,
+  // los aplicamos una sola vez y los borramos — así no hay que volver a
+  // tipearlos. Si falla (p.ej. sin conexión) los dejamos para reintentar la
+  // próxima vez.
+  function aplicarPerfilPendienteSiCorresponde(email) {
+    var crudo;
+    try {
+      crudo = window.localStorage.getItem(CLAVE_PERFIL_PENDIENTE);
+    } catch (e) {
+      return Promise.resolve();
+    }
+    if (!crudo) return Promise.resolve();
+
+    var pendiente;
+    try {
+      pendiente = JSON.parse(crudo);
+    } catch (e) {
+      try {
+        window.localStorage.removeItem(CLAVE_PERFIL_PENDIENTE);
+      } catch (e2) {
+        /* nada más para hacer acá */
+      }
+      return Promise.resolve();
+    }
+
+    if (!pendiente || !pendiente.email || pendiente.email !== email.toLowerCase()) return Promise.resolve();
+
+    return EpeStore.saveProfile(pendiente.datos)
+      .then(function () {
+        try {
+          window.localStorage.removeItem(CLAVE_PERFIL_PENDIENTE);
+        } catch (e) {
+          /* nada más para hacer acá */
+        }
+      })
+      .catch(function () {
+        // No se pudo guardar — lo dejamos en localStorage para la próxima.
+      });
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     EpeAuth.requireSession().then(function (session) {
       if (!session) return; // requireSession ya redirigió a login.html
@@ -29,11 +73,13 @@
 
       initTabs();
 
-      EpePerfil.init(document.querySelector("[data-panel='perfil']"), session.user.email);
-      EpeCasos.init(document.querySelector("[data-panel='casos']"));
-      EpeDispositivos.init(document.querySelector("[data-panel='dispositivos']"));
+      aplicarPerfilPendienteSiCorresponde(session.user.email).then(function () {
+        EpePerfil.init(document.querySelector("[data-panel='perfil']"), session.user.email);
+        EpeCasos.init(document.querySelector("[data-panel='casos']"));
+        EpeDispositivos.init(document.querySelector("[data-panel='dispositivos']"));
 
-      console.info("[EpE] Espacio personal — dashboard cargado (Supabase)");
+        console.info("[EpE] Espacio personal — dashboard cargado (Supabase)");
+      });
     });
   });
 

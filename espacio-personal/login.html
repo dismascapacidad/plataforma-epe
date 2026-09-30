@@ -32,6 +32,36 @@
             <label for="login-password">Contraseña</label>
             <input type="password" id="login-password" name="password" required autocomplete="current-password" />
           </div>
+
+          <div data-signup-fields hidden>
+            <p class="epe-login-sub">Contanos un poco de vos — podés completarlo después si preferís.</p>
+
+            <div class="epe-field">
+              <label for="signup-nombre">Nombre</label>
+              <input type="text" id="signup-nombre" name="nombre" autocomplete="name" />
+            </div>
+            <div class="epe-field">
+              <label for="signup-profesion">Profesión</label>
+              <input type="text" id="signup-profesion" name="profesion" />
+            </div>
+            <div class="epe-field">
+              <label for="signup-institucion">Institución</label>
+              <input type="text" id="signup-institucion" name="institucion" />
+            </div>
+            <div class="epe-field">
+              <label for="signup-telefono">Teléfono (opcional)</label>
+              <input type="tel" id="signup-telefono" name="telefono" autocomplete="tel" />
+            </div>
+            <div class="epe-field">
+              <label for="signup-localidad">Localidad (opcional)</label>
+              <input type="text" id="signup-localidad" name="localidad" autocomplete="address-level2" />
+            </div>
+            <div class="epe-field">
+              <label for="signup-email-contacto">Correo de contacto (opcional)</label>
+              <input type="email" id="signup-email-contacto" name="email_contacto" autocomplete="email" />
+            </div>
+          </div>
+
           <button class="epe-btn-acc" type="submit">Ingresar</button>
           <p class="epe-form-status" data-login-status></p>
         </form>
@@ -51,6 +81,8 @@
     <script src="../js/core/supabase-client.js"></script>
     <script src="../js/core/theme.js"></script>
     <script src="../js/features/perfil/auth.js"></script>
+    <script src="../js/features/perfil/data/schema.js"></script>
+    <script src="../js/features/perfil/data/store.js"></script>
     <script src="../js/features/perfil/login.js"></script>
   </body>
 </html>
