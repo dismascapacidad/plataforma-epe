@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Comunicación con seguimiento de cabeza — Apps EpE</title>
+    <link rel="icon" href="../assets/img/logo-epe.png" />
+
+    <script src="../js/core/theme-boot.js"></script>
+
+    <link rel="stylesheet" href="../css/base/reset.css" />
+    <link rel="stylesheet" href="../css/base/tokens.css" />
+    <link rel="stylesheet" href="../css/base/theme.css" />
+    <link rel="stylesheet" href="../css/base/typography.css" />
+    <link rel="stylesheet" href="../css/components/buttons.css" />
+    <link rel="stylesheet" href="../css/components/app-nav.css" />
+    <link rel="stylesheet" href="../css/components/juego-base.css" />
+    <link rel="stylesheet" href="../css/components/modal.css" />
+    <link rel="stylesheet" href="../css/features/apps-epe/comunicacion-cabeza.css" />
+    <link rel="stylesheet" href="../css/features/configurar-dispositivo/widget.css" />
+    <link rel="stylesheet" href="../vendor/tracky-mouse/tracky-mouse.css" />
+  </head>
+  <body>
+    <div class="epe-cc-shell" data-cc-raiz>
+      <header class="epe-cc-header">
+        <div class="epe-app-header-left">
+          <a class="epe-app-back" href="index.html" data-volver-apps>← Apps EpE</a>
+          <a href="../index.html"><img src="../assets/img/logo-epe.png" alt="Equipar para Equipar" height="26" /></a>
+        </div>
+        <div class="epe-cc-header-der">
+          <span class="epe-cc-chip" data-cc-chip role="status" aria-live="polite"></span>
+          <button
+            class="epe-theme-toggle"
+            type="button"
+            id="theme-toggle"
+            aria-pressed="false"
+            aria-label="Cambiar a modo oscuro"
+          >
+            <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="4" />
+              <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+            </svg>
+            <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" />
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- ── Configuración (para el profesional): modal principal, sin scroll.
+           "Empezar" la cierra; con la sesión iniciada, Escape la vuelve a abrir.
+           Lo que no entra acá va en modales aparte: cámara y sensibilidad,
+           y resumen de la sesión. ── -->
+      <div class="epe-cc-modal-overlay" data-cc-config>
+        <div class="epe-cc-modal" role="dialog" aria-modal="true" aria-labelledby="cc-titulo">
+          <h1 id="cc-titulo">Comunicación con seguimiento de cabeza</h1>
+          <p class="epe-cc-intro">
+            Escribir con la cabeza y elegir con pulsador o permanencia; el texto se dice por voz. Esc reabre esta pantalla.
+          </p>
+
+          <div class="epe-cc-config-fila">
+            <div class="epe-cc-grupo">
+              <h2>1. Seguimiento de cabeza</h2>
+              <div class="epe-cc-fila-botones">
+                <button class="epe-btn-acc epe-btn-sm" type="button" data-cc-iniciar-cabeza>Iniciar seguimiento</button>
+                <button class="epe-btn-ghost epe-btn-sm" type="button" data-cc-pausa hidden>Pausar</button>
+                <button class="epe-btn-ghost epe-btn-sm" type="button" data-cc-abrir-camara>Cámara y sensibilidad…</button>
+              </div>
+              <p class="epe-cc-estado" data-cc-estado-cabeza>
+                Pide permiso de cámara. Conviene buena luz de frente y la cara completa en cuadro.
+              </p>
+              <p class="epe-cc-estado">
+                La imagen de la cámara se procesa en este dispositivo: no se envía ni se guarda.
+              </p>
+              <label class="epe-cc-check">
+                <input type="checkbox" data-cc-usar-mouse />
+                Usar el mouse en lugar de la cabeza (para probar la app)
+              </label>
+            </div>
+
+            <div class="epe-cc-grupo">
+              <h2>2. Cómo elige la persona</h2>
+              <div class="epe-cc-opciones">
+                <label>
+                  <input type="radio" name="cc-seleccion" value="pulsador" checked />
+                  Cabeza + pulsador (tecla K o Espacio)
+                </label>
+                <label>
+                  <input type="radio" name="cc-seleccion" value="dwell" />
+                  Cabeza + permanencia (dwell)
+                </label>
+              </div>
+              <div class="epe-cc-inline" data-cc-dwell-wrap hidden>
+                <label for="cc-dwell">Permanencia</label>
+                <select id="cc-dwell" data-cc-dwell>
+                  <option value="600">0,6 s</option>
+                  <option value="900">0,9 s</option>
+                  <option value="1200" selected>1,2 s</option>
+                  <option value="1800">1,8 s</option>
+                  <option value="2500">2,5 s</option>
+                </select>
+              </div>
+              <div class="epe-cc-inline">
+                <label>Recentrar puntero</label>
+                <output class="epe-cc-tecla" data-cc-recentrar-tecla></output>
+                <button class="epe-btn-ghost epe-btn-sm" type="button" data-cc-asignar-recentrar>Asignar…</button>
+                <button class="epe-btn-ghost epe-btn-sm" type="button" data-cc-quitar-recentrar>Quitar</button>
+              </div>
+              <p class="epe-cc-estado" data-cc-recentrar-aviso></p>
+              <div class="epe-cc-fila-botones">
+                <button class="epe-btn-ghost epe-btn-sm" type="button" data-configurar-dispositivo>
+                  Configurar dispositivo…
+                </button>
+                <button class="epe-btn-ghost epe-btn-sm" type="button" data-restaurar-dispositivo hidden>
+                  Restaurar dispositivo
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="epe-cc-config-fila">
+            <div class="epe-cc-grupo">
+              <h2>3. Tablero</h2>
+              <div class="epe-cc-inline">
+                <label for="cc-layout">Disposición</label>
+                <select id="cc-layout" data-cc-layout>
+                  <option value="abc">ABC (alfabético)</option>
+                  <option value="qwerty">QWERTY</option>
+                </select>
+              </div>
+              <div class="epe-cc-inline" data-cc-descanso-wrap hidden>
+                <label class="epe-cc-check">
+                  <input type="checkbox" data-cc-descanso checked />
+                  Zona de descanso al centro
+                </label>
+                <select data-cc-descanso-tam aria-label="Tamaño de la zona de descanso">
+                  <option value="chica">Chica</option>
+                  <option value="mediana" selected>Mediana</option>
+                </select>
+              </div>
+              <label for="cc-celda">Tamaño mínimo de celda: <output data-cc-celda-out>120 px</output></label>
+              <input type="range" id="cc-celda" data-cc-celda min="80" max="200" step="10" value="120" />
+              <p class="epe-cc-estado" data-cc-celda-aviso></p>
+            </div>
+
+            <div class="epe-cc-grupo">
+              <h2>4. Voz</h2>
+              <select id="cc-voz" data-cc-voz aria-label="Voz"></select>
+              <label for="cc-vel">Velocidad: <output data-cc-vel-out>1,0×</output></label>
+              <input type="range" id="cc-vel" data-cc-vel min="0.6" max="1.4" step="0.1" value="1" />
+              <div class="epe-cc-fila-botones">
+                <button class="epe-btn-ghost epe-btn-sm" type="button" data-cc-probar-voz>Probar voz</button>
+              </div>
+              <p class="epe-cc-estado" data-cc-voz-aviso></p>
+            </div>
+          </div>
+
+          <div class="epe-juego-pie">
+            <a class="epe-btn-ghost" href="index.html" data-volver-apps>Volver a Apps EpE</a>
+            <button class="epe-btn-ghost" type="button" data-cc-abrir-resumen hidden>Ver resumen de la sesión</button>
+            <button class="epe-btn-acc" type="button" data-cc-empezar>Empezar</button>
+          </div>
+          <p class="epe-cc-estado" data-cc-aviso-empezar></p>
+        </div>
+      </div>
+
+      <!-- ── Modal secundario: cámara y sensibilidad. Se abre solo al terminar de
+           iniciar el seguimiento (el paso que sigue es encuadrar). La vista de
+           cámara de Tracky (fija en pantalla) se acomoda sobre el hueco. ── -->
+      <div class="epe-cc-modal-overlay epe-cc-modal-2" data-cc-modal-camara hidden>
+        <div class="epe-cc-modal epe-cc-modal-ancho" role="dialog" aria-modal="true" aria-labelledby="cc-cam-titulo">
+          <h1 id="cc-cam-titulo">Cámara y sensibilidad</h1>
+          <div class="epe-cc-vista-slot" data-cc-vista-slot>
+            La vista de cámara aparece acá al iniciar el seguimiento.
+          </div>
+          <div class="epe-cc-config-fila">
+            <div class="epe-cc-grupo">
+              <label for="cc-sens">Sensibilidad: <output data-cc-sens-out>—</output></label>
+              <input type="range" id="cc-sens" data-cc-sens min="0" max="100" step="1" value="50" disabled />
+              <div class="epe-cc-escala"><span>Más lento</span><span>Más rápido</span></div>
+              <p class="epe-cc-estado" data-cc-sens-aviso>Se habilita al iniciar el seguimiento.</p>
+            </div>
+            <div class="epe-cc-grupo">
+              <div class="epe-cc-fila-botones">
+                <button class="epe-btn-ghost epe-btn-sm" type="button" data-cc-quietud>Medir temblor (5 s)</button>
+                <button class="epe-btn-ghost epe-btn-sm" type="button" data-cc-ajustes-tracky aria-pressed="false">Todos los ajustes de Tracky</button>
+              </div>
+              <p class="epe-cc-estado" data-cc-quietud-res>Con la cabeza quieta, mirando la pantalla.</p>
+              <label class="epe-cc-check">
+                <input type="checkbox" data-cc-ocultar checked />
+                Ocultar la vista de cámara durante la sesión
+              </label>
+            </div>
+          </div>
+          <div class="epe-juego-pie">
+            <button class="epe-btn-acc" type="button" data-cc-cerrar-camara>Listo</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Modal secundario: resumen de la sesión. ── -->
+      <div class="epe-cc-modal-overlay epe-cc-modal-2" data-cc-modal-resumen hidden>
+        <div class="epe-cc-modal" role="dialog" aria-modal="true" aria-labelledby="cc-res-titulo">
+          <h1 id="cc-res-titulo">Resumen de la sesión</h1>
+          <pre class="epe-cc-resumen-texto" data-cc-resumen></pre>
+          <div class="epe-juego-pie">
+            <button class="epe-btn-ghost" type="button" data-cc-copiar-resumen>Copiar resumen</button>
+            <button class="epe-btn-acc" type="button" data-cc-cerrar-resumen>Cerrar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vista de cámara y ajustes de Tracky: vive fuera del modal para que
+           siga andando cuando el modal se cierra (se puede ocultar). -->
+      <div class="epe-cc-tracky-host" data-cc-tracky-host></div>
+
+      <!-- Aro que marca el centro un instante al recentrar. -->
+      <div class="epe-cc-centro" data-cc-centro hidden aria-hidden="true"></div>
+
+      <div class="epe-cc-body">
+        <div class="epe-cc-juego">
+          <div class="epe-cc-panel-texto">
+            <p class="epe-cc-texto" data-cc-texto aria-live="polite"></p>
+            <p class="epe-cc-estado" data-cc-estado-voz></p>
+          </div>
+          <div class="epe-cc-grilla" data-cc-grilla aria-label="Tablero de comunicación"></div>
+        </div>
+      </div>
+    </div>
+
+    <script src="../js/core/theme.js"></script>
+    <script src="../js/core/modal.js"></script>
+    <script type="module" src="../js/features/configurar-dispositivo/widget.js"></script>
+    <script type="module" src="../js/features/apps-epe/comunicacion-cabeza/main.js"></script>
+    <script>
+      EpeTheme.initThemeToggle(document.getElementById("theme-toggle"));
+    </script>
+  </body>
+</html>

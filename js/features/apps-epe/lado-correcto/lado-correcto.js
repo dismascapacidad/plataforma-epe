@@ -38,7 +38,22 @@ var EpeLadoCorrecto = (function () {
     { emoji: "🥝", nombre: "Kiwi" },
   ];
 
-  var LARGO_FILA = 4; // cuántas frutas se ven a la vez en la fila (índice 0 = la más cerca)
+  // Posición/aspecto de cada lugar en la fila (índice 0 = la fruta a
+  // responder AHORA). Con solo 2 lugares visibles se definen a mano en vez
+  // de interpolar con una fórmula continua: así "la que sigue" queda
+  // claramente más chica, más atrás, y parcialmente tapada por la actual
+  // (que se dibuja encima por ir después en la cola — ver aplicarPosiciones)
+  // — el efecto de "fila que se aleja hacia el fondo" que buscamos.
+  //
+  // "y" está en cqh (% del alto REAL del carril, ver container-type:size en
+  // lado-correcto.css) y no en px: así la separación entre las dos frutas
+  // escala junto con el tamaño que le toque al carril en cada pantalla, en
+  // vez de quedar fija y desbordar en viewports más bajos.
+  var POSICIONES_FILA = [
+    { escala: 1, y: "-6cqh", opacidad: 1 }, // la actual: al frente, grande, pegada a las flechas
+    { escala: 0.5, y: "-46cqh", opacidad: 0.5 }, // la que sigue: más chica, más atrás, medio tapada
+  ];
+  var LARGO_FILA = POSICIONES_FILA.length; // cuántas frutas se ven a la vez en la fila
 
   // Entradas fijas: acá no hay panel de reasignación de teclas (a diferencia
   // de Hanói/N-back/Stroop), las flechas son fijas. Se le pasan directo al
@@ -50,7 +65,7 @@ var EpeLadoCorrecto = (function () {
 
   var root, elConfig, elJuego, elResumen, elCarril;
   var elHudObjetivo, elHudErrores;
-  var elFrutaIzq, elFrutaDer, elContadorIzq, elContadorDer;
+  var elFrutaIzq, elFrutaDer;
   var elFlechaIzq, elFlechaDer;
   var elResumenTexto, elEstadisticasBoton, elEstadisticasPanel;
   var btnConfigurarDispositivo, btnRestaurarDispositivo, enlacesVolverApps;
@@ -91,21 +106,25 @@ var EpeLadoCorrecto = (function () {
   // la cola alcanza con volver a aplicar los transforms: la transición
   // CSS anima el "avance" solita.
 
-  function posicionParaIndice(idx) {
-    var paso = 1 - idx / LARGO_FILA; // 1 = más cerca, ~0.25 = más lejos
-    var escala = 0.4 + paso * 0.6;
-    var y = -(LARGO_FILA - 1 - idx) * 60;
-    var opacidad = 0.3 + paso * 0.7;
-    return "translate(-50%, " + y + "px) scale(" + escala + ")";
+  function posicionDe(idx) {
+    return POSICIONES_FILA[idx] || POSICIONES_FILA[POSICIONES_FILA.length - 1];
   }
 
   function aplicarPosiciones() {
+    // Se recorre de atrás para adelante para que, en el DOM, la fruta
+    // actual (idx 0) quede después que "la que sigue" — así se pinta
+    // encima sin necesitar z-index, y la tapa parcialmente sin más.
     estado.cola.forEach(function (item, idx) {
-      item.el.style.transform = posicionParaIndice(idx);
-      item.el.style.opacity = 0.3 + (1 - idx / LARGO_FILA) * 0.7;
-      item.el.style.zIndex = String(LARGO_FILA - idx);
+      var p = posicionDe(idx);
+      item.el.style.transform = "translate(-50%, " + p.y + ") scale(" + p.escala + ")";
+      item.el.style.opacity = String(p.opacidad);
       item.el.classList.toggle("is-frente", idx === 0);
     });
+    // Reordenar en el DOM (en vez de con z-index) para que la actual quede
+    // siempre pintada por encima de la que sigue.
+    for (var i = estado.cola.length - 1; i >= 0; i--) {
+      elCarril.appendChild(estado.cola[i].el);
+    }
   }
 
   function llenarFilaInicial() {
@@ -136,8 +155,6 @@ var EpeLadoCorrecto = (function () {
       elHudObjetivo.textContent = "Tiempo: " + estado.tiempoRestante + "s — Aciertos: " + estado.aciertos;
     }
     elHudErrores.textContent = "Errores: " + estado.errores;
-    elContadorIzq.textContent = String(estado.aciertosPorLado.izquierda);
-    elContadorDer.textContent = String(estado.aciertosPorLado.derecha);
   }
 
   function flashFlecha(lado, clase) {
@@ -149,7 +166,13 @@ var EpeLadoCorrecto = (function () {
   }
 
   function responder(ladoElegido) {
-    if (!estado || estado.terminado || !estado.cola.length) return;
+    // estado.procesando bloquea una segunda respuesta mientras la fruta
+    // actual todavía está resolviéndose (vuela/cae, 320ms) — sin esto, con
+    // la flecha mantenida apretada el repeat de keydown del sistema operativo
+    // dispara responder() de nuevo sobre la misma fruta y desincroniza la
+    // cola del DOM (la fruta queda pisada con la que entra).
+    if (!estado || estado.terminado || estado.procesando || !estado.cola.length) return;
+    estado.procesando = true;
 
     var frente = estado.cola[0];
     var esCorrecto = frente.lado === ladoElegido;
@@ -182,6 +205,7 @@ var EpeLadoCorrecto = (function () {
       elCarril.appendChild(nuevo.el);
       estado.cola.push(nuevo);
       aplicarPosiciones();
+      estado.procesando = false;
     }, 320);
   }
 
@@ -279,15 +303,18 @@ var EpeLadoCorrecto = (function () {
       errores: 0,
       aciertosPorLado: { izquierda: 0, derecha: 0 },
       terminado: false,
+      procesando: false,
       temporizador: null,
       inicioMs: performance.now(),
     };
 
     elCarril.className = "epe-lado-carril epe-lado-velocidad-" + config.velocidad;
-    elFrutaIzq.textContent = frutas.izquierda.emoji + " " + frutas.izquierda.nombre;
-    elFrutaDer.textContent = frutas.derecha.emoji + " " + frutas.derecha.nombre;
-    elContadorIzq.textContent = "0";
-    elContadorDer.textContent = "0";
+    elFrutaIzq.textContent = frutas.izquierda.emoji;
+    elFrutaDer.textContent = frutas.derecha.emoji;
+    // Sin texto visible en el botón (solo la fruta) el nombre queda en el
+    // aria-label, para que no se pierda con lectores de pantalla.
+    elFlechaIzq.setAttribute("aria-label", "Fruta izquierda: " + frutas.izquierda.nombre);
+    elFlechaDer.setAttribute("aria-label", "Fruta derecha: " + frutas.derecha.nombre);
 
     llenarFilaInicial();
     actualizarHud();
@@ -392,8 +419,6 @@ var EpeLadoCorrecto = (function () {
     elHudErrores = root.querySelector("[data-lado-hud-errores]");
     elFrutaIzq = root.querySelector("[data-lado-fruta-izq]");
     elFrutaDer = root.querySelector("[data-lado-fruta-der]");
-    elContadorIzq = root.querySelector("[data-lado-contador-izq]");
-    elContadorDer = root.querySelector("[data-lado-contador-der]");
     elFlechaIzq = root.querySelector('[data-lado-flecha="izquierda"]');
     elFlechaDer = root.querySelector('[data-lado-flecha="derecha"]');
     elResumenTexto = root.querySelector("[data-lado-resumen-texto]");

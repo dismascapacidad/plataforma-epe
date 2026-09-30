@@ -14,6 +14,11 @@
     "noImplicitAny": false,
     "types": ["vitest/globals"]
   },
-  "include": ["js/features/dispositivo/**/*.js", "tests/**/*.js", "dev/**/*.js"],
+  "include": [
+    "js/features/dispositivo/**/*.js",
+    "js/features/apps-epe/comunicacion-cabeza/**/*.js",
+    "tests/**/*.js",
+    "dev/**/*.js"
+  ],
   "exclude": ["node_modules"]
 }

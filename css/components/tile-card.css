@@ -76,7 +76,8 @@
   line-height: 1.4;
 }
 
-.epe-tile[data-soon]::after {
+.epe-tile[data-soon]::after,
+.epe-tile[data-beta]::after {
   content: "Próximamente";
   position: absolute;
   top: 14px;
@@ -90,6 +91,11 @@
   border: 1px solid var(--badge-border);
   border-radius: 20px;
   padding: 3px 8px;
+}
+
+/* "Beta": la app ya se puede usar pero todavía se está validando con personas. */
+.epe-tile[data-beta]::after {
+  content: "Beta";
 }
 
 /* Tile grande: destaca el Configurador como acceso principal.

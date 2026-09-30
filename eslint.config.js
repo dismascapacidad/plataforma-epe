@@ -10,7 +10,11 @@ export default [
   },
   js.configs.recommended,
   {
-    files: ['js/features/dispositivo/**/*.js', 'dev/**/*.js'],
+    files: [
+      'js/features/dispositivo/**/*.js',
+      'js/features/apps-epe/comunicacion-cabeza/**/*.js',
+      'dev/**/*.js',
+    ],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'module',

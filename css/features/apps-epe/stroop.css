@@ -42,7 +42,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: clamp(120px, 26vh, 220px);
+  min-height: clamp(160px, 34vh, 300px);
   background: var(--navy-800);
   border: 1px solid var(--navy-600);
   border-radius: var(--radius-lg);
@@ -50,7 +50,7 @@
 }
 
 .epe-stroop-palabra {
-  font-size: clamp(36px, min(12vh, 11vw), 96px);
+  font-size: clamp(56px, min(18vh, 16vw), 140px);
   font-weight: 800;
   letter-spacing: 0.02em;
   line-height: 1;
@@ -98,7 +98,7 @@
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  padding: 18px 8px;
+  padding: 22px 10px;
   border: 3px solid transparent;
   border-radius: var(--radius-lg);
   color: #fff;
@@ -120,8 +120,10 @@
 }
 
 .epe-stroop-resp-nombre {
-  font-size: 16px;
+  font-size: 20px;
   font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .epe-stroop-resp .epe-tecla {
