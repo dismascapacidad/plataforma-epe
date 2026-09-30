@@ -1,0 +1,572 @@
+.tracky-mouse-pointer {
+	z-index: 900000;
+	pointer-events: none;
+	/* background-image: url("data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath style='opacity:1;fill:%23ff0;stroke:%23000;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stop-color:%23000' d='M5 1v29l6-6 5 7 6-3-4-6h10z'/%3E%3Cpath style='opacity:1;fill:none;stroke:%23000;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stop-color:%23000' d='M5 18.978C13.157 22.5 17 16 17 16'/%3E%3Ccircle style='opacity:1;fill:%23000;stroke:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stop-color:%23000' cx='8.356' cy='13.886' r='1.726'/%3E%3Ccircle style='fill:%23000;stroke:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stop-color:%23000' cx='12.984' cy='13.836' r='1.872'/%3E%3C/svg%3E"); */
+	background-color: #000000;
+	clip-path: path('M4.5957 0.0859A1.0001 1.0001 0 0 0 4 1v29a1.0001 1.0001 0 0 0 1.707 0.707l5.1641 -5.1641l4.3145 6.0391a1.0001 1.0001 0 0 0 1.2617 0.3125l6 -3a1.0001 1.0001 0 0 0 0.3848 -1.4492L19.8691 23H28a1.0001 1.0001 0 0 0 0.6738 -1.7383L5.6738 0.2617A1.0001 1.0001 0 0 0 4.5957 0.0859Z');
+	width: 32px;
+	height: 32px;
+	position: fixed;
+	transform: translate(-12.5%, -0%);
+}
+
+.tracky-mouse-pointer::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	/* mouth */
+	background-color: #000000;
+	clip-path: path('M17.5098 15.1387a1 1 0 0 0 -1.3711 0.3516c0 0 -0.8368 1.4099 -2.5937 2.4609c-1.7569 1.0511 -4.328 1.759 -8.1484 0.1094a1 1 0 0 0 -1.3145 0.5215a1 1 0 0 0 0.5215 1.3145c4.3365 1.8724 7.7649 1.0899 9.9688 -0.2285c2.2038 -1.3184 3.2891 -3.1582 3.2891 -3.1582a1 1 0 0 0 -0.3516 -1.3711z');
+}
+
+.tracky-mouse-pointer::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	/* reverse border (fill as defined by border) */
+	background-color: #ffff00;
+	clip-path: path('M6 3.2656L25.4219 21H18a1.0001 1.0001 0 0 0 -0.832 1.5547l3.3711 5.0566l-4.2227 2.1113l-4.502 -6.3047a1.0001 1.0001 0 0 0 -1.5215 -0.125L6 27.5859Z');
+	/* eyes */
+	background-image:
+		radial-gradient(ellipse 5.849111875% 5.849111875% at 40.576240625% 43.238415625%, #000000 80%, transparent 100%),
+		radial-gradient(ellipse 5.3928859375% 5.3928859375% at 26.113536874999998% 43.3944%, #000000 80%, transparent 100%);
+	background-repeat: no-repeat;
+}
+
+.tracky-mouse-dwell-indicator {
+	position: fixed;
+	pointer-events: none;
+	z-index: 1000000;
+}
+
+.tracky-mouse-dwell-indicator::after {
+	content: "";
+	display: block;
+	position: absolute;
+	background: red;
+	left: 2px;
+	top: 2px;
+	right: 2px;
+	bottom: 2px;
+}
+
+.tracky-mouse-dwell-indicator:not(.tracky-mouse-for-release) {
+	background: yellow;
+}
+
+.tracky-mouse-dwell-indicator.tracky-mouse-for-release {
+	background: white;
+}
+
+.tracky-mouse-dwell-indicator:not(.tracky-mouse-for-release),
+.tracky-mouse-dwell-indicator:not(.tracky-mouse-for-release)::after {
+	border-radius: 50%;
+}
+
+.tracky-mouse-dwell-indicator.tracky-mouse-for-release,
+.tracky-mouse-dwell-indicator.tracky-mouse-for-release::after {
+	clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+}
+
+.tracky-mouse-hover-halo {
+	pointer-events: none;
+	z-index: 1000000;
+	box-shadow: 0 0 10px yellow, 0 0 3px yellow;
+}
+
+.tracky-mouse-ui {
+	display: flex;
+	flex-direction: column;
+	background-color: rgb(223, 204, 255);
+	color: black;
+	padding: 10px;
+	border-radius: 5px;
+	--max-ui-width: 600px;
+	max-width: var(--max-ui-width);
+	box-sizing: border-box;
+	font-size: 15px;
+	font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+	accent-color: rgb(191, 36, 234);
+}
+
+.tracky-mouse-ui.tracky-mouse-rtl {
+	direction: rtl;
+	text-align: right;
+}
+
+.tracky-mouse-canvas {
+	max-width: 100%;
+	object-fit: scale-down;
+	background-color: rgba(15, 0, 20, 0.5);
+}
+
+.tracky-mouse-start-stop-button,
+.tracky-mouse-help-button {
+	border-radius: 5px;
+	padding: 5px;
+	margin: 5px;
+	margin-bottom: 10px;
+	cursor: pointer;
+}
+
+.tracky-mouse-start-stop-button::after,
+.tracky-mouse-help-button::after {
+	content: "(" attr(aria-keyshortcuts) ")";
+	opacity: 0.6;
+	margin-inline-start: 0.5em;
+}
+
+.tracky-mouse-start-stop-button {
+	font-size: 20px;
+	min-width: 120px;
+	background-color: rgb(191, 36, 234);
+	color: white;
+}
+
+.tracky-mouse-help-button {
+	float: right;
+	min-width: 90px;
+}
+
+.tracky-mouse-help-button-icon {
+	transform: scale(1.4);
+	display: inline-block;
+	margin-inline-start: 2px;
+	margin-inline-end: 4px;
+}
+
+.tracky-mouse-help-dialog[open] {
+	max-width: 40em;
+	position: fixed;
+	padding: 0;
+	margin: auto;
+	display: flex;
+	flex-direction: column;
+	overflow: visible;
+	border-radius: 7px;
+	/* border: 2px solid black; */
+	border: 2px solid rgb(204, 143, 0);
+	background: rgb(255, 255, 157);
+	box-shadow: 0 4px #cc8f00, 0 0 10px #cc8f00 inset, rgba(0, 0, 0, 0.5) 0 7px 10px;
+}
+
+.tracky-mouse-help-dialog h1 {
+	margin: 0;
+	margin-bottom: 0;
+	padding: 0;
+	height: calc(32px + 10px + 10px);
+	line-height: calc(32px + 10px + 10px);
+	padding-left: 10px;
+	flex: 0 0 auto;
+	/* border-radius: 5px;
+	border-bottom-left-radius: 0;
+	border-bottom-right-radius: 0;
+	outline: 2px solid rgb(0, 0, 0); */
+	border-bottom: 7px solid rgb(255, 207, 116);
+	background: rgba(255, 165, 0, 0.27);
+}
+
+.tracky-mouse-help-dialog-content {
+	overflow: auto;
+	padding: 0.5em 1em;
+}
+
+.tracky-mouse-help-dialog ul>li,
+.tracky-mouse-help-dialog ol>li {
+	margin-bottom: 0.5em;
+}
+
+.tracky-mouse-help-close-button {
+	display: block;
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	/* vertical-align: middle; */
+	border: 2px solid;
+	color: inherit;
+	border-radius: 50%;
+	background: transparent;
+	/* position: relative; */
+	width: 32px;
+	height: 32px;
+	opacity: 0.6;
+}
+
+.tracky-mouse-help-close-button:focus-visible,
+.tracky-mouse-help-close-button:hover {
+	opacity: 1;
+	background: rgba(128, 128, 128, 0.5);
+}
+
+.tracky-mouse-help-close-button:active {
+	background: rgba(128, 128, 128, 0.9);
+}
+
+.tracky-mouse-help-close-button::before,
+.tracky-mouse-help-close-button::after {
+	content: " ";
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	height: 20px;
+	width: 4px;
+	background-color: currentColor;
+}
+
+.tracky-mouse-help-close-button::before {
+	transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.tracky-mouse-help-close-button::after {
+	transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+
+.tracky-mouse-ui .tracky-mouse-control-row:not([hidden]) {
+	display: flex;
+	min-height: 30px;
+	align-items: center;
+	anchor-scope: all;
+}
+
+.tracky-mouse-ui .tracky-mouse-control-row label {
+	/* Avoid accidental clicks on controls by their labels, when otherwise 100% width. */
+	/* This may not be needed in the current layout. */
+	width: fit-content;
+}
+
+.tracky-mouse-ui .tracky-mouse-label-text {
+	display: inline-block;
+	min-width: 150px;
+	margin-inline-end: 10px;
+}
+
+.tracky-mouse-ui .tracky-mouse-labeled-slider {
+	display: inline-flex;
+	flex-direction: column;
+	margin-bottom: 18px;
+	margin-top: 5px;
+	flex: 1;
+	max-width: 400px;
+	/* Default min-width is too big, causes horizontal scrollbars */
+	min-width: 50px;
+}
+
+.tracky-mouse-ui .tracky-mouse-labeled-slider input {
+	flex: 1;
+}
+
+.tracky-mouse-ui .tracky-mouse-labeled-slider .tracky-mouse-slider-labels {
+	opacity: 0.8;
+	pointer-events: none;
+	display: flex;
+	width: 100%;
+	left: 0;
+	right: 0;
+	justify-content: space-between;
+	/* If they come this close, wrap the slider label text */
+	gap: 10px;
+}
+
+.tracky-mouse-controls select {
+	font-size: 1.2em;
+	/* Default min-width is too big, causes horizontal scrollbars */
+	min-width: 50px;
+}
+
+.tracky-mouse-ui .tracky-mouse-experimental-label {
+	border-bottom: 1px dotted;
+}
+
+.tracky-mouse-camera-area {
+	flex: 1;
+	flex-basis: 0;
+	min-width: 0;
+	/* I might be able to simplify this or let it have an intrinsic height
+	based on the width, for the web demo, by leaving min-height unset (auto),
+	and only setting it	to 0 for the desktop app.
+	Well, really the difference is whether the height of the .tracky-mouse-ui
+	is fixed or not, not whether it's a web demo or desktop app.
+	So I might differentiate based on a .constrained-height class or something,
+	if not detect it automatically. */
+	min-height: var(--tracky-mouse-camera-view-min-height, 300px);
+}
+
+.tracky-mouse-canvas-container {
+	position: relative;
+	/* Note: aspect-ratio is set from JS, which determines the width implicitly. */
+	max-height: 100%;
+	margin: auto;
+}
+
+.tracky-mouse-canvas-overlay {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	pointer-events: none;
+}
+
+.tracky-mouse-canvas-overlay>* {
+	pointer-events: auto;
+}
+
+.tracky-mouse-use-camera-button {
+	font-size: min(2em, 8vw);
+	color: white;
+	background-color: rgb(220, 20, 60);
+	border: 0;
+	border-radius: 5px;
+	padding: 10px;
+	cursor: pointer;
+}
+
+.tracky-mouse-use-camera-button:hover {
+	background-color: rgb(230, 20, 62);
+}
+
+.tracky-mouse-error-message {
+	font-size: min(1.5em, 6vw);
+	text-align: center;
+	color: white;
+	padding: 5px;
+	animation: tracky-mouse-jello-vertical 1s ease 0s 1 normal none;
+	white-space: pre-wrap;
+}
+
+.tracky-mouse-error-message pre {
+	white-space: pre-wrap;
+	font-size: small;
+	background: rgba(0, 0, 0, 0.5);
+	color: white;
+}
+
+@keyframes tracky-mouse-jello-vertical {
+	0% {
+		transform: scale3d(calc(calc(3 + 1) / 4), calc(calc(3 + 1) / 4), 1);
+	}
+
+	30% {
+		transform: scale3d(calc(calc(3 + 0.75) / 4), calc(calc(3 + 1.25) / 4), 1);
+	}
+
+	40% {
+		transform: scale3d(calc(calc(3 + 1.25) / 4), calc(calc(3 + 0.75) / 4), 1);
+	}
+
+	50% {
+		transform: scale3d(calc(calc(3 + 0.85) / 4), calc(calc(3 + 1.15) / 4), 1);
+	}
+
+	65% {
+		transform: scale3d(calc(calc(3 + 1.05) / 4), calc(calc(3 + 0.95) / 4), 1);
+	}
+
+	75% {
+		transform: scale3d(calc(calc(3 + 0.95) / 4), calc(calc(3 + 1.05) / 4), 1);
+	}
+
+	100% {
+		transform: scale3d(calc(calc(3 + 1) / 4), calc(calc(3 + 1) / 4), 1);
+	}
+}
+
+.tracky-mouse-toast {
+	position: fixed;
+	top: 25px + env(titlebar-area-height, 0px);
+	top: calc(25px + env(titlebar-area-height, 0px));
+	right: 25px;
+	z-index: 100;
+	background-color: rgba(255, 233, 38, 0.8);
+	color: black;
+	padding: 10px 20px;
+	border-radius: 5px;
+	animation: tracky-mouse-fade-out 3s 3s ease-out forwards;
+	white-space: pre-wrap;
+	font-family: sans-serif;
+}
+
+/* Screen overlay in electron app */
+
+.tracky-mouse-hide-near-cursor {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+	user-select: none;
+}
+
+#tracky-mouse-screen-overlay-work-area {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+}
+
+#tracky-mouse-screen-overlay-message {
+	color: yellow;
+	position: absolute;
+	bottom: 0;
+	left: 50%;
+	transform: translateX(-50%);
+	text-align: center;
+	padding: 0 5px;
+	white-space: nowrap;
+	--overlay-background-color: rgba(0, 0, 0, 0.3);
+	--height: 25px;
+	height: var(--height);
+	line-height: var(--height);
+	background-color: var(--overlay-background-color);
+	text-shadow: 0 0 8px rgba(3, 2, 2, 0.5);
+	font-size: calc(var(--height) * 0.8);
+	font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+/* triangles */
+#tracky-mouse-screen-overlay-message::before,
+#tracky-mouse-screen-overlay-message::after {
+	content: "";
+	position: absolute;
+	bottom: 0;
+	width: 0px;
+	height: 0px;
+	border-style: solid;
+}
+
+#tracky-mouse-screen-overlay-message::before {
+	border-width: 0 0 var(--height) var(--height);
+	border-color: transparent transparent var(--overlay-background-color) transparent;
+	left: calc(var(--height) * -1);
+}
+
+#tracky-mouse-screen-overlay-message::after {
+	border-width: var(--height) 0 0 var(--height);
+	border-color: transparent transparent transparent var(--overlay-background-color);
+	right: calc(var(--height) * -1);
+}
+
+@keyframes tracky-mouse-fade-out {
+	0% {
+		opacity: 1;
+	}
+
+	100% {
+		opacity: 0;
+	}
+}
+
+.tracky-mouse-absolute-center {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%, -50%);
+}
+
+/* prefer manual takeback indicator, rather than showing both at once */
+body.tracky-mouse-manual-takeback .tracky-mouse-head-not-found-indicator,
+body:not(.tracky-mouse-head-not-found) .tracky-mouse-head-not-found-indicator {
+	display: none;
+}
+
+body:not(.tracky-mouse-manual-takeback) .tracky-mouse-manual-takeback-indicator {
+	display: none;
+}
+
+.tracky-mouse-screen-overlay-status-indicator img {
+	filter: drop-shadow(0 0 4px #000) drop-shadow(2px 2px 2px #000);
+	opacity: 0.5;
+}
+
+.tracky-mouse-ui a:link,
+.tracky-mouse-ui a:visited {
+	color: rgb(135 0 191);
+}
+
+.tracky-mouse-controls {
+	overflow: auto;
+}
+
+.tracky-mouse-controls details {
+	border: 1px solid rgba(0, 0, 0, 0.3);
+	border-radius: 4px;
+	margin-bottom: 8px;
+}
+
+.tracky-mouse-controls details summary {
+	cursor: pointer;
+	user-select: none;
+	font-weight: bold;
+	background: rgba(135, 0, 191, 0.1);
+	padding: 8px;
+}
+
+.tracky-mouse-controls details .tracky-mouse-details-body {
+	padding: 8px;
+}
+
+.tracky-mouse-control-row:not(:hover):not(:has(:focus-visible)) .tracky-mouse-setting-extra-button,
+.tracky-mouse-setting-extra-button[disabled] {
+	opacity: 0;
+	pointer-events: none;
+}
+
+/* No longer using popover API because cursor+HUD should go on top in the web demo/web version. */
+/* .tracky-mouse-control-row:has(.tracky-mouse-setting-info-popover:popover-open) .tracky-mouse-setting-info-button { */
+.tracky-mouse-control-row:has(.tracky-mouse-setting-info-popover:not([hidden])) .tracky-mouse-setting-info-button {
+	opacity: 1;
+	pointer-events: auto;
+	background: rgb(255, 255, 157);
+	color: black;
+	outline: 2px solid black;
+}
+
+
+.tracky-mouse-setting-extra-button {
+	transition: opacity 0.2s ease;
+	margin-inline-end: 5px;
+	font-size: 1.3em;
+	background: none;
+	border: 2px solid transparent;
+	border-radius: 4px;
+	cursor: pointer;
+}
+
+.tracky-mouse-setting-extra-button:hover,
+.tracky-mouse-setting-extra-button:focus-visible {
+	border-color: currentColor;
+	background-color: rgba(0, 0, 0, 0.1);
+}
+
+.tracky-mouse-setting-extra-button:active {
+	background-color: rgba(0, 0, 0, 0.2);
+}
+
+.tracky-mouse-setting-info-button {
+	anchor-name: --tracky-mouse-setting-info;
+}
+
+.tracky-mouse-setting-info-popover {
+	/* Note: There is fallback logic in settings-ui.js when position-area is unavailable */
+	position-anchor: --tracky-mouse-setting-info;
+	position: fixed;
+	position-area: end span-end;
+	position-try-fallbacks: flip-block;
+	white-space: pre-wrap;
+	background: rgb(255, 255, 157);
+	color: black;
+	border: 2px solid black;
+	box-shadow: 4px 4px 10px 0 rgba(0, 0, 0, 0.5);
+	padding: 5px;
+	z-index: 1000;
+	width: fit-content;
+	height: fit-content;
+	max-width: 50em;
+}

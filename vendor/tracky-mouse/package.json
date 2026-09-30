@@ -1,0 +1,66 @@
+{
+  "name": "tracky-mouse",
+  "version": "3.0.0",
+  "description": "Add facial mouse accessibility to JavaScript applications",
+  "license": "MIT",
+  "author": {
+    "name": "Isaiah Odhner",
+    "email": "isaiahodhner@gmail.com",
+    "url": "https://isaiahodhner.io"
+  },
+  "keywords": [
+    "camera-mouse",
+    "mouse",
+    "camera",
+    "webcam",
+    "head-tracker",
+    "head-tracking",
+    "facial-recognition",
+    "face-tracker",
+    "face-tracking",
+    "headmouse",
+    "facial-mouse",
+    "facemesh",
+    "eye-tracker",
+    "eye-tracking",
+    "eye-gaze",
+    "accessibility",
+    "assistive-technology",
+    "cursor",
+    "pointer",
+    "pointing",
+    "input-method",
+    "hands-free",
+    "handsfree",
+    "desktop-automation",
+    "telekinesis"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/1j01/tracky-mouse.git"
+  },
+  "bugs": {
+    "url": "https://github.com/1j01/tracky-mouse/issues"
+  },
+  "homepage": "https://trackymouse.js.org/",
+  "type": "module",
+  "main": "src/core/tracky-mouse.js",
+  "browser": "src/core/tracky-mouse.js",
+  "files": [
+    "tracky-mouse.js",
+    "tracky-mouse.css",
+    "src/",
+    "locales/",
+    "images/",
+    "audio/",
+    "lib/"
+  ],
+  "devDependencies": {
+    "@david18284/one-euro-filter": "^1.0.3",
+    "@mediapipe/face_mesh": "^0.4.1633559619",
+    "@tensorflow-models/face-landmarks-detection": "^1.0.6"
+  },
+  "scripts": {
+    "copy-deps": "node copy-deps.js"
+  }
+}
