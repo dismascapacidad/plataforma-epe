@@ -59,7 +59,11 @@
 /* Los estilos de .epe-field (label + input) viven en
    css/components/form-field.css, compartidos con el dashboard. */
 
-[data-signup-fields] {
+/* :not([hidden]) a propósito: si esto fuera solo "[data-signup-fields]",
+   el display: flex le gana en la cascada al display: none que el navegador
+   aplica por el atributo hidden (misma especificidad, pero regla de autor),
+   y el bloque queda siempre visible sin importar el modo. */
+[data-signup-fields]:not([hidden]) {
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -103,4 +107,19 @@
 
 .epe-login-back:hover {
   color: var(--text-strong);
+}
+
+/* Respaldo de marca dentro de la tarjeta (ver css/components/atribucion.css).
+   Se pisan el alto y el margen que `.epe-login-card img` le daría al logo. */
+.epe-login-card .epe-atribucion-pie {
+  margin-top: 22px;
+  padding: 14px 0 0;
+  border-top: 1px solid var(--tile-border);
+  font-size: 12px;
+  gap: 6px 12px;
+}
+
+.epe-login-card .epe-atribucion-logo {
+  height: 16px;
+  margin: -3px -8px;
 }
