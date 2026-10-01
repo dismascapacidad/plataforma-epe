@@ -56,3 +56,17 @@ ol {
   outline: 2px solid var(--teal-500);
   outline-offset: 2px;
 }
+
+/* El atributo hidden tiene que ganar siempre, pase lo que pase en el resto
+   de las hojas de estilo. Sin esto, CUALQUIER regla de autor que le ponga
+   display a un elemento (.epe-btn-ghost, .epe-panel, lo que sea) empata en
+   especificidad con la regla [hidden] del navegador — y como una regla de
+   autor le gana a una regla de user-agent aunque empate en especificidad,
+   el elemento queda visible igual aunque tenga hidden puesto. Ya pasó dos
+   veces por este motivo exacto (los campos de alta en login.css y el link
+   "Panel dis+capacidad" en el dashboard): no confiar en que ninguna otra
+   regla vaya a ser "más específica" — esta de acá, con !important, es la
+   que corta por lo sano para toda la plataforma de una vez. */
+[hidden] {
+  display: none !important;
+}
