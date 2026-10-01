@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Panel dis+capacidad — Equipar para Equipar</title>
+    <link rel="icon" href="../assets/img/logo-epe.png" />
+
+    <script src="../js/core/theme-boot.js"></script>
+
+    <link rel="stylesheet" href="../css/base/reset.css" />
+    <link rel="stylesheet" href="../css/base/tokens.css" />
+    <link rel="stylesheet" href="../css/base/theme.css" />
+    <link rel="stylesheet" href="../css/base/typography.css" />
+    <link rel="stylesheet" href="../css/components/buttons.css" />
+    <link rel="stylesheet" href="../css/components/atribucion.css" />
+    <link rel="stylesheet" href="../css/components/form-field.css" />
+    <link rel="stylesheet" href="../css/layout/shell.css" />
+    <link rel="stylesheet" href="../css/features/admin/dashboard.css" />
+  </head>
+  <body>
+    <div class="epe-shell">
+      <header class="epe-header">
+        <div class="epe-brand">
+          <a href="../index.html"><img class="epe-logo-chip" src="../assets/img/logo-epe.png" alt="Equipar para Equipar" /></a>
+        </div>
+        <div class="epe-header-actions">
+          <span class="epe-dash-header-meta" data-sesion-email></span>
+          <a class="epe-btn-ghost epe-btn-sm" href="../espacio-personal/dashboard.html">Mi espacio personal</a>
+          <button
+            class="epe-theme-toggle"
+            type="button"
+            id="theme-toggle"
+            aria-pressed="false"
+            aria-label="Cambiar a modo oscuro"
+          >
+            <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="4" />
+              <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+            </svg>
+            <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" />
+            </svg>
+          </button>
+          <button class="epe-btn-ghost" type="button" data-logout>Salir</button>
+        </div>
+      </header>
+
+      <div class="epe-dash-body">
+        <div class="epe-intro" style="padding-left: 0; padding-right: 0;">
+          <p class="eyebrow">dis+capacidad</p>
+          <h1>Panel de seguimiento</h1>
+        </div>
+
+        <!-- Se muestra solo si la cuenta no está en staff_dismascapacidad -->
+        <section class="epe-panel" data-sin-acceso hidden>
+          <h2>No tenés acceso a este panel</h2>
+          <p class="epe-panel-sub">Esta sección es solo para el equipo de dis+capacidad.</p>
+        </section>
+
+        <div data-admin-contenido hidden>
+          <nav class="epe-tabs" role="tablist" aria-label="Secciones del panel">
+            <button class="epe-tab is-active" type="button" data-admin-tab="colecciones" role="tab" aria-selected="true">Colecciones compartidas</button>
+            <button class="epe-tab" type="button" data-admin-tab="instituciones" role="tab" aria-selected="false">Instituciones</button>
+            <button class="epe-tab" type="button" data-admin-tab="pendientes" role="tab" aria-selected="false">Pendientes</button>
+          </nav>
+
+          <!-- ── Colecciones compartidas ── -->
+          <section class="epe-panel" data-admin-panel="colecciones">
+            <p class="epe-panel-sub">
+              Colecciones que algún profesional compartió con dis+capacidad para pedir
+              acompañamiento, agrupadas por institución y profesional.
+            </p>
+
+            <input class="epe-admin-buscador" type="search" placeholder="Buscar institución o profesional…" data-admin-buscador />
+
+            <div class="epe-casos-layout">
+              <div>
+                <div data-admin-arbol></div>
+                <p class="epe-vacio" data-admin-arbol-vacio hidden>Todavía no hay colecciones compartidas con dis+capacidad.</p>
+              </div>
+
+              <div>
+                <p class="epe-detalle-vacio" data-admin-detalle-vacio>Elegí una colección de la lista.</p>
+
+                <div class="epe-detalle" data-admin-detalle hidden>
+                  <h3 data-admin-detalle-nombre></h3>
+                  <p class="epe-caso-banner" data-admin-detalle-meta></p>
+
+                  <div class="epe-detalle-seccion">
+                    <h4>Recursos vinculados</h4>
+                    <ul class="epe-comentarios-lista" data-admin-actividades-lista></ul>
+                  </div>
+
+                  <div class="epe-detalle-seccion">
+                    <h4>Espacio compartido</h4>
+                    <p class="epe-panel-sub">
+                      Mismo canal que ve el profesional — no reemplaza sus notas
+                      personales, que son privadas y nunca llegan acá.
+                    </p>
+                    <ul class="epe-comentarios-lista" data-admin-comentarios-lista></ul>
+                    <form class="epe-inline-form" data-admin-comentario-form>
+                      <textarea name="contenido" placeholder="Escribí un comentario…" required></textarea>
+                      <button class="epe-btn-ghost epe-btn-sm" type="submit">Comentar</button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ── Instituciones ── -->
+          <section class="epe-panel" data-admin-panel="instituciones" hidden>
+            <p class="epe-panel-sub">
+              Alta de instituciones y su código de acceso — se lo pasás al referente
+              de cada institución para que sus profesionales puedan verificar su
+              pertenencia al elegirla en su perfil.
+            </p>
+
+            <form class="epe-inline-form" data-admin-institucion-form>
+              <input type="text" name="nombre" placeholder="Nombre de la institución" required />
+              <button class="epe-btn-acc epe-btn-sm" type="submit">Dar de alta</button>
+            </form>
+            <span class="epe-form-status" data-admin-institucion-status></span>
+
+            <ul class="epe-compartir-lista" data-admin-instituciones-lista></ul>
+          </section>
+
+          <!-- ── Pendientes ── -->
+          <section class="epe-panel" data-admin-panel="pendientes" hidden>
+            <p class="epe-panel-sub">
+              Profesionales que eligieron una institución que todavía no existe en el
+              catálogo, o que no verificaron su pertenencia con un código.
+            </p>
+            <ul class="epe-compartir-lista" data-admin-pendientes-lista></ul>
+            <p class="epe-vacio" data-admin-pendientes-vacio hidden>No hay nada pendiente de resolver.</p>
+          </section>
+        </div>
+      </div>
+
+      <div data-atribucion="pie"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="../js/core/supabase-client.js"></script>
+    <script src="../js/core/theme.js"></script>
+    <script src="../js/core/atribucion.js"></script>
+    <script src="../js/data/catalogo-actividades.js"></script>
+    <script src="../js/features/perfil/auth.js"></script>
+    <script src="../js/features/perfil/data/schema.js"></script>
+    <script src="../js/features/perfil/data/store.js"></script>
+    <script src="../js/features/admin/data/admin-store.js"></script>
+    <script src="../js/features/admin/panel.js"></script>
+    <script src="../js/features/admin/instituciones.js"></script>
+    <script src="../js/features/admin/pendientes.js"></script>
+    <script src="../js/features/admin/dashboard.js"></script>
+  </body>
+</html>

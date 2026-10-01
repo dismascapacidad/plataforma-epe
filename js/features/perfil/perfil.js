@@ -41,13 +41,129 @@ var EpePerfil = (function () {
     var nombre = (datos.nombre || "").trim();
     nombreEl.textContent = nombre || email || "Tu perfil";
 
-    var detalle = [datos.profesion, datos.institucion]
+    var detalle = [datos.profesion, datos.institucion_nombre || datos.institucion_pendiente]
       .map(function (v) {
         return (v || "").trim();
       })
       .filter(Boolean)
       .join(" · ");
     detalleEl.textContent = detalle || email || "";
+  }
+
+  // ── Institución (entidad propia) ──────────────────────────────────────
+  // Separada del formulario principal a propósito: elegir/verificar una
+  // institución es una afirmación de pertenencia, no un campo de texto más
+  // (ver EpeStore y supabase/010_instituciones_y_staff.sql). Vuelve a leer
+  // EpeStore.getProfile() después de cada acción en vez de armar el estado
+  // a mano acá, para no duplicar la lógica de qué significa cada
+  // combinación de institucion_id/institucion_pendiente/verificada.
+  function initInstitucion(root) {
+    var select = root.querySelector("[data-institucion-select]");
+    var campoPendiente = root.querySelector("[data-institucion-pendiente-campo]");
+    var inputPendiente = root.querySelector("#perfil-institucion-pendiente");
+    var campoCodigo = root.querySelector("[data-institucion-codigo-campo]");
+    var inputCodigo = root.querySelector("#perfil-institucion-codigo");
+    var estado = root.querySelector("[data-institucion-estado]");
+    var status = root.querySelector("[data-institucion-status]");
+    var boton = root.querySelector("[data-institucion-guardar]");
+    if (!select) return Promise.resolve(); // página vieja sin este bloque todavía
+
+    function actualizarCampos() {
+      var esOtra = select.value === "_otra";
+      campoPendiente.hidden = !esOtra;
+      campoCodigo.hidden = !select.value || esOtra;
+    }
+
+    function actualizarEstado(datos) {
+      if (datos.institucion_id && datos.institucion_verificada) {
+        estado.textContent = "Institución verificada: " + datos.institucion_nombre + ".";
+      } else if (datos.institucion_id) {
+        estado.textContent = "Elegiste " + datos.institucion_nombre + ", todavía sin verificar — pedile el código a dis+capacidad para confirmarla.";
+      } else if (datos.institucion_pendiente) {
+        estado.textContent = 'Avisaste "' + datos.institucion_pendiente + '" — dis+capacidad la va a dar de alta pronto.';
+      } else {
+        estado.textContent = "Todavía no elegiste tu institución.";
+      }
+    }
+
+    function cargar() {
+      return Promise.all([EpeStore.getInstituciones(), EpeStore.getProfile()]).then(function (resultados) {
+        var instituciones = resultados[0];
+        var datos = resultados[1];
+
+        select.innerHTML = "";
+        var vacia = document.createElement("option");
+        vacia.value = "";
+        vacia.textContent = "Elegí tu institución…";
+        select.appendChild(vacia);
+        instituciones.forEach(function (inst) {
+          var option = document.createElement("option");
+          option.value = inst.id;
+          option.textContent = inst.nombre;
+          select.appendChild(option);
+        });
+        var otra = document.createElement("option");
+        otra.value = "_otra";
+        otra.textContent = "Mi institución no está en la lista";
+        select.appendChild(otra);
+
+        select.value = datos.institucion_id || (datos.institucion_pendiente ? "_otra" : "");
+        inputPendiente.value = datos.institucion_pendiente || "";
+        inputCodigo.value = "";
+        actualizarCampos();
+        actualizarEstado(datos);
+        return datos;
+      });
+    }
+
+    select.addEventListener("change", actualizarCampos);
+
+    boton.addEventListener("click", function () {
+      boton.disabled = true;
+      status.textContent = "Guardando…";
+
+      var promesa;
+      if (select.value === "_otra") {
+        var texto = inputPendiente.value.trim();
+        promesa = EpeStore.setInstitucionPendiente(texto);
+      } else if (select.value) {
+        var codigo = inputCodigo.value.trim();
+        promesa = codigo
+          ? EpeStore.verificarInstitucion(select.value, codigo).then(function (coincide) {
+              if (coincide) return;
+              // El código no coincidió: igual queda elegida, sin verificar
+              // (no bloquea el uso de la plataforma — ver ADR).
+              return EpeStore.elegirInstitucionSinVerificar(select.value).then(function () {
+                status.textContent = "El código no coincide — guardado igual, sin verificar.";
+              });
+            })
+          : EpeStore.elegirInstitucionSinVerificar(select.value);
+      } else {
+        boton.disabled = false;
+        return;
+      }
+
+      promesa
+        .then(function () {
+          return cargar();
+        })
+        .then(function (datos) {
+          actualizarResumen(root, datos, "");
+          if (!status.textContent || status.textContent === "Guardando…") status.textContent = "Guardado.";
+          window.clearTimeout(status._epeTimeout);
+          status._epeTimeout = window.setTimeout(function () {
+            status.textContent = "";
+          }, 3000);
+        })
+        .catch(function (err) {
+          status.textContent = "No se pudo guardar." + (err && err.message ? " (" + err.message + ")" : "");
+        })
+        .finally(function () {
+          boton.disabled = false;
+        });
+    });
+
+    return cargar();
   }
 
   // email: el de la sesión (dashboard.js ya lo tiene, evita pedirlo de
@@ -60,14 +176,14 @@ var EpePerfil = (function () {
     var status = root.querySelector("[data-perfil-status]");
     if (!form) return;
 
-    actualizarResumen(root, { nombre: "", profesion: "", institucion: "" }, email);
+    actualizarResumen(root, { nombre: "", profesion: "", institucion_nombre: "" }, email);
+    initInstitucion(root);
 
     status.textContent = "Cargando…";
     EpeStore.getProfile()
       .then(function (datos) {
         form.elements.nombre.value = datos.nombre || "";
         form.elements.profesion.value = datos.profesion || "";
-        form.elements.institucion.value = datos.institucion || "";
         form.elements.telefono.value = datos.telefono || "";
         form.elements.localidad.value = datos.localidad || "";
         form.elements.email_contacto.value = datos.email_contacto || "";
@@ -88,7 +204,6 @@ var EpePerfil = (function () {
       var datos = {
         nombre: form.elements.nombre.value.trim(),
         profesion: form.elements.profesion.value.trim(),
-        institucion: form.elements.institucion.value.trim(),
         telefono: form.elements.telefono.value.trim(),
         localidad: form.elements.localidad.value.trim(),
         email_contacto: form.elements.email_contacto.value.trim(),
@@ -96,8 +211,15 @@ var EpePerfil = (function () {
 
       EpeStore.saveProfile(datos)
         .then(function () {
-          actualizarResumen(root, datos, email);
-          actualizarSaludo(datos);
+          // Se vuelve a pedir el perfil completo (en vez de usar el `datos`
+          // de arriba tal cual) porque éste no incluye institución — así el
+          // resumen de arriba no "pierde" la institución al guardar los
+          // demás campos.
+          return EpeStore.getProfile();
+        })
+        .then(function (datosCompletos) {
+          actualizarResumen(root, datosCompletos, email);
+          actualizarSaludo(datosCompletos);
           status.textContent = "Guardado.";
           window.clearTimeout(status._epeTimeout);
           status._epeTimeout = window.setTimeout(function () {

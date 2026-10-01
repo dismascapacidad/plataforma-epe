@@ -84,9 +84,31 @@
               <label for="perfil-profesion">Profesión</label>
               <input type="text" id="perfil-profesion" name="profesion" />
             </div>
-            <div class="epe-field">
-              <label for="perfil-institucion">Institución</label>
-              <input type="text" id="perfil-institucion" name="institucion" />
+
+            <div class="epe-form-section">
+              <h3>Institución</h3>
+              <p class="epe-field-hint" data-institucion-estado>Cargando…</p>
+            </div>
+
+            <div class="epe-field" style="grid-column: 1 / -1;">
+              <label for="perfil-institucion-select">Tu institución</label>
+              <select id="perfil-institucion-select" data-institucion-select></select>
+            </div>
+
+            <div class="epe-field" data-institucion-pendiente-campo hidden style="grid-column: 1 / -1;">
+              <label for="perfil-institucion-pendiente">Nombre de tu institución</label>
+              <input type="text" id="perfil-institucion-pendiente" />
+              <span class="epe-field-hint">dis+capacidad la va a dar de alta pronto.</span>
+            </div>
+
+            <div class="epe-field" data-institucion-codigo-campo hidden style="grid-column: 1 / -1;">
+              <label for="perfil-institucion-codigo">Código de acceso (te lo pasa dis+capacidad)</label>
+              <input type="text" id="perfil-institucion-codigo" placeholder="Opcional por ahora" />
+            </div>
+
+            <div class="epe-form-actions" style="grid-column: 1 / -1;">
+              <button class="epe-btn-ghost epe-btn-sm" type="button" data-institucion-guardar>Guardar institución</button>
+              <span class="epe-form-status" data-institucion-status></span>
             </div>
 
             <div class="epe-form-section">

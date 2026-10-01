@@ -32,30 +32,45 @@ var EpeStore = (function () {
   // registra — acá solo leemos/actualizamos la fila propia (RLS: id =
   // auth.uid()).
 
+  // "institucion" (texto libre) ya no existe — ver
+  // supabase/010_instituciones_y_staff.sql. getProfile trae el nombre de la
+  // institución vía el embed de supabase-js (instituciones(nombre)), que
+  // funciona solo porque profiles.institucion_id es una FK real a
+  // instituciones.id.
   function getProfile() {
     return EpeSupabase.auth.getUser().then(function (userRes) {
       if (userRes.error) throw userRes.error;
       var uid = userRes.data.user.id;
       return EpeSupabase.from("profiles")
-        .select("nombre, profesion, institucion, telefono, localidad, email_contacto")
+        .select(
+          "nombre, profesion, telefono, localidad, email_contacto, institucion_id, institucion_pendiente, institucion_verificada, institucion_verificada_metodo, instituciones(nombre)"
+        )
         .eq("id", uid)
         .maybeSingle()
         .then(function (res) {
           lanzarSiError(res);
-          return (
-            res.data || {
-              nombre: "",
-              profesion: "",
-              institucion: "",
-              telefono: "",
-              localidad: "",
-              email_contacto: "",
-            }
-          );
+          var datos = res.data || {};
+          return {
+            nombre: datos.nombre || "",
+            profesion: datos.profesion || "",
+            telefono: datos.telefono || "",
+            localidad: datos.localidad || "",
+            email_contacto: datos.email_contacto || "",
+            institucion_id: datos.institucion_id || null,
+            institucion_nombre: (datos.instituciones && datos.instituciones.nombre) || "",
+            institucion_pendiente: datos.institucion_pendiente || "",
+            institucion_verificada: !!datos.institucion_verificada,
+            institucion_verificada_metodo: datos.institucion_verificada_metodo || "",
+          };
         });
     });
   }
 
+  // Solo los campos "de siempre" del formulario de Perfil — institución se
+  // guarda aparte (ver elegirInstitucionSinVerificar/setInstitucionPendiente/
+  // verificarInstitucion más abajo): es una afirmación de pertenencia, no un
+  // dato de texto más, así que tiene su propia acción en la interfaz en vez
+  // de mezclarse con el botón "Guardar" general.
   function saveProfile(datos) {
     return EpeSupabase.auth.getUser().then(function (userRes) {
       if (userRes.error) throw userRes.error;
@@ -64,18 +79,90 @@ var EpeStore = (function () {
         .update({
           nombre: datos.nombre,
           profesion: datos.profesion,
-          institucion: datos.institucion,
           telefono: datos.telefono,
           localidad: datos.localidad,
           email_contacto: datos.email_contacto,
           actualizado_en: new Date().toISOString(),
         })
         .eq("id", uid)
-        .select("nombre, profesion, institucion, telefono, localidad, email_contacto")
+        .select("nombre, profesion, telefono, localidad, email_contacto")
         .single()
         .then(function (res) {
           lanzarSiError(res);
           return res.data;
+        });
+    });
+  }
+
+  // ── Institución (entidad propia, ver ADR en el proyecto) ─────────────
+  // Tres acciones posibles desde el formulario de Perfil: elegir una
+  // institución existente (con o sin código a mano), o avisar que la
+  // institución todavía no está en el catálogo.
+
+  function getInstituciones() {
+    return EpeSupabase.from("instituciones")
+      .select("id, nombre")
+      .order("nombre", { ascending: true })
+      .then(function (res) {
+        lanzarSiError(res);
+        return res.data || [];
+      });
+  }
+
+  // El código se valida DENTRO de la función de Postgres (security
+  // definer) — nunca viaja a este cliente para compararlo acá. true/false
+  // según si coincidió; si coincidió, la base ya dejó institucion_id y
+  // institucion_verificada actualizados, no hace falta un segundo viaje.
+  function verificarInstitucion(institucionId, codigo) {
+    return EpeSupabase.rpc("verificar_institucion", {
+      p_institucion_id: institucionId,
+      p_codigo: codigo,
+    }).then(function (res) {
+      lanzarSiError(res);
+      return !!res.data;
+    });
+  }
+
+  // Elegir una institución del catálogo SIN código (o con uno que no
+  // coincidió) — queda registrada la elección, pero institucion_verificada
+  // en false, visible para el staff en la pestaña Pendientes.
+  function elegirInstitucionSinVerificar(institucionId) {
+    return EpeSupabase.auth.getUser().then(function (userRes) {
+      if (userRes.error) throw userRes.error;
+      var uid = userRes.data.user.id;
+      return EpeSupabase.from("profiles")
+        .update({
+          institucion_id: institucionId,
+          institucion_pendiente: null,
+          institucion_verificada: false,
+          institucion_verificada_en: null,
+          institucion_verificada_metodo: null,
+        })
+        .eq("id", uid)
+        .then(function (res) {
+          lanzarSiError(res);
+        });
+    });
+  }
+
+  // "Mi institución no está en la lista" — queda el texto tal cual lo
+  // escribió la persona, para que el staff la dé de alta desde el panel
+  // (pestaña Pendientes) y recién ahí quede con un institucion_id real.
+  function setInstitucionPendiente(texto) {
+    return EpeSupabase.auth.getUser().then(function (userRes) {
+      if (userRes.error) throw userRes.error;
+      var uid = userRes.data.user.id;
+      return EpeSupabase.from("profiles")
+        .update({
+          institucion_id: null,
+          institucion_pendiente: texto,
+          institucion_verificada: false,
+          institucion_verificada_en: null,
+          institucion_verificada_metodo: null,
+        })
+        .eq("id", uid)
+        .then(function (res) {
+          lanzarSiError(res);
         });
     });
   }
@@ -402,6 +489,10 @@ var EpeStore = (function () {
   return {
     getProfile: getProfile,
     saveProfile: saveProfile,
+    getInstituciones: getInstituciones,
+    verificarInstitucion: verificarInstitucion,
+    elegirInstitucionSinVerificar: elegirInstitucionSinVerificar,
+    setInstitucionPendiente: setInstitucionPendiente,
     getCasos: getCasos,
     getCaso: getCaso,
     createCaso: createCaso,

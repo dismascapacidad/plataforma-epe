@@ -1,0 +1,286 @@
+/*
+  dashboard.css (panel de staff)
+  Duplica a propósito las piezas genéricas de pestañas/panel/comentarios
+  que ya existen en css/features/perfil/dashboard.css (.epe-tabs,
+  .epe-panel, .epe-comentario-item, etc.) — las dos features todavía no
+  comparten CSS (ver PLAN_deuda_tecnica.md); si en algún momento se
+  extraen a css/components, este archivo se achica.
+*/
+
+.epe-dash-header-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12.5px;
+  color: var(--text-dim);
+}
+
+.epe-dash-body {
+  flex: 1;
+  padding: 4px clamp(16px, 4vw, 40px) clamp(24px, 4vw, 40px);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.epe-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--tile-border);
+}
+
+.epe-tab {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-dim);
+  padding: 10px 14px;
+  border-bottom: 2px solid transparent;
+  transform: translateY(1px);
+}
+
+.epe-tab:hover {
+  color: var(--text-strong);
+}
+
+.epe-tab.is-active {
+  color: var(--teal-600);
+  border-bottom-color: var(--teal-600);
+}
+
+[data-theme="dark"] .epe-tab.is-active {
+  color: var(--teal-500);
+  border-bottom-color: var(--teal-500);
+}
+
+.epe-panel {
+  background: var(--tile-bg);
+  border: 1px solid var(--tile-border);
+  border-radius: var(--radius-lg);
+  padding: clamp(18px, 3vw, 28px);
+}
+
+.epe-panel h2 {
+  font-size: 16px;
+  color: var(--text-strong);
+}
+
+.epe-panel .epe-panel-sub {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+.epe-vacio {
+  font-size: 12.5px;
+  color: var(--text-faint);
+  padding: 10px 2px;
+}
+
+.epe-detalle-vacio {
+  padding: 40px 12px;
+  text-align: center;
+  color: var(--text-faint);
+  font-size: 13px;
+  border: 1px dashed var(--tile-border);
+  border-radius: var(--radius-md);
+}
+
+.epe-detalle h3 {
+  font-size: 16px;
+  color: var(--text-strong);
+}
+
+.epe-caso-banner {
+  margin-top: 8px;
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--teal-600) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--teal-600) 30%, transparent);
+  color: var(--text-strong);
+  font-size: 12.5px;
+}
+
+.epe-detalle-seccion {
+  margin-top: 22px;
+}
+
+.epe-detalle-seccion h4 {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 10px;
+}
+
+.epe-inline-form {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.epe-inline-form input,
+.epe-inline-form textarea,
+.epe-inline-form select {
+  border: 1px solid var(--tile-border);
+  background: var(--shell-bg);
+  color: var(--text-strong);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+.epe-inline-form input {
+  flex: 1;
+  min-width: 140px;
+}
+
+.epe-inline-form textarea {
+  flex-basis: 100%;
+  min-height: 56px;
+  resize: vertical;
+}
+
+.epe-btn-sm {
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+.epe-compartir-lista {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.epe-compartir-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 12px;
+  border: 1px solid var(--tile-border);
+  border-radius: var(--radius-sm);
+  background: var(--shell-bg-2);
+  font-size: 13px;
+  color: var(--text-strong);
+}
+
+.epe-comentarios-lista {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.epe-comentario-item {
+  padding: 10px 12px;
+  border: 1px solid var(--tile-border);
+  border-radius: var(--radius-sm);
+  background: var(--shell-bg-2);
+}
+
+.epe-comentario-item p {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--text-strong);
+  white-space: pre-wrap;
+}
+
+.epe-comentario-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.epe-comentario-autor {
+  font-weight: 700;
+  color: var(--text-strong);
+}
+
+.epe-comentario-borrar {
+  margin-left: auto;
+}
+
+/* ── Específico del panel de staff ── */
+
+.epe-admin-buscador {
+  margin-top: 16px;
+  width: 100%;
+  max-width: 360px;
+  border: 1px solid var(--tile-border);
+  background: var(--shell-bg);
+  color: var(--text-strong);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+.epe-casos-layout {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+
+@media (min-width: 860px) {
+  .epe-casos-layout {
+    grid-template-columns: 300px 1fr;
+    align-items: start;
+  }
+}
+
+.epe-admin-institucion {
+  margin-bottom: 10px;
+}
+
+.epe-admin-institucion > summary {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-strong);
+  cursor: pointer;
+  padding: 6px 0;
+}
+
+.epe-admin-profesional {
+  margin-left: 16px;
+  margin-top: 4px;
+}
+
+.epe-admin-profesional > summary {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.epe-admin-profesional .epe-casos-lista {
+  margin-left: 12px;
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.epe-caso-card {
+  width: 100%;
+  text-align: left;
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 12.5px;
+  color: var(--text-strong);
+}
+
+.epe-caso-card:hover {
+  background: var(--tile-bg-hover);
+}
+
+.epe-caso-card.is-active {
+  background: color-mix(in srgb, var(--teal-600) 16%, transparent);
+  color: var(--teal-600);
+  font-weight: 600;
+}
