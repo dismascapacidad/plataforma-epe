@@ -65,6 +65,19 @@
 
       EpeTheme.initThemeToggle(document.getElementById("theme-toggle"));
 
+      // Solo le mostramos el link al panel de staff a las cuentas que
+      // están en staff_dismascapacidad — para el resto de los
+      // profesionales no tiene sentido (y admin/dashboard.html de
+      // cualquier forma se los bloquea del lado del servidor).
+      EpeAdminStore.soyStaff()
+        .then(function (esStaff) {
+          var linkAdmin = document.querySelector("[data-link-admin]");
+          if (linkAdmin) linkAdmin.hidden = !esStaff;
+        })
+        .catch(function () {
+          // Si falla la consulta lo dejamos oculto, no es crítico.
+        });
+
       document.querySelector("[data-logout]").addEventListener("click", function () {
         EpeAuth.signOut().then(function () {
           window.location.href = "login.html";
