@@ -65,80 +65,84 @@
 
         <!-- ── Perfil ── -->
         <section class="epe-panel" data-panel="perfil">
-          <div class="epe-perfil-resumen">
-            <div class="epe-avatar" data-perfil-avatar aria-hidden="true">?</div>
-            <div class="epe-perfil-resumen-texto">
-              <strong data-perfil-resumen-nombre>Tu perfil</strong>
-              <span data-perfil-resumen-detalle>Completá tus datos abajo.</span>
+          <div class="epe-perfil-layout">
+            <div class="epe-perfil-resumen">
+              <div class="epe-avatar" data-perfil-avatar aria-hidden="true">?</div>
+              <div class="epe-perfil-resumen-texto">
+                <strong data-perfil-resumen-nombre>Tu perfil</strong>
+                <span data-perfil-resumen-detalle>Completá tus datos abajo.</span>
+              </div>
+            </div>
+
+            <div class="epe-perfil-main">
+              <h2>Editar perfil</h2>
+              <p class="epe-panel-sub">Estos datos van a identificarte en las colecciones que compartas.</p>
+
+              <form class="epe-form-grid" data-perfil-form>
+                <div class="epe-field">
+                  <label for="perfil-nombre">Nombre</label>
+                  <input type="text" id="perfil-nombre" name="nombre" />
+                </div>
+                <div class="epe-field">
+                  <label for="perfil-profesion">Profesión</label>
+                  <input type="text" id="perfil-profesion" name="profesion" />
+                </div>
+
+                <div class="epe-form-section">
+                  <h3>Institución</h3>
+                  <p class="epe-field-hint" data-institucion-estado>Cargando…</p>
+                </div>
+
+                <div class="epe-field">
+                  <label for="perfil-institucion-select">Tu institución</label>
+                  <select id="perfil-institucion-select" data-institucion-select></select>
+                </div>
+
+                <div class="epe-field" data-institucion-pendiente-campo hidden>
+                  <label for="perfil-institucion-pendiente">Nombre de tu institución</label>
+                  <input type="text" id="perfil-institucion-pendiente" />
+                  <span class="epe-field-hint">dis+capacidad la va a dar de alta pronto.</span>
+                </div>
+
+                <div class="epe-field" data-institucion-codigo-campo hidden>
+                  <label for="perfil-institucion-codigo">Código de acceso (te lo pasa dis+capacidad)</label>
+                  <input type="text" id="perfil-institucion-codigo" placeholder="Opcional por ahora" />
+                </div>
+
+                <div class="epe-form-actions">
+                  <button class="epe-btn-ghost epe-btn-sm" type="button" data-institucion-guardar>Guardar institución</button>
+                  <span class="epe-form-status" data-institucion-status></span>
+                </div>
+
+                <div class="epe-form-section">
+                  <h3>Datos de contacto</h3>
+                  <p class="epe-field-hint">
+                    Opcionales. Si los completás, dis+capacidad puede usarlos para
+                    contactarte y contarte sobre sus desarrollos — nunca los
+                    compartimos con terceros.
+                  </p>
+                </div>
+
+                <div class="epe-field">
+                  <label for="perfil-telefono">Teléfono</label>
+                  <input type="tel" id="perfil-telefono" name="telefono" autocomplete="tel" />
+                </div>
+                <div class="epe-field">
+                  <label for="perfil-localidad">Localidad</label>
+                  <input type="text" id="perfil-localidad" name="localidad" autocomplete="address-level2" />
+                </div>
+                <div class="epe-field">
+                  <label for="perfil-email-contacto">Correo electrónico</label>
+                  <input type="email" id="perfil-email-contacto" name="email_contacto" autocomplete="email" />
+                </div>
+
+                <div class="epe-form-actions">
+                  <button class="epe-btn-acc" type="submit">Guardar</button>
+                  <span class="epe-form-status" data-perfil-status></span>
+                </div>
+              </form>
             </div>
           </div>
-
-          <h2>Editar perfil</h2>
-          <p class="epe-panel-sub">Estos datos van a identificarte en las colecciones que compartas.</p>
-
-          <form class="epe-form-grid" data-perfil-form>
-            <div class="epe-field">
-              <label for="perfil-nombre">Nombre</label>
-              <input type="text" id="perfil-nombre" name="nombre" />
-            </div>
-            <div class="epe-field">
-              <label for="perfil-profesion">Profesión</label>
-              <input type="text" id="perfil-profesion" name="profesion" />
-            </div>
-
-            <div class="epe-form-section">
-              <h3>Institución</h3>
-              <p class="epe-field-hint" data-institucion-estado>Cargando…</p>
-            </div>
-
-            <div class="epe-field" style="grid-column: 1 / -1;">
-              <label for="perfil-institucion-select">Tu institución</label>
-              <select id="perfil-institucion-select" data-institucion-select></select>
-            </div>
-
-            <div class="epe-field" data-institucion-pendiente-campo hidden style="grid-column: 1 / -1;">
-              <label for="perfil-institucion-pendiente">Nombre de tu institución</label>
-              <input type="text" id="perfil-institucion-pendiente" />
-              <span class="epe-field-hint">dis+capacidad la va a dar de alta pronto.</span>
-            </div>
-
-            <div class="epe-field" data-institucion-codigo-campo hidden style="grid-column: 1 / -1;">
-              <label for="perfil-institucion-codigo">Código de acceso (te lo pasa dis+capacidad)</label>
-              <input type="text" id="perfil-institucion-codigo" placeholder="Opcional por ahora" />
-            </div>
-
-            <div class="epe-form-actions" style="grid-column: 1 / -1;">
-              <button class="epe-btn-ghost epe-btn-sm" type="button" data-institucion-guardar>Guardar institución</button>
-              <span class="epe-form-status" data-institucion-status></span>
-            </div>
-
-            <div class="epe-form-section">
-              <h3>Datos de contacto</h3>
-              <p class="epe-field-hint">
-                Opcionales. Si los completás, dis+capacidad puede usarlos para
-                contactarte y contarte sobre sus desarrollos — nunca los
-                compartimos con terceros.
-              </p>
-            </div>
-
-            <div class="epe-field">
-              <label for="perfil-telefono">Teléfono</label>
-              <input type="tel" id="perfil-telefono" name="telefono" autocomplete="tel" />
-            </div>
-            <div class="epe-field">
-              <label for="perfil-localidad">Localidad</label>
-              <input type="text" id="perfil-localidad" name="localidad" autocomplete="address-level2" />
-            </div>
-            <div class="epe-field">
-              <label for="perfil-email-contacto">Correo electrónico</label>
-              <input type="email" id="perfil-email-contacto" name="email_contacto" autocomplete="email" />
-            </div>
-
-            <div class="epe-form-actions">
-              <button class="epe-btn-acc" type="submit">Guardar</button>
-              <span class="epe-form-status" data-perfil-status></span>
-            </div>
-          </form>
         </section>
 
         <!-- ── Gestión de casos ── -->

@@ -71,6 +71,24 @@
   margin-top: 4px;
 }
 
+/* ── Perfil: layout general ──
+   En pantallas angostas, la tarjeta de resumen queda arriba del
+   formulario (como antes). Desde 760px pasa a ser una columna lateral
+   angosta al lado del formulario, igual que .epe-casos-layout — para no
+   dejar todo el ancho sobrante vacío a la derecha. */
+.epe-perfil-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+@media (min-width: 760px) {
+  .epe-perfil-layout {
+    grid-template-columns: 220px 1fr;
+    align-items: start;
+  }
+}
+
 /* ── Perfil: card de resumen (avatar + nombre/profesión/institución) ── */
 .epe-perfil-resumen {
   display: flex;
@@ -79,6 +97,19 @@
   padding-bottom: 20px;
   margin-bottom: 20px;
   border-bottom: 1px solid var(--tile-border);
+}
+
+@media (min-width: 760px) {
+  .epe-perfil-resumen {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 16px;
+    margin-bottom: 0;
+    border: 1px solid var(--tile-border);
+    border-radius: var(--radius-md);
+    background: var(--shell-bg-2);
+  }
 }
 
 .epe-avatar {
