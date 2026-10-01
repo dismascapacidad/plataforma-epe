@@ -59,11 +59,17 @@
 /* Los estilos de .epe-field (label + input) viven en
    css/components/form-field.css, compartidos con el dashboard. */
 
-/* :not([hidden]) a propósito: si esto fuera solo "[data-signup-fields]",
-   el display: flex le gana en la cascada al display: none que el navegador
-   aplica por el atributo hidden (misma especificidad, pero regla de autor),
-   y el bloque queda siempre visible sin importar el modo. */
-[data-signup-fields]:not([hidden]) {
+/* Oculto por defecto con una regla simple de clase (no depende del
+   atributo hidden ni de pelearle la cascada a los estilos del navegador):
+   solo se muestra cuando la tarjeta tiene .is-signup, que es la misma
+   clase que ya controla el ancho de la tarjeta más arriba (ver setModo en
+   login.js). Este selector (.epe-login-card.is-signup [data-signup-fields])
+   siempre le gana en especificidad a la regla de acá abajo. */
+[data-signup-fields] {
+  display: none;
+}
+
+.epe-login-card.is-signup [data-signup-fields] {
   display: flex;
   flex-direction: column;
   gap: 14px;
