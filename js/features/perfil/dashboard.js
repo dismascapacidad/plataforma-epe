@@ -14,6 +14,21 @@
 (function () {
   var CLAVE_PERFIL_PENDIENTE = "epePerfilPendiente";
 
+  // Lista corta de emails de staff — hoy es uno solo. Determina si se
+  // MUESTRA el link al panel (solo eso, es cosmético). Se decidió así, en
+  // vez de preguntarle a la función soy_staff() de la base en cada carga,
+  // porque esa llamada mostró un resultado inconsistente en vivo (devolvió
+  // true para una cuenta que no es staff, y segundos después, llamada a
+  // mano desde la consola, devolvió false correctamente) — algo
+  // transitorio del lado de Supabase/el pooler de conexiones, no
+  // reproducible a pedido. La seguridad real NO depende de esto:
+  // admin/dashboard.html vuelve a chequear soy_staff() del lado del
+  // servidor antes de mostrar cualquier contenido, y las funciones de
+  // datos (panel_staff_colecciones, etc.) son security definer y chequean
+  // staff_dismascapacidad por su cuenta. Si se suma más gente al staff,
+  // agregar su email acá.
+  var EMAILS_STAFF = ["dismascapacidad@gmail.com"];
+
   // Si la persona cargó datos de perfil al crear la cuenta (ver login.js),
   // pero en ese momento no había sesión todavía (Confirm email activado en
   // Supabase), quedaron guardados en localStorage. Acá, ya con sesión real,
@@ -73,24 +88,19 @@
 
       initTabs();
 
-      // Solo le mostramos el link al panel de staff a las cuentas que
-      // están en staff_dismascapacidad — para el resto de los
-      // profesionales no tiene sentido (y admin/dashboard.html de
-      // cualquier forma se los bloquea del lado del servidor). Va DESPUÉS
-      // de conectar "Salir" y las pestañas, y con try/catch, para que un
-      // problema acá (p.ej. que admin-store.js no esté disponible) nunca
-      // pueda tumbar el resto del dashboard — eso es lo que pasó recién.
+      // Mostrar/ocultar el link al panel de staff: decisión puramente
+      // cosmética contra la lista fija EMAILS_STAFF (ver comentario arriba).
+      // El acceso real sigue protegido del lado del servidor
+      // (admin/dashboard.html chequea soy_staff() de nuevo, y las funciones
+      // de datos son security definer) — esto es solo para no mostrar un
+      // link que de todas formas va a rechazar.
       try {
-        EpeAdminStore.soyStaff()
-          .then(function (esStaff) {
-            var linkAdmin = document.querySelector("[data-link-admin]");
-            if (linkAdmin) linkAdmin.hidden = !esStaff;
-          })
-          .catch(function () {
-            // Si falla la consulta lo dejamos oculto, no es crítico.
-          });
+        var linkAdmin = document.querySelector("[data-link-admin]");
+        if (linkAdmin) {
+          linkAdmin.hidden = EMAILS_STAFF.indexOf((session.user.email || "").toLowerCase()) === -1;
+        }
       } catch (e) {
-        // EpeAdminStore ni siquiera estaba definido — igual, no bloqueamos nada.
+        // No debería pasar, pero por si acaso no bloqueamos el resto del dashboard.
       }
 
       aplicarPerfilPendienteSiCorresponde(session.user.email).then(function () {
