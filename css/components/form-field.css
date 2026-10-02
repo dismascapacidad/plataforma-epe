@@ -92,3 +92,19 @@
   color: var(--teal-600);
   font-weight: 600;
 }
+
+/* Recordatorio de privacidad delante de TODO campo de texto libre que
+   termina en una colección (comentarios, nombre de colección, notas
+   personales, apps de terceros): la plataforma no es un sistema clínico
+   y nadie debería poder identificar a una persona a partir de lo que se
+   escribe acá. Ámbar (distinto del teal de .epe-field-hint-aviso) porque
+   es una advertencia, no un estado pendiente — pero el texto ya lo dice
+   solo, el color es siempre refuerzo. */
+.epe-field-hint-privacidad {
+  width: 100%; /* fuerza su propio renglón dentro de .epe-inline-form (flex) */
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--amb);
+}

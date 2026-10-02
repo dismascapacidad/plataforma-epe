@@ -260,7 +260,10 @@ var EpeCasos = (function () {
   }
 
   function onCrearCaso() {
-    var nombre = window.prompt("Nombre de la colección (podés usar cualquier criterio: iniciales, tipo de actividad, lo que te sirva a vos):");
+    var nombre = window.prompt(
+      "Nombre de la colección (podés usar cualquier criterio: iniciales, tipo de actividad, lo que te sirva a vos):\n\n" +
+        "Esto no es un caso clínico: no identifiques a la persona ni incluyas datos sensibles."
+    );
     if (nombre === null) return;
     EpeStore.createCaso({ nombre: nombre.trim() || "Colección sin nombre" })
       .then(function (caso) {
@@ -664,6 +667,14 @@ var EpeCasos = (function () {
     intro.className = "epe-panel-sub";
     intro.textContent = "Esta app solo va a ser visible en esta colección — no se suma al catálogo público.";
     contenido.appendChild(intro);
+
+    // Única línea para los cuatro campos de texto libre de abajo (nombre,
+    // descripción, instrucciones, configuración) — no un hint por campo,
+    // para no estirar el alto del modal y forzar scroll.
+    var avisoPrivacidad = document.createElement("p");
+    avisoPrivacidad.className = "epe-field-hint-privacidad";
+    avisoPrivacidad.textContent = "Esto no es un caso clínico: no identifiques a la persona ni incluyas datos sensibles.";
+    contenido.appendChild(avisoPrivacidad);
 
     var form = document.createElement("form");
     form.className = "epe-form-grid epe-picker-form";
