@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="../css/components/buttons.css" />
     <link rel="stylesheet" href="../css/components/atribucion.css" />
     <link rel="stylesheet" href="../css/components/form-field.css" />
+    <link rel="stylesheet" href="../css/components/aviso.css" />
     <link rel="stylesheet" href="../css/layout/shell.css" />
     <link rel="stylesheet" href="../css/features/admin/dashboard.css" />
   </head>
@@ -60,9 +61,15 @@
 
         <div data-admin-contenido hidden>
           <nav class="epe-tabs" role="tablist" aria-label="Secciones del panel">
-            <button class="epe-tab is-active" type="button" data-admin-tab="colecciones" role="tab" aria-selected="true">Colecciones compartidas</button>
+            <button class="epe-tab is-active" type="button" data-admin-tab="colecciones" role="tab" aria-selected="true">
+              Colecciones compartidas
+              <span class="epe-aviso-punto" data-aviso-colecciones hidden><span class="epe-sr-only">Hay mensajes nuevos</span></span>
+            </button>
             <button class="epe-tab" type="button" data-admin-tab="instituciones" role="tab" aria-selected="false">Instituciones</button>
-            <button class="epe-tab" type="button" data-admin-tab="pendientes" role="tab" aria-selected="false">Pendientes</button>
+            <button class="epe-tab" type="button" data-admin-tab="pendientes" role="tab" aria-selected="false">
+              Pendientes
+              <span class="epe-aviso-numero" data-aviso-pendientes hidden></span>
+            </button>
           </nav>
 
           <!-- ── Colecciones compartidas ── -->

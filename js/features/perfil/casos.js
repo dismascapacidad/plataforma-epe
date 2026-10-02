@@ -53,6 +53,7 @@ var EpeCasos = (function () {
     initSubtabs();
     renderListaCasos();
     renderDetalleCaso();
+    actualizarAvisoTabCasos();
   }
 
   // ── Sub-pestañas dentro del detalle de un caso ─────────────────────
@@ -72,8 +73,40 @@ var EpeCasos = (function () {
         paneles.forEach(function (panel) {
           panel.hidden = panel.getAttribute("data-subpanel") !== destino;
         });
+
+        // Abrir el Espacio compartido es "leer los mensajes" — se marca
+        // como visto acá, no antes (ver supabase/012_comentarios_vistos.sql).
+        // Si falla (sin conexión), no pasa nada grave: el punto de aviso
+        // sigue mostrado y se vuelve a intentar la próxima vez que entre.
+        if (destino === "compartido" && casoSeleccionadoId) {
+          var casoId = casoSeleccionadoId;
+          EpeStore.marcarComentariosVistos(casoId)
+            .then(function () {
+              if (casoId !== casoSeleccionadoId) return;
+              renderListaCasos();
+              actualizarAvisoTabCasos();
+            })
+            .catch(function () {
+              /* se reintenta solo la próxima vez que se abra esta sub-pestaña */
+            });
+        }
       });
     });
+  }
+
+  // Punto de aviso en la pestaña "Mis colecciones" del dashboard (fuera de
+  // `root`, por eso se busca en todo el documento): se enciende si
+  // cualquier colección propia o compartida tiene mensajes sin leer.
+  function actualizarAvisoTabCasos() {
+    var avisoTab = document.querySelector("[data-aviso-casos]");
+    if (!avisoTab) return;
+    EpeStore.getNoLeidos()
+      .then(function (mapa) {
+        avisoTab.hidden = Object.keys(mapa).length === 0;
+      })
+      .catch(function () {
+        /* si falla, se deja como estaba — no es crítico */
+      });
   }
 
   function resetSubtabActividades() {
@@ -112,7 +145,7 @@ var EpeCasos = (function () {
   // compartió con vos (sin borrar — eso sigue siendo solo del dueño, y ni
   // siquiera se puede intentar: RLS lo rechazaría igual).
 
-  function construirCasoCard(caso, esPropio) {
+  function construirCasoCard(caso, esPropio, noLeidos) {
     var item = document.createElement("li");
     item.className = "epe-caso-card";
     if (caso.id === casoSeleccionadoId) item.classList.add("is-active");
@@ -124,6 +157,18 @@ var EpeCasos = (function () {
     var nombre = document.createElement("span");
     nombre.textContent = caso.nombre;
     btn.appendChild(nombre);
+
+    // Punto de aviso: hay mensajes nuevos en el Espacio compartido de esta
+    // colección que todavía no viste vos (ver EpeStore.getNoLeidos()).
+    if (noLeidos > 0) {
+      var aviso = document.createElement("span");
+      aviso.className = "epe-aviso-punto";
+      var avisoSr = document.createElement("span");
+      avisoSr.className = "epe-sr-only";
+      avisoSr.textContent = "Mensajes nuevos sin leer";
+      aviso.appendChild(avisoSr);
+      btn.appendChild(aviso);
+    }
 
     if (!esPropio) {
       var badge = document.createElement("span");
@@ -180,10 +225,11 @@ var EpeCasos = (function () {
     var listaCompartidos = root.querySelector("[data-casos-lista-compartidos]");
     var headerCompartidos = root.querySelector("[data-casos-compartidos-header]");
 
-    Promise.all([EpeStore.getCasos(), EpeStore.getUserId()])
+    Promise.all([EpeStore.getCasos(), EpeStore.getUserId(), EpeStore.getNoLeidos().catch(function () { return {}; })])
       .then(function (resultados) {
         var casos = resultados[0];
         var miUserId = resultados[1];
+        var noLeidos = resultados[2]; // { [casoId]: cantidad } — ver EpeStore.getNoLeidos()
 
         var propios = casos.filter(function (c) {
           return c.dueno_id === miUserId;
@@ -195,13 +241,13 @@ var EpeCasos = (function () {
         listaPropios.innerHTML = "";
         vacioPropios.hidden = propios.length > 0;
         propios.forEach(function (caso) {
-          listaPropios.appendChild(construirCasoCard(caso, true));
+          listaPropios.appendChild(construirCasoCard(caso, true, noLeidos[caso.id]));
         });
 
         listaCompartidos.innerHTML = "";
         headerCompartidos.hidden = compartidos.length === 0;
         compartidos.forEach(function (caso) {
-          listaCompartidos.appendChild(construirCasoCard(caso, false));
+          listaCompartidos.appendChild(construirCasoCard(caso, false, noLeidos[caso.id]));
         });
       })
       .catch(function () {

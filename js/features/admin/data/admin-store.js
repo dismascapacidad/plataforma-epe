@@ -70,6 +70,24 @@ var EpeAdminStore = (function () {
     });
   }
 
+  // Igual que EpeStore.getNoLeidos(), pero restringido a lo compartido con
+  // dis+capacidad (ver panel_staff_no_leidos() en
+  // supabase/012_comentarios_vistos.sql) — a propósito separada, para no
+  // mezclar lo propio del staff con lo compartido (mismo motivo que
+  // panelColecciones más arriba). Marcar como visto usa la misma
+  // EpeStore.marcarComentariosVistos de siempre: la marca es por usuario,
+  // no por rol.
+  function getNoLeidosStaff() {
+    return EpeSupabase.rpc("panel_staff_no_leidos").then(function (res) {
+      lanzarSiError(res);
+      var mapa = {};
+      (res.data || []).forEach(function (fila) {
+        mapa[fila.caso_id] = fila.no_leidos;
+      });
+      return mapa;
+    });
+  }
+
   return {
     soyStaff: soyStaff,
     panelColecciones: panelColecciones,
@@ -78,5 +96,6 @@ var EpeAdminStore = (function () {
     crearInstitucion: crearInstitucion,
     regenerarCodigo: regenerarCodigo,
     verificarManual: verificarManual,
+    getNoLeidosStaff: getNoLeidosStaff,
   };
 })();

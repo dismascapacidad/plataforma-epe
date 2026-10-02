@@ -36,18 +36,32 @@ var EpeAdminPanel = (function () {
     cargar();
   }
 
+  var noLeidos = {}; // { [casoId]: cantidad } — ver EpeAdminStore.getNoLeidosStaff()
+
   function cargar() {
     var arbol = root.querySelector("[data-admin-arbol]");
     arbol.innerHTML = '<p class="epe-vacio">Cargando…</p>';
 
-    EpeAdminStore.panelColecciones()
-      .then(function (data) {
-        filas = data;
+    Promise.all([EpeAdminStore.panelColecciones(), EpeAdminStore.getNoLeidosStaff().catch(function () { return {}; })])
+      .then(function (resultados) {
+        filas = resultados[0];
+        noLeidos = resultados[1];
         renderArbol();
+        actualizarAvisoTabColecciones();
       })
       .catch(function () {
         arbol.innerHTML = '<p class="epe-vacio">No se pudieron cargar las colecciones. Recargá la página.</p>';
       });
+  }
+
+  // Punto de aviso en la pestaña "Colecciones compartidas" del panel (ver
+  // admin/dashboard.html) — se enciende si CUALQUIER colección de la
+  // lista tiene mensajes sin leer, para que el staff lo note sin tener
+  // que abrir el árbol entero.
+  function actualizarAvisoTabColecciones() {
+    var avisoTab = document.querySelector("[data-aviso-colecciones]");
+    if (!avisoTab) return;
+    avisoTab.hidden = Object.keys(noLeidos).length === 0;
   }
 
   // institución → profesional → [casos]. Se arma en JS (no en SQL) porque
@@ -127,6 +141,17 @@ var EpeAdminPanel = (function () {
           btn.className = "epe-caso-card";
           if (fila.caso_id === casoSeleccionado) btn.classList.add("is-active");
           btn.textContent = fila.caso_nombre;
+
+          if (noLeidos[fila.caso_id] > 0) {
+            var aviso = document.createElement("span");
+            aviso.className = "epe-aviso-punto";
+            var avisoSr = document.createElement("span");
+            avisoSr.className = "epe-sr-only";
+            avisoSr.textContent = "Mensajes nuevos sin leer";
+            aviso.appendChild(avisoSr);
+            btn.appendChild(aviso);
+          }
+
           btn.addEventListener("click", function () {
             seleccionarCaso(fila);
           });
@@ -155,6 +180,21 @@ var EpeAdminPanel = (function () {
 
     renderActividades(fila.caso_id);
     renderComentarios(fila.caso_id);
+
+    // Acá no hay una sub-pestaña separada para el Espacio compartido como
+    // en el espacio personal (ver casos.js): los comentarios se ven apenas
+    // se abre la colección, así que abrirla YA cuenta como leerlos.
+    var casoId = fila.caso_id;
+    EpeStore.marcarComentariosVistos(casoId)
+      .then(function () {
+        if (casoId !== casoSeleccionado) return;
+        delete noLeidos[casoId];
+        renderArbol();
+        actualizarAvisoTabColecciones();
+      })
+      .catch(function () {
+        /* se reintenta solo la próxima vez que se abra esta colección */
+      });
   }
 
   function renderActividades(casoId) {

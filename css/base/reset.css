@@ -70,3 +70,20 @@ ol {
 [hidden] {
   display: none !important;
 }
+
+/* Texto solo para lectores de pantalla — para los avisos de "mensajes sin
+   leer"/"pendientes" (ver css/components/aviso.css): esos avisos nunca
+   pueden depender solo de un punto de color, así que siempre van con uno
+   de estos al lado explicando qué significa. display:none lo sacaría del
+   árbol de accesibilidad, por eso se achica a 1px en vez de ocultarlo. */
+.epe-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

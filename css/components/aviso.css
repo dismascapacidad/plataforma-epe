@@ -1,0 +1,47 @@
+/*
+  aviso.css
+  Indicadores de "hay algo nuevo": mensajes sin leer en una colección, o
+  cuestiones a resolver (pendientes institucionales en el panel de staff).
+
+  Dos variantes, a propósito distintas (ver investigación en el chat):
+  - .epe-aviso-punto: un punto simple, para cuando lo que importa es que
+    "hay algo nuevo" sin que la cantidad agregue nada (mensajes sin leer
+    en una colección puntual, o "alguna colección tiene novedades" en la
+    pestaña que las agrupa).
+  - .epe-aviso-numero: un número, para cuando la cantidad SÍ importa para
+    decidir si conviene entrar ahora o después (cuántos pendientes hay
+    para resolver).
+
+  Ninguna de las dos depende solo del color: siempre van acompañadas de
+  texto para lectores de pantalla (.epe-sr-only, en reset.css) que arma el
+  JS que las crea. Se arman siempre desde JS, nunca quedan en el HTML
+  estático en cero — el elemento directamente no existe si no hay nada
+  que avisar (ver casos.js, admin/panel.js, admin/dashboard.js).
+*/
+
+.epe-aviso-punto {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-left: 7px;
+  border-radius: 50%;
+  background: var(--teal-600);
+  vertical-align: middle;
+}
+
+.epe-aviso-numero {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  margin-left: 7px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--teal-600);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  vertical-align: middle;
+}

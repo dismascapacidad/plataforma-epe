@@ -38,12 +38,40 @@
           EpeAdminPanel.init(document.querySelector('[data-admin-panel="colecciones"]'));
           EpeAdminInstituciones.init(document.querySelector('[data-admin-panel="instituciones"]'));
           EpeAdminPendientes.init(document.querySelector('[data-admin-panel="pendientes"]'));
+          actualizarAvisoPendientes();
         })
         .catch(function () {
           document.querySelector("[data-sin-acceso]").hidden = false;
         });
     });
   });
+
+  // Número en la pestaña "Pendientes" — a diferencia del punto de
+  // "Colecciones compartidas", acá la cantidad sí importa para decidir si
+  // conviene entrar ahora (ver css/components/aviso.css). v1 simple: se
+  // calcula una vez al entrar al panel, no se refresca solo mientras está
+  // abierto (igual que el resto de este panel — ver panel.js).
+  function actualizarAvisoPendientes() {
+    var avisoTab = document.querySelector("[data-aviso-pendientes]");
+    if (!avisoTab) return;
+    EpeAdminStore.pendientes()
+      .then(function (lista) {
+        if (lista.length === 0) {
+          avisoTab.hidden = true;
+          return;
+        }
+        avisoTab.hidden = false;
+        avisoTab.innerHTML = "";
+        avisoTab.appendChild(document.createTextNode(String(lista.length)));
+        var sr = document.createElement("span");
+        sr.className = "epe-sr-only";
+        sr.textContent = " pendientes de resolver";
+        avisoTab.appendChild(sr);
+      })
+      .catch(function () {
+        avisoTab.hidden = true;
+      });
+  }
 
   function initTabs() {
     var tabs = document.querySelectorAll("[data-admin-tab]");

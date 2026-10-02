@@ -486,6 +486,38 @@ var EpeStore = (function () {
       });
   }
 
+  // ── Avisos de mensajes sin leer (ver supabase/012_comentarios_vistos.sql) ─
+  // Misma marca de "visto" para el espacio personal y para el panel de
+  // staff (ver EpeAdminStore.getNoLeidosStaff) — cada usuario tiene la
+  // suya, independiente de la de los demás.
+
+  // Se llama al abrir el Espacio compartido de una colección (ver
+  // casos.js y admin/panel.js). upsert: la primera vez inserta, las
+  // siguientes actualiza la misma fila (caso_id, usuario_id).
+  function marcarComentariosVistos(casoId) {
+    return getUserId().then(function (uid) {
+      return EpeSupabase.from("caso_comentarios_vistos")
+        .upsert({ caso_id: casoId, usuario_id: uid, visto_en: new Date().toISOString() }, { onConflict: "caso_id,usuario_id" })
+        .then(function (res) {
+          lanzarSiError(res);
+        });
+    });
+  }
+
+  // Promise<{ [casoId]: cantidadNoLeidos }> — solo trae las colecciones
+  // que SÍ tienen algo sin leer (ver la función en Postgres), así que un
+  // caso ausente del mapa significa "nada pendiente", no cero explícito.
+  function getNoLeidos() {
+    return EpeSupabase.rpc("mis_casos_no_leidos").then(function (res) {
+      lanzarSiError(res);
+      var mapa = {};
+      (res.data || []).forEach(function (fila) {
+        mapa[fila.caso_id] = fila.no_leidos;
+      });
+      return mapa;
+    });
+  }
+
   return {
     getProfile: getProfile,
     saveProfile: saveProfile,
@@ -518,5 +550,7 @@ var EpeStore = (function () {
     listComentarios: listComentarios,
     addComentario: addComentario,
     removeComentario: removeComentario,
+    marcarComentariosVistos: marcarComentariosVistos,
+    getNoLeidos: getNoLeidos,
   };
 })();

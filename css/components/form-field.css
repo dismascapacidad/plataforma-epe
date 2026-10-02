@@ -83,3 +83,12 @@
   color: var(--text-faint);
   line-height: 1.4;
 }
+
+/* Variante de .epe-field-hint para una cuestión a resolver (institución
+   sin verificar o pendiente de alta — ver perfil.js). El texto ya explica
+   la situación en palabras, el color es solo refuerzo, nunca lo único que
+   lo distingue. */
+.epe-field-hint-aviso {
+  color: var(--teal-600);
+  font-weight: 600;
+}

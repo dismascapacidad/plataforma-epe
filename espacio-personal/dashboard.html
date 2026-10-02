@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="../css/components/buttons.css" />
     <link rel="stylesheet" href="../css/components/atribucion.css" />
     <link rel="stylesheet" href="../css/components/form-field.css" />
+    <link rel="stylesheet" href="../css/components/aviso.css" />
     <link rel="stylesheet" href="../css/components/modal.css" />
     <link rel="stylesheet" href="../css/components/catalogo-tienda.css" />
     <link rel="stylesheet" href="../css/components/tercero-detalle.css" />
@@ -59,7 +60,10 @@
 
         <nav class="epe-tabs" role="tablist" aria-label="Secciones del espacio personal">
           <button class="epe-tab is-active" type="button" data-tab="perfil" role="tab" aria-selected="true">Perfil</button>
-          <button class="epe-tab" type="button" data-tab="casos" role="tab" aria-selected="false">Mis colecciones</button>
+          <button class="epe-tab" type="button" data-tab="casos" role="tab" aria-selected="false">
+            Mis colecciones
+            <span class="epe-aviso-punto" data-aviso-casos hidden><span class="epe-sr-only">Hay mensajes nuevos</span></span>
+          </button>
           <button class="epe-tab" type="button" data-tab="dispositivos" role="tab" aria-selected="false">Mis dispositivos</button>
         </nav>
 

@@ -74,15 +74,23 @@ var EpePerfil = (function () {
       campoCodigo.hidden = !select.value || esOtra;
     }
 
+    // "aviso" (cuestión a resolver, ver css/components/form-field.css) solo
+    // para los dos estados que también ve el staff en la pestaña
+    // Pendientes del panel — no para "todavía no elegiste", que no es un
+    // trámite trabado, es simplemente algo que no hiciste todavía.
     function actualizarEstado(datos) {
       if (datos.institucion_id && datos.institucion_verificada) {
         estado.textContent = "Institución verificada: " + datos.institucion_nombre + ".";
+        estado.classList.remove("epe-field-hint-aviso");
       } else if (datos.institucion_id) {
         estado.textContent = "Elegiste " + datos.institucion_nombre + ", todavía sin verificar — pedile el código a dis+capacidad para confirmarla.";
+        estado.classList.add("epe-field-hint-aviso");
       } else if (datos.institucion_pendiente) {
         estado.textContent = 'Avisaste "' + datos.institucion_pendiente + '" — dis+capacidad la va a dar de alta pronto.';
+        estado.classList.add("epe-field-hint-aviso");
       } else {
         estado.textContent = "Todavía no elegiste tu institución.";
+        estado.classList.remove("epe-field-hint-aviso");
       }
     }
 
