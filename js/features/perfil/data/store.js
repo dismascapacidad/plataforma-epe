@@ -167,6 +167,32 @@ var EpeStore = (function () {
     });
   }
 
+  // Dejar la institución actual (verificada, sin verificar, o pendiente
+  // de alta) — vuelve el perfil al estado "sin institución". La limpieza
+  // de los caso_shares tipo "institución" de las colecciones propias la
+  // hace un trigger en la base (ver
+  // supabase/014_limpiar_shares_al_cambiar_institucion.sql), no este
+  // código: así también cubre cambiar directo de una institución a otra
+  // sin pasar por acá.
+  function dejarInstitucion() {
+    return EpeSupabase.auth.getUser().then(function (userRes) {
+      if (userRes.error) throw userRes.error;
+      var uid = userRes.data.user.id;
+      return EpeSupabase.from("profiles")
+        .update({
+          institucion_id: null,
+          institucion_pendiente: null,
+          institucion_verificada: false,
+          institucion_verificada_en: null,
+          institucion_verificada_metodo: null,
+        })
+        .eq("id", uid)
+        .then(function (res) {
+          lanzarSiError(res);
+        });
+    });
+  }
+
   // ── Casos ───────────────────────────────────────────────────────────
 
   function getCasos() {
@@ -525,6 +551,7 @@ var EpeStore = (function () {
     verificarInstitucion: verificarInstitucion,
     elegirInstitucionSinVerificar: elegirInstitucionSinVerificar,
     setInstitucionPendiente: setInstitucionPendiente,
+    dejarInstitucion: dejarInstitucion,
     getCasos: getCasos,
     getCaso: getCaso,
     createCaso: createCaso,

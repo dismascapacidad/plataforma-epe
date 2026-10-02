@@ -66,6 +66,7 @@ var EpePerfil = (function () {
     var estado = root.querySelector("[data-institucion-estado]");
     var status = root.querySelector("[data-institucion-status]");
     var boton = root.querySelector("[data-institucion-guardar]");
+    var botonDejar = root.querySelector("[data-institucion-dejar]");
     if (!select) return Promise.resolve(); // página vieja sin este bloque todavía
 
     function actualizarCampos() {
@@ -120,6 +121,7 @@ var EpePerfil = (function () {
         inputCodigo.value = "";
         actualizarCampos();
         actualizarEstado(datos);
+        botonDejar.hidden = !datos.institucion_id && !datos.institucion_pendiente;
         return datos;
       });
     }
@@ -168,6 +170,42 @@ var EpePerfil = (function () {
         })
         .finally(function () {
           boton.disabled = false;
+        });
+    });
+
+    // Dejar la institución: acción separada de "Guardar" porque, a
+    // diferencia de elegir una, esto tiene una consecuencia hacia el
+    // resto de tus colecciones (deja de verse lo compartido con ella, y
+    // dejás de ver lo que compartieron con vos) — se avisa en el propio
+    // confirm en vez de un modal aparte.
+    botonDejar.addEventListener("click", function () {
+      if (
+        !window.confirm(
+          "¿Dejar tu institución actual? Vos vas a dejar de ver lo que tus colegas compartieron con la institución, y ellos van a dejar de ver lo que vos compartiste con ella."
+        )
+      ) {
+        return;
+      }
+      botonDejar.disabled = true;
+      status.textContent = "Guardando…";
+
+      EpeStore.dejarInstitucion()
+        .then(function () {
+          return cargar();
+        })
+        .then(function (datos) {
+          actualizarResumen(root, datos, "");
+          status.textContent = "Listo — ya no pertenecés a ninguna institución.";
+          window.clearTimeout(status._epeTimeout);
+          status._epeTimeout = window.setTimeout(function () {
+            status.textContent = "";
+          }, 3000);
+        })
+        .catch(function (err) {
+          status.textContent = "No se pudo completar." + (err && err.message ? " (" + err.message + ")" : "");
+        })
+        .finally(function () {
+          botonDejar.disabled = false;
         });
     });
 
