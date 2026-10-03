@@ -167,6 +167,59 @@
   color: var(--text-strong);
 }
 
+/* Fila de la lista de instituciones: nombre, aviso de admin y botón
+   alineados en columnas de grilla (antes era flex con
+   justify-content: space-between, que corría el botón según si el
+   aviso estaba presente o no, y no alineaba nada entre filas). El
+   ancho de columna no depende de qué tenga cada fila — queda
+   consistente aunque falte el aviso en algunas. "Administradores" se
+   deja como su propia fila completa abajo, no como una columna más:
+   al expandirse muestra nombres y un botón por cada admin, y eso no
+   entra prolijo en una columna angosta de ancho fijo. */
+.epe-institucion-item {
+  display: grid;
+  grid-template-columns: minmax(160px, 1fr) minmax(170px, auto) auto;
+  grid-template-areas:
+    "nombre badge boton"
+    "admins admins admins";
+  align-items: center;
+  column-gap: 16px;
+  row-gap: 8px;
+}
+
+.epe-institucion-item > .epe-institucion-nombre {
+  grid-area: nombre;
+}
+
+.epe-institucion-item > .epe-field-hint-aviso {
+  grid-area: badge;
+  justify-self: start;
+}
+
+.epe-institucion-item > button {
+  grid-area: boton;
+  justify-self: end;
+}
+
+.epe-institucion-item > details {
+  grid-area: admins;
+}
+
+@media (max-width: 640px) {
+  .epe-institucion-item {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "nombre"
+      "badge"
+      "boton"
+      "admins";
+  }
+
+  .epe-institucion-item > button {
+    justify-self: start;
+  }
+}
+
 .epe-comentarios-lista {
   margin-top: 12px;
   display: flex;

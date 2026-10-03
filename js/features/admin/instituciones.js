@@ -40,9 +40,13 @@ var EpeAdminInstituciones = (function () {
 
   function construirItem(inst) {
     var li = document.createElement("li");
-    li.className = "epe-compartir-item";
+    // epe-institucion-item además de la base compartida: alinea nombre /
+    // aviso de admin / botón en columnas (ver css/features/admin/dashboard.css)
+    // — solo afecta esta lista, no a pendientes.js ni a la de admins anidada.
+    li.className = "epe-compartir-item epe-institucion-item";
 
     var texto = document.createElement("span");
+    texto.className = "epe-institucion-nombre";
     texto.textContent = inst.nombre + " — código: " + inst.codigo_acceso;
     li.appendChild(texto);
 
