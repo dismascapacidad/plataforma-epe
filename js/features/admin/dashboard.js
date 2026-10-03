@@ -38,7 +38,9 @@
           EpeAdminPanel.init(document.querySelector('[data-admin-panel="colecciones"]'));
           EpeAdminInstituciones.init(document.querySelector('[data-admin-panel="instituciones"]'));
           EpeAdminPendientes.init(document.querySelector('[data-admin-panel="pendientes"]'));
+          EpeAdminSolicitudes.init(document.querySelector('[data-admin-panel="solicitudes-admin"]'));
           actualizarAvisoPendientes();
+          actualizarAvisoSolicitudesAdmin();
         })
         .catch(function () {
           document.querySelector("[data-sin-acceso]").hidden = false;
@@ -66,6 +68,30 @@
         var sr = document.createElement("span");
         sr.className = "epe-sr-only";
         sr.textContent = " pendientes de resolver";
+        avisoTab.appendChild(sr);
+      })
+      .catch(function () {
+        avisoTab.hidden = true;
+      });
+  }
+
+  // Mismo criterio que actualizarAvisoPendientes: se calcula una vez al
+  // entrar al panel, no se refresca solo mientras está abierto.
+  function actualizarAvisoSolicitudesAdmin() {
+    var avisoTab = document.querySelector("[data-aviso-solicitudes-admin]");
+    if (!avisoTab) return;
+    EpeAdminStore.listarSolicitudesAdmin()
+      .then(function (lista) {
+        if (lista.length === 0) {
+          avisoTab.hidden = true;
+          return;
+        }
+        avisoTab.hidden = false;
+        avisoTab.innerHTML = "";
+        avisoTab.appendChild(document.createTextNode(String(lista.length)));
+        var sr = document.createElement("span");
+        sr.className = "epe-sr-only";
+        sr.textContent = " solicitudes de admin pendientes";
         avisoTab.appendChild(sr);
       })
       .catch(function () {

@@ -32,19 +32,15 @@ var EpeStore = (function () {
   // registra — acá solo leemos/actualizamos la fila propia (RLS: id =
   // auth.uid()).
 
-  // "institucion" (texto libre) ya no existe — ver
-  // supabase/010_instituciones_y_staff.sql. getProfile trae el nombre de la
-  // institución vía el embed de supabase-js (instituciones(nombre)), que
-  // funciona solo porque profiles.institucion_id es una FK real a
-  // instituciones.id.
+  // Institución ya no vive en profiles (desde
+  // supabase/015_instituciones_multiples.sql un profesional puede tener
+  // varias) — ver misInstituciones() más abajo.
   function getProfile() {
     return EpeSupabase.auth.getUser().then(function (userRes) {
       if (userRes.error) throw userRes.error;
       var uid = userRes.data.user.id;
       return EpeSupabase.from("profiles")
-        .select(
-          "nombre, profesion, telefono, localidad, email_contacto, institucion_id, institucion_pendiente, institucion_verificada, institucion_verificada_metodo, instituciones(nombre)"
-        )
+        .select("nombre, profesion, telefono, localidad, email_contacto")
         .eq("id", uid)
         .maybeSingle()
         .then(function (res) {
@@ -56,11 +52,6 @@ var EpeStore = (function () {
             telefono: datos.telefono || "",
             localidad: datos.localidad || "",
             email_contacto: datos.email_contacto || "",
-            institucion_id: datos.institucion_id || null,
-            institucion_nombre: (datos.instituciones && datos.instituciones.nombre) || "",
-            institucion_pendiente: datos.institucion_pendiente || "",
-            institucion_verificada: !!datos.institucion_verificada,
-            institucion_verificada_metodo: datos.institucion_verificada_metodo || "",
           };
         });
     });
@@ -95,9 +86,13 @@ var EpeStore = (function () {
   }
 
   // ── Institución (entidad propia, ver ADR en el proyecto) ─────────────
-  // Tres acciones posibles desde el formulario de Perfil: elegir una
-  // institución existente (con o sin código a mano), o avisar que la
-  // institución todavía no está en el catálogo.
+  // Desde supabase/015_instituciones_multiples.sql un profesional puede
+  // pertenecer a VARIAS instituciones a la vez — ya no hay "la"
+  // institución del perfil, sino una lista (misInstituciones()). Elegir
+  // una nueva (con o sin código) o avisar una pendiente de alta siguen
+  // siendo inserts directos del cliente; dejar una SÍ pasa por RPC
+  // porque ahora puede implicar transferir colecciones (ver
+  // supabase/016_admin_institucion.sql).
 
   function getInstituciones() {
     return EpeSupabase.from("instituciones")
@@ -109,10 +104,19 @@ var EpeStore = (function () {
       });
   }
 
+  // Promise<[{ institucion_id, institucion_nombre, institucion_pendiente,
+  // verificada, verificada_metodo, saliendo, admin_estado, admins_activos }]>
+  // — una fila por institución a la que pertenezco (o por la que tengo
+  // pendiente de alta). admin_estado es "activo"/"congelado"/null.
+  function misInstituciones() {
+    return EpeSupabase.rpc("mis_instituciones").then(function (res) {
+      lanzarSiError(res);
+      return res.data || [];
+    });
+  }
+
   // El código se valida DENTRO de la función de Postgres (security
-  // definer) — nunca viaja a este cliente para compararlo acá. true/false
-  // según si coincidió; si coincidió, la base ya dejó institucion_id y
-  // institucion_verificada actualizados, no hace falta un segundo viaje.
+  // definer) — nunca viaja a este cliente para compararlo acá.
   function verificarInstitucion(institucionId, codigo) {
     return EpeSupabase.rpc("verificar_institucion", {
       p_institucion_id: institucionId,
@@ -124,21 +128,15 @@ var EpeStore = (function () {
   }
 
   // Elegir una institución del catálogo SIN código (o con uno que no
-  // coincidió) — queda registrada la elección, pero institucion_verificada
-  // en false, visible para el staff en la pestaña Pendientes.
+  // coincidió) — insert directo a profile_instituciones (RLS exige
+  // profile_id = auth.uid(); verificada queda en false por trigger, ver
+  // 015). Se puede hacer aunque ya pertenezcas a otras instituciones.
   function elegirInstitucionSinVerificar(institucionId) {
     return EpeSupabase.auth.getUser().then(function (userRes) {
       if (userRes.error) throw userRes.error;
       var uid = userRes.data.user.id;
-      return EpeSupabase.from("profiles")
-        .update({
-          institucion_id: institucionId,
-          institucion_pendiente: null,
-          institucion_verificada: false,
-          institucion_verificada_en: null,
-          institucion_verificada_metodo: null,
-        })
-        .eq("id", uid)
+      return EpeSupabase.from("profile_instituciones")
+        .insert({ profile_id: uid, institucion_id: institucionId })
         .then(function (res) {
           lanzarSiError(res);
         });
@@ -147,49 +145,103 @@ var EpeStore = (function () {
 
   // "Mi institución no está en la lista" — queda el texto tal cual lo
   // escribió la persona, para que el staff la dé de alta desde el panel
-  // (pestaña Pendientes) y recién ahí quede con un institucion_id real.
+  // (pestaña Pendientes). Como máximo una fila "pendiente" por
+  // profesional (lo exige un índice único en la base).
   function setInstitucionPendiente(texto) {
     return EpeSupabase.auth.getUser().then(function (userRes) {
       if (userRes.error) throw userRes.error;
       var uid = userRes.data.user.id;
-      return EpeSupabase.from("profiles")
-        .update({
-          institucion_id: null,
-          institucion_pendiente: texto,
-          institucion_verificada: false,
-          institucion_verificada_en: null,
-          institucion_verificada_metodo: null,
-        })
-        .eq("id", uid)
+      return EpeSupabase.from("profile_instituciones")
+        .insert({ profile_id: uid, institucion_pendiente: texto })
         .then(function (res) {
           lanzarSiError(res);
         });
     });
   }
 
-  // Dejar la institución actual (verificada, sin verificar, o pendiente
-  // de alta) — vuelve el perfil al estado "sin institución". La limpieza
-  // de los caso_shares tipo "institución" de las colecciones propias la
-  // hace un trigger en la base (ver
-  // supabase/014_limpiar_shares_al_cambiar_institucion.sql), no este
-  // código: así también cubre cambiar directo de una institución a otra
-  // sin pasar por acá.
-  function dejarInstitucion() {
+  // Retractar un "mi institución no está en la lista" todavía sin
+  // resolver — a diferencia de dejarInstitucion(), esto es un delete
+  // directo (RLS lo permite solo para filas sin institución real: no
+  // hay ninguna colección ni rol de admin que una función tenga que
+  // desenredar, ver 015).
+  function retirarInstitucionPendiente() {
     return EpeSupabase.auth.getUser().then(function (userRes) {
       if (userRes.error) throw userRes.error;
       var uid = userRes.data.user.id;
-      return EpeSupabase.from("profiles")
-        .update({
-          institucion_id: null,
-          institucion_pendiente: null,
-          institucion_verificada: false,
-          institucion_verificada_en: null,
-          institucion_verificada_metodo: null,
-        })
-        .eq("id", uid)
+      return EpeSupabase.from("profile_instituciones")
+        .delete()
+        .eq("profile_id", uid)
+        .is("institucion_id", null)
         .then(function (res) {
           lanzarSiError(res);
         });
+    });
+  }
+
+  // Dejar UNA institución puntual (ya no "la" institución — puede haber
+  // varias). candidatoId es obligatorio solo si sos el único admin
+  // activo de esa institución y hay a quién sugerir (la base devuelve
+  // un error explicándolo si hace falta y no se mandó) — ver
+  // dejar_institucion() en supabase/016_admin_institucion.sql: ahora
+  // puede transferir la propiedad de las colecciones compartidas con
+  // esa institución, no solo desactivar el share.
+  function dejarInstitucion(institucionId, candidatoId) {
+    return EpeSupabase.rpc("dejar_institucion", {
+      p_institucion_id: institucionId,
+      p_candidato_id: candidatoId || null,
+    }).then(function (res) {
+      lanzarSiError(res);
+    });
+  }
+
+  // ── Admin de institución ──────────────────────────────────────────
+  // Ver supabase/016_admin_institucion.sql — cada función de acá valida
+  // sus propios permisos del lado del servidor (ser admin activo, estar
+  // verificado, etc.); este archivo solo arma el llamado.
+
+  function solicitarAdminInstitucion(institucionId, mensaje, telefono) {
+    return EpeSupabase.rpc("solicitar_admin_institucion", {
+      p_institucion_id: institucionId,
+      p_mensaje: mensaje || "",
+      p_telefono: telefono || null,
+    }).then(function (res) {
+      lanzarSiError(res);
+    });
+  }
+
+  function listarColegasInstitucion(institucionId) {
+    return EpeSupabase.rpc("listar_colegas_institucion", { p_institucion_id: institucionId }).then(function (res) {
+      lanzarSiError(res);
+      return res.data || [];
+    });
+  }
+
+  function quitarDeInstitucion(institucionId, profesionalId) {
+    return EpeSupabase.rpc("institucion_admin_quitar_profesional", {
+      p_institucion_id: institucionId,
+      p_profesional_id: profesionalId,
+    }).then(function (res) {
+      lanzarSiError(res);
+    });
+  }
+
+  // Promise<{ profile_id, nombre, profesion } | null>.
+  function buscarProfesionalPorEmail(institucionId, email) {
+    return EpeSupabase.rpc("institucion_admin_buscar_profesional", {
+      p_institucion_id: institucionId,
+      p_email: email,
+    }).then(function (res) {
+      lanzarSiError(res);
+      return (res.data && res.data[0]) || null;
+    });
+  }
+
+  function agregarProfesionalAInstitucion(institucionId, profesionalId) {
+    return EpeSupabase.rpc("institucion_admin_agregar_profesional", {
+      p_institucion_id: institucionId,
+      p_profesional_id: profesionalId,
+    }).then(function (res) {
+      lanzarSiError(res);
     });
   }
 
@@ -396,23 +448,27 @@ var EpeStore = (function () {
       });
   }
 
-  function setShare(casoId, tipo, activo) {
+  // institucionId es obligatorio para tipo "institucion" (desde
+  // supabase/015_instituciones_multiples.sql cada share institucional
+  // apunta a una institución puntual, porque un dueño puede pertenecer
+  // a varias) — se ignora para "dismascapacidad".
+  function setShare(casoId, tipo, activo, institucionId) {
     if (activo) {
+      var fila = { caso_id: casoId, tipo: tipo };
+      if (tipo === "institucion") fila.institucion_id = institucionId;
       return EpeSupabase.from("caso_shares")
-        .insert({ caso_id: casoId, tipo: tipo })
+        .insert(fila)
         .then(function (res) {
           lanzarSiError(res);
           return getShares(casoId);
         });
     }
-    return EpeSupabase.from("caso_shares")
-      .delete()
-      .eq("caso_id", casoId)
-      .eq("tipo", tipo)
-      .then(function (res) {
-        lanzarSiError(res);
-        return getShares(casoId);
-      });
+    var query = EpeSupabase.from("caso_shares").delete().eq("caso_id", casoId).eq("tipo", tipo);
+    if (tipo === "institucion") query = query.eq("institucion_id", institucionId);
+    return query.then(function (res) {
+      lanzarSiError(res);
+      return getShares(casoId);
+    });
   }
 
   // Promise<uuid|null>. null significa "nadie con ese email tiene cuenta
@@ -548,10 +604,17 @@ var EpeStore = (function () {
     getProfile: getProfile,
     saveProfile: saveProfile,
     getInstituciones: getInstituciones,
+    misInstituciones: misInstituciones,
     verificarInstitucion: verificarInstitucion,
     elegirInstitucionSinVerificar: elegirInstitucionSinVerificar,
     setInstitucionPendiente: setInstitucionPendiente,
+    retirarInstitucionPendiente: retirarInstitucionPendiente,
     dejarInstitucion: dejarInstitucion,
+    solicitarAdminInstitucion: solicitarAdminInstitucion,
+    listarColegasInstitucion: listarColegasInstitucion,
+    quitarDeInstitucion: quitarDeInstitucion,
+    buscarProfesionalPorEmail: buscarProfesionalPorEmail,
+    agregarProfesionalAInstitucion: agregarProfesionalAInstitucion,
     getCasos: getCasos,
     getCaso: getCaso,
     createCaso: createCaso,

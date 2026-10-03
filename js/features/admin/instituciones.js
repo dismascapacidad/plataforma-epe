@@ -46,6 +46,17 @@ var EpeAdminInstituciones = (function () {
     texto.textContent = inst.nombre + " — código: " + inst.codigo_acceso;
     li.appendChild(texto);
 
+    // Aviso si nadie confirmó todavía el rol de administrador para esta
+    // institución (ver supabase/016_admin_institucion.sql) — ayuda al
+    // staff a saber dónde falta resolver una solicitud o, directamente,
+    // dónde todavía no la pidió nadie.
+    if (!inst.cantidad_admins_activos) {
+      var aviso = document.createElement("span");
+      aviso.className = "epe-field-hint-aviso";
+      aviso.textContent = "Sin administrador confirmado";
+      li.appendChild(aviso);
+    }
+
     var regenerar = document.createElement("button");
     regenerar.type = "button";
     regenerar.className = "epe-btn-ghost epe-btn-sm";
@@ -64,7 +75,70 @@ var EpeAdminInstituciones = (function () {
     });
     li.appendChild(regenerar);
 
+    // Administradores: plegado por defecto (ver_admins_institucion_staff
+    // en supabase/016_admin_institucion.sql) — solo quitar el ROL, nunca
+    // la pertenencia a la institución (eso lo hace un admin activo, o la
+    // propia persona desde su perfil).
+    var detalleAdmins = document.createElement("details");
+    var resumenAdmins = document.createElement("summary");
+    resumenAdmins.textContent = "Administradores";
+    detalleAdmins.appendChild(resumenAdmins);
+    var listaAdmins = document.createElement("ul");
+    listaAdmins.className = "epe-compartir-lista";
+    detalleAdmins.appendChild(listaAdmins);
+    detalleAdmins.addEventListener(
+      "toggle",
+      function () {
+        if (!detalleAdmins.open) return;
+        cargarAdmins(inst, listaAdmins);
+      },
+      { once: true }
+    );
+    li.appendChild(detalleAdmins);
+
     return li;
+  }
+
+  function cargarAdmins(inst, listaAdmins) {
+    listaAdmins.innerHTML = '<li class="epe-vacio">Cargando…</li>';
+    EpeAdminStore.listarAdminsInstitucion(inst.id)
+      .then(function (admins) {
+        listaAdmins.innerHTML = "";
+        if (admins.length === 0) {
+          listaAdmins.innerHTML = '<li class="epe-vacio">Sin administradores confirmados.</li>';
+          return;
+        }
+        admins.forEach(function (admin) {
+          var li = document.createElement("li");
+          li.className = "epe-compartir-item";
+          var texto = document.createElement("span");
+          texto.textContent = (admin.nombre || admin.email) + (admin.estado === "congelado" ? " (dejando la institución)" : "");
+          li.appendChild(texto);
+
+          var quitar = document.createElement("button");
+          quitar.type = "button";
+          quitar.className = "epe-btn-ghost epe-btn-sm";
+          quitar.textContent = "Quitar rol de admin";
+          quitar.addEventListener("click", function () {
+            if (!window.confirm("¿Sacarle el rol de administrador a " + (admin.nombre || admin.email) + "? Sigue siendo profesional de la institución, solo deja de administrarla.")) return;
+            quitar.disabled = true;
+            EpeAdminStore.quitarAdmin(inst.id, admin.profile_id)
+              .then(function () {
+                cargarAdmins(inst, listaAdmins);
+                cargar();
+              })
+              .catch(function (err) {
+                window.alert("No se pudo quitar el rol." + (err && err.message ? " (" + err.message + ")" : ""));
+                quitar.disabled = false;
+              });
+          });
+          li.appendChild(quitar);
+          listaAdmins.appendChild(li);
+        });
+      })
+      .catch(function () {
+        listaAdmins.innerHTML = '<li class="epe-vacio">No se pudieron cargar los administradores.</li>';
+      });
   }
 
   function onCrear(ev) {

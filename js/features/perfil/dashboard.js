@@ -107,6 +107,7 @@
         EpePerfil.init(document.querySelector("[data-panel='perfil']"), session.user.email);
         EpeCasos.init(document.querySelector("[data-panel='casos']"));
         EpeDispositivos.init(document.querySelector("[data-panel='dispositivos']"));
+        EpeMiInstitucion.init(document.querySelector("[data-tab-mi-institucion]"), document.querySelector("[data-mi-institucion-lista]"));
 
         console.info("[EpE] Espacio personal — dashboard cargado (Supabase)");
       });

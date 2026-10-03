@@ -65,6 +65,7 @@
             <span class="epe-aviso-punto" data-aviso-casos hidden><span class="epe-sr-only">Hay mensajes nuevos</span></span>
           </button>
           <button class="epe-tab" type="button" data-tab="dispositivos" role="tab" aria-selected="false">Mis dispositivos</button>
+          <button class="epe-tab" type="button" data-tab="mi-institucion" role="tab" aria-selected="false" data-tab-mi-institucion hidden>Mi institución</button>
         </nav>
 
         <!-- ── Perfil ── -->
@@ -93,12 +94,14 @@
                 </div>
 
                 <div class="epe-form-section">
-                  <h3>Institución</h3>
-                  <p class="epe-field-hint" data-institucion-estado>Cargando…</p>
+                  <h3>Instituciones</h3>
+                  <p class="epe-field-hint">Podés pertenecer a más de una a la vez.</p>
                 </div>
 
+                <ul class="epe-compartir-lista" data-instituciones-lista></ul>
+
                 <div class="epe-field">
-                  <label for="perfil-institucion-select">Tu institución</label>
+                  <label for="perfil-institucion-select">Sumar otra institución</label>
                   <select id="perfil-institucion-select" data-institucion-select></select>
                 </div>
 
@@ -114,8 +117,7 @@
                 </div>
 
                 <div class="epe-form-actions">
-                  <button class="epe-btn-ghost epe-btn-sm" type="button" data-institucion-guardar>Guardar institución</button>
-                  <button class="epe-btn-ghost epe-btn-sm" type="button" data-institucion-dejar hidden>Dejar la institución</button>
+                  <button class="epe-btn-ghost epe-btn-sm" type="button" data-institucion-guardar>Agregar institución</button>
                   <span class="epe-form-status" data-institucion-status></span>
                 </div>
 
@@ -239,16 +241,7 @@
                     + Compartir con un colega
                   </button>
 
-                  <div class="epe-compartir-grupo">
-                    <div class="epe-compartir-grupo-info">
-                      <strong>Tu institución</strong>
-                      <span data-institucion-hint></span>
-                    </div>
-                    <label class="epe-switch">
-                      <input type="checkbox" data-share-toggle value="institucion" />
-                      <span class="epe-switch-track"></span>
-                    </label>
-                  </div>
+                  <div data-instituciones-compartir></div>
 
                   <div class="epe-compartir-grupo">
                     <div class="epe-compartir-grupo-info">
@@ -272,6 +265,18 @@
           <p class="epe-panel-sub">Actualizaciones de firmware, manuales y material de consulta por dispositivo.</p>
           <p class="epe-placeholder">Próximamente. Todavía no definimos cómo se vincula un dispositivo a tu perfil.</p>
         </section>
+
+        <!-- ── Mi institución (solo si sos admin de alguna) ── -->
+        <section class="epe-panel" data-panel="mi-institucion" hidden>
+          <h2>Mi institución</h2>
+          <p class="epe-panel-sub">
+            Como administrador de institución tenés los mismos accesos que cualquier
+            profesional — la diferencia es que podés sumar o quitar profesionales de
+            tu institución.
+          </p>
+
+          <div data-mi-institucion-lista></div>
+        </section>
       </div>
 
       <div data-atribucion="pie"></div>
@@ -291,6 +296,7 @@
     <script src="../js/features/perfil/perfil.js"></script>
     <script src="../js/features/perfil/casos.js"></script>
     <script src="../js/features/perfil/dispositivos.js"></script>
+    <script src="../js/features/perfil/institucion-admin.js"></script>
     <script src="../js/features/perfil/dashboard.js"></script>
   </body>
 </html>

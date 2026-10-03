@@ -828,35 +828,108 @@ var EpeCasos = (function () {
   // colegas se reconstruye en cada render; los dos toggles solo se
   // actualizan (checked/disabled), no se recrean.
 
+  // Un toggle por institución VERIFICADA (puede haber varias desde
+  // supabase/015_instituciones_multiples.sql — antes había una sola, un
+  // único toggle fijo en el HTML). Si estás "saliendo" de alguna (ver
+  // Admin de institución, 016), ese toggle queda deshabilitado: ni se
+  // puede agregar ni se puede sacar mientras se resuelve el reemplazo.
+  function renderInstitucionesCompartir(casoId, shares, misInstituciones) {
+    var contenedor = root.querySelector("[data-instituciones-compartir]");
+    contenedor.innerHTML = "";
+
+    var verificadas = misInstituciones.filter(function (inst) {
+      return inst.institucion_id && inst.verificada;
+    });
+
+    if (verificadas.length === 0) {
+      var grupoVacio = document.createElement("div");
+      grupoVacio.className = "epe-compartir-grupo";
+      var infoVacio = document.createElement("div");
+      infoVacio.className = "epe-compartir-grupo-info";
+      var tituloVacio = document.createElement("strong");
+      tituloVacio.textContent = "Tu institución";
+      var hintVacio = document.createElement("span");
+      hintVacio.textContent = "Completá y verificá una institución en la pestaña Perfil para poder usar esto.";
+      infoVacio.appendChild(tituloVacio);
+      infoVacio.appendChild(hintVacio);
+      grupoVacio.appendChild(infoVacio);
+      contenedor.appendChild(grupoVacio);
+      return;
+    }
+
+    verificadas.forEach(function (inst) {
+      var compartidoAhora = shares.some(function (s) {
+        return s.tipo === "institucion" && s.institucion_id === inst.institucion_id;
+      });
+
+      var grupo = document.createElement("div");
+      grupo.className = "epe-compartir-grupo";
+
+      var info = document.createElement("div");
+      info.className = "epe-compartir-grupo-info";
+      var titulo = document.createElement("strong");
+      titulo.textContent = inst.institucion_nombre;
+      var hint = document.createElement("span");
+      hint.textContent = inst.saliendo
+        ? "Te estás yendo de esta institución — no se puede cambiar mientras se resuelve el reemplazo."
+        : 'Le da acceso a cualquier colega verificado en "' + inst.institucion_nombre + '".';
+      info.appendChild(titulo);
+      info.appendChild(hint);
+      grupo.appendChild(info);
+
+      var label = document.createElement("label");
+      label.className = "epe-switch";
+      var input = document.createElement("input");
+      input.type = "checkbox";
+      input.checked = compartidoAhora;
+      input.disabled = !!inst.saliendo;
+      input.addEventListener("change", function () {
+        onToggleInstitucion(casoId, inst.institucion_id, input);
+      });
+      var track = document.createElement("span");
+      track.className = "epe-switch-track";
+      label.appendChild(input);
+      label.appendChild(track);
+      grupo.appendChild(label);
+
+      contenedor.appendChild(grupo);
+    });
+  }
+
+  function onToggleInstitucion(casoId, institucionId, input) {
+    if (casoId !== casoSeleccionadoId) return;
+    var valorAnterior = !input.checked;
+    input.disabled = true;
+    EpeStore.setShare(casoId, "institucion", input.checked, institucionId)
+      .catch(function (err) {
+        input.checked = valorAnterior;
+        window.alert("No se pudo actualizar." + detalleError(err));
+      })
+      .finally(function () {
+        input.disabled = false;
+      });
+  }
+
   function renderShares(casoId) {
     var listaColegas = root.querySelector("[data-colegas-lista]");
-    var toggleInstitucion = root.querySelector('[data-share-toggle][value="institucion"]');
     var toggleDismascapacidad = root.querySelector('[data-share-toggle][value="dismascapacidad"]');
-    var hintInstitucion = root.querySelector("[data-institucion-hint]");
 
     mensajeVacio(listaColegas, "Cargando…");
 
-    Promise.all([EpeStore.getShares(casoId), EpeStore.getProfile()])
+    Promise.all([EpeStore.getShares(casoId), EpeStore.misInstituciones()])
       .then(function (resultados) {
         if (casoId !== casoSeleccionadoId) return;
         var shares = resultados[0];
-        var miPerfil = resultados[1];
+        var misInstituciones = resultados[1];
 
         var colegas = shares.filter(function (s) {
           return s.tipo === "colega";
-        });
-        toggleInstitucion.checked = shares.some(function (s) {
-          return s.tipo === "institucion";
         });
         toggleDismascapacidad.checked = shares.some(function (s) {
           return s.tipo === "dismascapacidad";
         });
 
-        var institucion = (miPerfil.institucion || "").trim();
-        toggleInstitucion.disabled = !institucion;
-        hintInstitucion.textContent = institucion
-          ? 'Le da acceso a cualquier colega cuyo perfil diga "' + institucion + '".'
-          : "Completá tu institución en la pestaña Perfil para poder usar esto.";
+        renderInstitucionesCompartir(casoId, shares, misInstituciones);
 
         listaColegas.innerHTML = "";
         if (colegas.length === 0) {

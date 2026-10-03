@@ -70,6 +70,10 @@
               Pendientes
               <span class="epe-aviso-numero" data-aviso-pendientes hidden></span>
             </button>
+            <button class="epe-tab" type="button" data-admin-tab="solicitudes-admin" role="tab" aria-selected="false">
+              Solicitudes de admin
+              <span class="epe-aviso-numero" data-aviso-solicitudes-admin hidden></span>
+            </button>
           </nav>
 
           <!-- ── Colecciones compartidas ── -->
@@ -143,6 +147,18 @@
             <ul class="epe-compartir-lista" data-admin-pendientes-lista></ul>
             <p class="epe-vacio" data-admin-pendientes-vacio hidden>No hay nada pendiente de resolver.</p>
           </section>
+
+          <!-- ── Solicitudes de admin ── -->
+          <section class="epe-panel" data-admin-panel="solicitudes-admin" hidden>
+            <p class="epe-panel-sub">
+              Profesionales que pidieron ser administradores de su institución, o que
+              un administrador saliente sugirió como su reemplazo. Confirmá a la
+              persona por fuera de la plataforma (con el teléfono que dejó) antes de
+              aprobar.
+            </p>
+            <ul class="epe-compartir-lista" data-admin-solicitudes-lista></ul>
+            <p class="epe-vacio" data-admin-solicitudes-vacio hidden>No hay solicitudes pendientes.</p>
+          </section>
         </div>
       </div>
 
@@ -161,6 +177,7 @@
     <script src="../js/features/admin/panel.js"></script>
     <script src="../js/features/admin/instituciones.js"></script>
     <script src="../js/features/admin/pendientes.js"></script>
+    <script src="../js/features/admin/solicitudes-admin.js"></script>
     <script src="../js/features/admin/dashboard.js"></script>
   </body>
 </html>

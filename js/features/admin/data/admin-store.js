@@ -70,6 +70,46 @@ var EpeAdminStore = (function () {
     });
   }
 
+  // ── Admin de institución (ver supabase/016_admin_institucion.sql) ──
+
+  function listarSolicitudesAdmin() {
+    return EpeSupabase.rpc("listar_solicitudes_admin_staff").then(function (res) {
+      lanzarSiError(res);
+      return res.data || [];
+    });
+  }
+
+  function aprobarAdmin(solicitudId) {
+    return EpeSupabase.rpc("aprobar_admin_institucion", { p_solicitud_id: solicitudId }).then(function (res) {
+      lanzarSiError(res);
+    });
+  }
+
+  function rechazarAdmin(solicitudId, motivo) {
+    return EpeSupabase.rpc("rechazar_admin_institucion", {
+      p_solicitud_id: solicitudId,
+      p_motivo: motivo || "",
+    }).then(function (res) {
+      lanzarSiError(res);
+    });
+  }
+
+  function listarAdminsInstitucion(institucionId) {
+    return EpeSupabase.rpc("listar_admins_institucion_staff", { p_institucion_id: institucionId }).then(function (res) {
+      lanzarSiError(res);
+      return res.data || [];
+    });
+  }
+
+  function quitarAdmin(institucionId, profileId) {
+    return EpeSupabase.rpc("quitar_admin_institucion", {
+      p_institucion_id: institucionId,
+      p_profile_id: profileId,
+    }).then(function (res) {
+      lanzarSiError(res);
+    });
+  }
+
   // Igual que EpeStore.getNoLeidos(), pero restringido a lo compartido con
   // dis+capacidad (ver panel_staff_no_leidos() en
   // supabase/012_comentarios_vistos.sql) — a propósito separada, para no
@@ -96,6 +136,11 @@ var EpeAdminStore = (function () {
     crearInstitucion: crearInstitucion,
     regenerarCodigo: regenerarCodigo,
     verificarManual: verificarManual,
+    listarSolicitudesAdmin: listarSolicitudesAdmin,
+    aprobarAdmin: aprobarAdmin,
+    rechazarAdmin: rechazarAdmin,
+    listarAdminsInstitucion: listarAdminsInstitucion,
+    quitarAdmin: quitarAdmin,
     getNoLeidosStaff: getNoLeidosStaff,
   };
 })();
