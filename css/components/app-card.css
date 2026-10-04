@@ -217,3 +217,136 @@ button.epe-app-card {
   font-size: 10.5px;
   color: var(--text-faint);
 }
+
+/* ── Pantalla de inicio de la plataforma ── */
+
+/* Grilla del inicio: 1 / 2 / 3 / 4 columnas. Con 7 secciones, en 4 columnas
+   el Configurador (card destacada) ocupa la columna derecha en 2 filas y las
+   otras 6 secciones se acomodan en 3 columnas × 2 filas. */
+.epe-grid.epe-grid-inicio {
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 420px) {
+  .epe-grid.epe-grid-inicio {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 720px) {
+  .epe-grid.epe-grid-inicio {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1080px) {
+  .epe-grid.epe-grid-inicio {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Pill de estado ("Próximamente"): sin ícono, mismo lugar que la de compatibilidad. */
+.epe-app-card-pill-soon {
+  padding: 3px 9px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* ── Card destacada (Configurador) ── */
+.epe-app-card-destacada {
+  grid-column: 1 / -1;
+}
+
+.epe-app-card-destacada .epe-app-card-body {
+  gap: 10px;
+  padding: 6px 8px 8px;
+}
+
+.epe-app-card-destacada .epe-app-card-title {
+  font-size: 19px;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+/* La descripción de la destacada es más larga: se muestra completa. */
+.epe-app-card-destacada .epe-app-card-desc {
+  font-size: 13.5px;
+  display: block;
+  overflow: visible;
+}
+
+.epe-app-card-puntos {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--text-dim);
+}
+
+.epe-app-card-puntos > span {
+  position: relative;
+  padding-left: 16px;
+}
+
+.epe-app-card-puntos > span::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 0.5em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--teal-600);
+}
+
+.epe-app-card-cta {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 6px;
+  margin-top: auto;
+  padding: 8px 14px;
+  border-radius: 20px;
+  background: var(--teal-600);
+  color: var(--surf);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.epe-app-card-cta svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Tablet: la destacada va arriba, ancho completo y en horizontal. */
+@media (min-width: 560px) and (max-width: 1079.98px) {
+  .epe-app-card-destacada {
+    flex-direction: row;
+    align-items: stretch;
+  }
+
+  .epe-app-card-destacada .epe-app-card-media {
+    flex: 0 0 44%;
+    aspect-ratio: auto;
+    min-height: 220px;
+  }
+
+  .epe-app-card-destacada .epe-app-card-body {
+    flex: 1;
+    padding: 10px 12px 10px 4px;
+    justify-content: center;
+  }
+
+  .epe-app-card-destacada .epe-app-card-cta {
+    margin-top: 6px;
+  }
+}
+
+/* Escritorio: columna derecha, 2 filas de alto. */
+@media (min-width: 1080px) {
+  .epe-grid.epe-grid-inicio .epe-app-card-destacada {
+    grid-column: 4;
+    grid-row: 1 / span 2;
+  }
+}
