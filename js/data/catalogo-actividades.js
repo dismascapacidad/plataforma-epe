@@ -11,6 +11,12 @@
  * solo-lectura desde la UI por ahora — es la fuente de verdad de qué apps
  * existen "para todo el mundo", no datos del usuario.
  *
+ * Un recurso de terceros puede declarar `teclas`: la lista de teclas a las que
+ * responde (ej. las 4 flechas). Eso lo marca como compatible con los
+ * dispositivos dis+capacidad y habilita configurar el dispositivo antes de
+ * abrirlo (ver js/core/tercero-detalle.js y
+ * js/features/configurar-dispositivo/externo.js).
+ *
  * Dos tipos de entrada, campo `tipo`:
  * - "app-epe": las Apps EpE propias (apps-epe/*.html). Se abren directo
  *   con "Abrir" — no necesitan indicaciones, la app se explica sola.
@@ -82,6 +88,15 @@ var EpeCatalogo = (function () {
       configuracion: row.configuracion,
       url: row.url,
       icono: ICONOS[row.icono_key] || ICONOS.generico,
+      // Teclas que necesita un recurso externo compatible con dispositivos
+      // dis+capacidad (columna `teclas`, ver supabase/018). Acá solo se
+      // comprueba la forma general; la validación estricta (teclas
+      // permitidas, ids, largo) la hace configurar-dispositivo/teclas-externas.js
+      // justo antes de usarlas. null = recurso sin compatibilidad.
+      teclas:
+        Array.isArray(row.teclas) && row.teclas.length > 0 && row.teclas.length <= 8
+          ? row.teclas
+          : null,
     };
   }
 

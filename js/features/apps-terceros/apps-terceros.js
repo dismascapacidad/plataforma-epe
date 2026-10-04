@@ -20,8 +20,23 @@ var EpeAppsTerceros = (function () {
     var vacio = document.querySelector("[data-tienda-vacio]");
     if (!grid) return;
 
-    EpeCatalogo.getAll()
-      .then(function (todas) {
+    // El módulo que compatibiliza recursos con dispositivos dis+capacidad es
+    // ES (import dinámico, ruta relativa a ESTE archivo): se espera acá, antes
+    // de dibujar las cards, para que la pill de compatibilidad no dependa de
+    // quién termina primero. Si no carga, la página funciona igual sin esa parte.
+    var modulo = import("../configurar-dispositivo/externo.js").catch(function () {
+      return null;
+    });
+
+    // Si la última vez el dispositivo quedó configurado para un recurso externo
+    // y no se restauró (pestaña cerrada o recargada), se ofrece restaurarlo.
+    modulo.then(function (m) {
+      if (m && window.EpeDispositivoExterno) window.EpeDispositivoExterno.revisarPendiente();
+    });
+
+    Promise.all([EpeCatalogo.getAll(), modulo])
+      .then(function (res) {
+        var todas = res[0];
         var apps = todas.filter(function (app) {
           return app.tipo === "tercero";
         });
@@ -41,15 +56,37 @@ var EpeAppsTerceros = (function () {
       });
   }
 
-  // Capturas de cada recurso, por id del catálogo (columna `id` de
+  // Capturas de cada recurso, por URL del recurso (columna `url` de
   // catalogo_actividades). Viven en assets/img/terceros/ (archivos propios del
   // repo, nunca una URL que venga de la base): así no hace falta migrar la
   // tabla y ningún sitio externo recibe la IP de quien mira la página.
-  // Mientras un recurso no tenga captura se muestra un placeholder con su
+  // (se usa la URL porque el id lo genera la base al cargar la fila). Mientras
+  // no haya captura se muestra un placeholder con su
   // ícono. Ejemplo:
-  //   "uuid-del-recurso": "../assets/img/terceros/cboard.webp",
+  //   "https://apps.makeymakey.com/play/#counter": "../assets/img/terceros/counter-makey.webp",
   // Las capturas de sitios ajenos llevan atribución en el detalle del recurso.
-  var IMAGENES = {};
+  var IMAGENES = {
+    "https://apps.makeymakey.com/play/#counter": "../assets/img/terceros/counter-makey.webp",
+  };
+
+  // Clave tolerante: sin protocolo, sin "www." y sin "/" final, en minúsculas,
+  // para que una diferencia menor al cargar la URL en la base no pierda la captura.
+  function claveUrl(u) {
+    return String(u || "")
+      .trim()
+      .toLowerCase()
+      .replace(/^https?:\/\//, "")
+      .replace(/^www\./, "")
+      .replace(/\/+(?=#|$)/, "");
+  }
+
+  function imagenDe(app) {
+    var k = claveUrl(app.url);
+    for (var u in IMAGENES) {
+      if (claveUrl(u) === k) return IMAGENES[u];
+    }
+    return null;
+  }
 
   function construirItem(app) {
     var item = document.createElement("button");
@@ -61,7 +98,10 @@ var EpeAppsTerceros = (function () {
     media.className = "epe-app-card-media";
 
     function ponerPlaceholder() {
-      media.innerHTML = "";
+      // Saca la imagen (y un placeholder previo) pero deja la pill, si ya está.
+      Array.prototype.slice.call(media.children).forEach(function (hijo) {
+        if (!hijo.classList.contains("epe-app-card-pill")) media.removeChild(hijo);
+      });
       media.classList.add("epe-app-card-media-vacia");
       var ph = document.createElement("span");
       ph.className = "epe-app-card-placeholder";
@@ -73,7 +113,7 @@ var EpeAppsTerceros = (function () {
       media.appendChild(ph);
     }
 
-    var src = IMAGENES[app.id];
+    var src = imagenDe(app);
     if (src) {
       var img = document.createElement("img");
       img.src = src;
@@ -113,6 +153,21 @@ var EpeAppsTerceros = (function () {
     autor.className = "epe-app-card-autor";
     autor.textContent = "De terceros: " + app.autor;
     body.appendChild(autor);
+
+    // Pill de compatibilidad: solo los recursos que declaran `teclas` (ver
+    // catalogo-actividades.js) y que externo.js acepta como válidos.
+    var externo = window.EpeDispositivoExterno;
+    if (app.teclas && externo && externo.soporta(app)) {
+      var pill = document.createElement("span");
+      pill.className = "epe-app-card-pill";
+      pill.title = "Compatible con dispositivos de acceso dis+capacidad";
+      var pillIcono = document.createElement("span");
+      pillIcono.className = "epe-app-card-pill-icon";
+      pillIcono.setAttribute("aria-hidden", "true");
+      pill.appendChild(pillIcono);
+      pill.appendChild(document.createTextNode("Compatible dis+capacidad"));
+      media.appendChild(pill);
+    }
 
     item.appendChild(media);
     item.appendChild(body);

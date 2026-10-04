@@ -85,6 +85,37 @@ function teclaLegible(tecla) {
   return tecla.charAt(0).toUpperCase() + tecla.slice(1);
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// Textos según para qué se abre el widget: un juego propio (Apps EpE) o un
+// recurso externo de terceros (ver `externo` en `abrir()`). Un recurso
+// externo cambia el vocabulario y suma un aviso: el dispositivo se restaura
+// desde la pestaña de la plataforma, no desde el recurso.
+// ─────────────────────────────────────────────────────────────────────────
+const TEXTOS_JUEGO = {
+  sujeto: 'el juego',
+  conectar:
+    'Conectá el dispositivo de dis+capacidad (disMouse, disHub…) para asignarle los botones que necesita este juego.',
+  exito: 'Listo, el dispositivo ya está configurado para este juego.',
+  continuar: 'Empezar',
+  aviso: null,
+};
+
+/** @param {string} nombre */
+function textosExterno(nombre) {
+  return {
+    sujeto: 'el recurso',
+    conectar: `Conectá el dispositivo de dis+capacidad (disMouse, disHub…) para asignarle los botones que necesita «${nombre}».`,
+    exito: `Listo, el dispositivo ya está configurado para «${nombre}».`,
+    continuar: 'Abrir recurso',
+    aviso:
+      'Como es un recurso externo, para restaurar el dispositivo tenés que volver a esta pestaña de la ' +
+      'plataforma y presionar «Restaurar». No la cierres mientras usás el recurso.',
+  };
+}
+
+/** Textos del widget abierto ahora (hay un solo widget a la vez: comparte el modal). */
+let T = TEXTOS_JUEGO;
+
 function el(tag, clase, texto) {
   const e = document.createElement(tag);
   if (clase) e.className = clase;
@@ -111,7 +142,9 @@ function mostrarCabecera(cabecera, info) {
  * problema se muestra dentro del modal mismo.
  *
  * @param {EntradaNecesaria[]} entradas Lo que la app necesita ahora mismo.
- * @param {{ titulo?: string }} [opciones]
+ * @param {{ titulo?: string, externo?: { nombre: string } }} [opciones]
+ *   `externo`: se abre para un recurso de terceros (cambia los textos y suma
+ *   el aviso de cómo restaurar; ver `textosExterno`).
  * @returns {Promise<{ ok: boolean, motivo?: string, snapshot?: object, restaurar?: () => Promise<{ok: boolean, diferencias: any[]}>, continuar?: boolean }>}
  *   `ok:true` cuando se aplicó una configuración nueva y el usuario cerró el
  *   widget conforme. Si aplicó y no deshizo dentro del propio widget, viene
@@ -123,6 +156,7 @@ function mostrarCabecera(cabecera, info) {
  *   si se canceló antes de aplicar nada.
  */
 export function abrir(entradas, opciones = {}) {
+  T = opciones.externo ? textosExterno(opciones.externo.nombre) : TEXTOS_JUEGO;
   return new Promise((resolve) => {
     if (!window.EpeModal) {
       // No debería pasar: cada página que usa el widget carga modal.js.
@@ -166,13 +200,7 @@ export function abrir(entradas, opciones = {}) {
 
 function pasoConectar(raiz, entradas, cerrar, cabecera) {
   raiz.innerHTML = '';
-  raiz.appendChild(
-    el(
-      'p',
-      'epe-cd-intro',
-      'Conectá el dispositivo de dis+capacidad (disMouse, disHub…) para asignarle los botones que necesita este juego.',
-    ),
-  );
+  raiz.appendChild(el('p', 'epe-cd-intro', T.conectar));
 
   const usbOk = TransporteUsb.disponible();
   const bleOk = TransporteBle.disponible();
@@ -287,7 +315,7 @@ function pasoAsignar(raiz, entradas, cerrar, conexion, producto, snapshot, dispo
         el(
           'p',
           'epe-cd-aviso',
-          `Este dispositivo tiene ${disponibles.length} entradas y el juego necesita ${entradas.length}. ` +
+          `Este dispositivo tiene ${disponibles.length} entradas y ${T.sujeto} necesita ${entradas.length}. ` +
             `Se van a asignar las primeras ${disponibles.length}; el resto queda sin configurar.`,
         ),
       );
@@ -391,6 +419,8 @@ function pasoResumen(raiz, entradasPedidas, aUsar, asignaciones, cerrar, conexio
     );
   }
 
+  if (T.aviso) raiz.appendChild(el('p', 'epe-cd-aviso', T.aviso));
+
   const filaBotones = el('div', 'epe-cd-botones');
   const btnAplicar = el('button', 'epe-btn-acc', 'Aplicar');
   btnAplicar.type = 'button';
@@ -427,11 +457,10 @@ async function aplicar(raiz, cerrar, conexion, asignaciones, snapshot, necesitaM
       el(
         'p',
         exito ? 'epe-cd-ok' : 'epe-cd-error',
-        exito
-          ? 'Listo, el dispositivo ya está configurado para este juego.'
-          : `El dispositivo respondió: ${errorDispositivo}`,
+        exito ? T.exito : `El dispositivo respondió: ${errorDispositivo}`,
       ),
     );
+    if (exito && T.aviso) raiz.appendChild(el('p', 'epe-cd-aviso', T.aviso));
     const filaBotones = el('div', 'epe-cd-botones');
     const btnDeshacer = el('button', 'epe-btn-ghost', 'Deshacer (volver a como estaba)');
     btnDeshacer.type = 'button';
@@ -441,7 +470,7 @@ async function aplicar(raiz, cerrar, conexion, asignaciones, snapshot, necesitaM
     // antes hacía falta cerrar el modal y encima apretar "Empezar" aparte.
     // Si falló la aplicación, se deja "Cerrar" nomás: no tiene sentido
     // arrancar como si el dispositivo ya estuviera listo.
-    const btnContinuar = el('button', 'epe-btn-acc', exito ? 'Empezar' : 'Cerrar');
+    const btnContinuar = el('button', 'epe-btn-acc', exito ? T.continuar : 'Cerrar');
     btnContinuar.type = 'button';
     btnContinuar.addEventListener('click', () =>
       cerrar({ ok: true, snapshot, restaurar: () => conexion.restaurar(snapshot), continuar: exito }),

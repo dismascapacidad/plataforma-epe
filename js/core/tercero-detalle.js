@@ -8,6 +8,11 @@
  * (`js/features/perfil/casos.js`, agregando ahí un botón extra para
  * vincular la app a un caso).
  *
+ * Si el recurso declara `teclas` (es compatible con dispositivos
+ * dis+capacidad) y la página cargó js/features/configurar-dispositivo/externo.js
+ * (window.EpeDispositivoExterno), el modal ofrece configurar el dispositivo
+ * antes de abrirlo. Sin ese script, el modal funciona como siempre.
+ *
  * Depende de EpeModal (js/core/modal.js) para el modal en sí, y de las
  * clases .epe-tercero-detalle-* de css/components/tercero-detalle.css.
  *
@@ -15,6 +20,16 @@
  */
 
 var EpeTerceroDetalle = (function () {
+  // Solo https: (nada de javascript:, data:, http:). Devuelve la URL o null.
+  function urlSegura(url) {
+    try {
+      var u = new URL(url);
+      return u.protocol === "https:" && u.hostname ? u.href : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
   // opciones.accionExtra: { etiqueta, onClick } — botón adicional en el
   // footer (hoy lo usa casos.js para "Vincular a este caso"). Se omite
   // cuando no hace falta, como en la página pública de solo consulta.
@@ -39,17 +54,51 @@ var EpeTerceroDetalle = (function () {
       contenido.appendChild(bloque("Configuración de dispositivo necesaria", app.configuracion));
     }
 
+    var externo = window.EpeDispositivoExterno;
+    var compatible = !!(externo && externo.soporta(app));
+    var url = urlSegura(app.url);
+
+    if (compatible) {
+      contenido.appendChild(bloqueCompatible(app));
+    }
+
+    if (url) {
+      var aviso = document.createElement("p");
+      aviso.className = "epe-tercero-detalle-salida";
+      aviso.textContent =
+        "Es un sitio de terceros: al abrirlo salís de la plataforma (" +
+        new URL(url).hostname +
+        ") y se rige por sus propias condiciones.";
+      contenido.appendChild(aviso);
+    }
+
     var footer = document.createElement("div");
     footer.className = "epe-tercero-detalle-acciones";
 
-    var abrirExterno = document.createElement("button");
-    abrirExterno.type = "button";
-    abrirExterno.className = "epe-btn-ghost epe-btn-sm";
-    abrirExterno.textContent = "Abrir página externa";
-    abrirExterno.addEventListener("click", function () {
-      window.open(app.url, "_blank", "noopener");
-    });
-    footer.appendChild(abrirExterno);
+    if (compatible && url) {
+      var configurar = document.createElement("button");
+      configurar.type = "button";
+      configurar.className = "epe-btn-acc epe-btn-sm";
+      configurar.textContent = "Configurar mi dispositivo y abrir";
+      configurar.addEventListener("click", function () {
+        externo.configurarYAbrir(app).then(function (r) {
+          // Si cancelaron antes de tocar el dispositivo, se vuelve al detalle.
+          if (r && !r.ok && r.motivo === "cancelado") abrir(app, opciones);
+        });
+      });
+      footer.appendChild(configurar);
+    }
+
+    if (url) {
+      var abrirExterno = document.createElement("button");
+      abrirExterno.type = "button";
+      abrirExterno.className = "epe-btn-ghost epe-btn-sm";
+      abrirExterno.textContent = compatible ? "Abrir sin configurar" : "Abrir página externa";
+      abrirExterno.addEventListener("click", function () {
+        window.open(url, "_blank", "noopener,noreferrer");
+      });
+      footer.appendChild(abrirExterno);
+    }
 
     if (accionExtra) {
       var extraBtn = document.createElement("button");
@@ -66,6 +115,30 @@ var EpeTerceroDetalle = (function () {
       titulo: app.nombre,
       contenido: contenido,
     });
+  }
+
+  // Cuadro "Compatible con dis+capacidad": qué teclas usa el recurso y qué va a pasar.
+  function bloqueCompatible(app) {
+    var wrap = document.createElement("div");
+    wrap.className = "epe-tercero-detalle-compat";
+    var h4 = document.createElement("h4");
+    h4.textContent = "Compatible con dispositivos dis+capacidad";
+    var p = document.createElement("p");
+    var nombres = app.teclas
+      .map(function (t) {
+        return t && typeof t.etiqueta === "string" ? t.etiqueta : "";
+      })
+      .filter(Boolean)
+      .join(", ");
+    p.textContent =
+      "Este recurso responde a: " +
+      nombres +
+      ". Antes de abrirlo vas a elegir a qué botón de tu dispositivo asignar cada tecla. " +
+      "Como es un recurso externo, para restaurar el dispositivo hay que volver a esta pestaña de la " +
+      "plataforma y presionar «Restaurar».";
+    wrap.appendChild(h4);
+    wrap.appendChild(p);
+    return wrap;
   }
 
   function bloque(titulo, texto) {
