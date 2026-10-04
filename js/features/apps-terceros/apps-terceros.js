@@ -41,35 +41,81 @@ var EpeAppsTerceros = (function () {
       });
   }
 
+  // Capturas de cada recurso, por id del catálogo (columna `id` de
+  // catalogo_actividades). Viven en assets/img/terceros/ (archivos propios del
+  // repo, nunca una URL que venga de la base): así no hace falta migrar la
+  // tabla y ningún sitio externo recibe la IP de quien mira la página.
+  // Mientras un recurso no tenga captura se muestra un placeholder con su
+  // ícono. Ejemplo:
+  //   "uuid-del-recurso": "../assets/img/terceros/cboard.webp",
+  // Las capturas de sitios ajenos llevan atribución en el detalle del recurso.
+  var IMAGENES = {};
+
   function construirItem(app) {
     var item = document.createElement("button");
     item.type = "button";
-    item.className = "epe-catalogo-item";
+    item.className = "epe-app-card";
 
-    var icono = document.createElement("span");
-    icono.className = "epe-catalogo-item-icono";
-    icono.innerHTML = app.icono;
-    icono.setAttribute("aria-hidden", "true");
+    // ── Captura (o placeholder) ──
+    var media = document.createElement("span");
+    media.className = "epe-app-card-media";
 
-    var nombre = document.createElement("strong");
-    nombre.textContent = app.nombre;
+    function ponerPlaceholder() {
+      media.innerHTML = "";
+      media.classList.add("epe-app-card-media-vacia");
+      var ph = document.createElement("span");
+      ph.className = "epe-app-card-placeholder";
+      ph.setAttribute("aria-hidden", "true");
+      // app.icono sale del mapa fijo ICONOS de catalogo-actividades.js (SVG
+      // escritos a mano en el repo); la base solo guarda la clave. Por eso
+      // este innerHTML no contiene texto de usuario.
+      ph.innerHTML = app.icono;
+      media.appendChild(ph);
+    }
 
-    var categoria = document.createElement("span");
-    categoria.className = "epe-catalogo-item-categoria";
-    categoria.textContent = app.categoria;
+    var src = IMAGENES[app.id];
+    if (src) {
+      var img = document.createElement("img");
+      img.src = src;
+      img.alt = "Captura de " + app.nombre;
+      img.width = 640;
+      img.height = 480;
+      img.loading = "lazy";
+      img.decoding = "async";
+      img.addEventListener("error", ponerPlaceholder);
+      media.appendChild(img);
+    } else {
+      ponerPlaceholder();
+    }
 
-    var desc = document.createElement("p");
+    // ── Texto ── (todo con textContent: la base puede tener cualquier cosa)
+    var body = document.createElement("span");
+    body.className = "epe-app-card-body";
+
+    if (app.categoria) {
+      var categoria = document.createElement("span");
+      categoria.className = "epe-app-card-categoria";
+      categoria.textContent = app.categoria;
+      body.appendChild(categoria);
+    }
+
+    var titulo = document.createElement("span");
+    titulo.className = "epe-app-card-title";
+    titulo.textContent = app.nombre;
+    body.appendChild(titulo);
+
+    var desc = document.createElement("span");
+    desc.className = "epe-app-card-desc";
     desc.textContent = app.descripcion;
+    body.appendChild(desc);
 
     var autor = document.createElement("span");
-    autor.className = "epe-catalogo-item-autor";
+    autor.className = "epe-app-card-autor";
     autor.textContent = "De terceros: " + app.autor;
+    body.appendChild(autor);
 
-    item.appendChild(icono);
-    item.appendChild(nombre);
-    item.appendChild(categoria);
-    item.appendChild(desc);
-    item.appendChild(autor);
+    item.appendChild(media);
+    item.appendChild(body);
 
     item.addEventListener("click", function () {
       EpeTerceroDetalle.abrir(app, {});

@@ -1,17 +1,13 @@
 /*
   apps-terceros.css
-  Layout propio de la página pública "Apps y recursos de terceros": nada
-  más que separar la grilla de la tienda (componente compartido, ver
-  css/components/catalogo-tienda.css) del resto del shell.
+  Layout propio de la página pública "Apps y recursos de terceros". La
+  grilla y las cards son las mismas de Apps EpE (css/components/app-card.css,
+  clases epe-grid / epe-grid-apps / epe-app-card): acá solo queda el mensaje
+  de "no hay recursos" / error de carga.
 */
-
-[data-tienda-grid] {
-  margin-top: 8px;
-  padding-bottom: 40px;
-}
 
 [data-tienda-vacio] {
   font-size: 13px;
   color: var(--text-faint);
-  padding: 24px 2px;
+  padding: 24px clamp(16px, 4vw, 40px);
 }

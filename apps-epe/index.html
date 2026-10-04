@@ -22,7 +22,7 @@
     <link rel="stylesheet" href="../css/base/typography.css" />
     <link rel="stylesheet" href="../css/components/buttons.css" />
     <link rel="stylesheet" href="../css/components/atribucion.css" />
-    <link rel="stylesheet" href="../css/components/tile-card.css" />
+    <link rel="stylesheet" href="../css/components/app-card.css" />
     <link rel="stylesheet" href="../css/components/app-nav.css" />
     <link rel="stylesheet" href="../css/layout/shell.css" />
   </head>
@@ -58,113 +58,131 @@
         <p>Juegos y ejercicios propios, para probar y usar en sesión.</p>
       </div>
 
-      <nav class="epe-grid" aria-label="Apps EpE disponibles">
-        <a class="epe-tile" href="piano.html" data-section="piano">
-          <span class="epe-tile-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M9 18V5l12-2v13" />
-              <circle cx="6" cy="18" r="3" />
-              <circle cx="18" cy="16" r="3" />
-            </svg>
+      <nav class="epe-grid epe-grid-apps" aria-label="Apps EpE disponibles">
+        <a class="epe-app-card" href="piano.html" data-section="piano">
+          <span class="epe-app-card-media">
+            <img src="../assets/img/apps/piano.webp" alt="Captura de la app: teclado de piano de 7 notas" width="640" height="480" loading="lazy" decoding="async" />
+            <span class="epe-app-card-pill" title="Compatible con dispositivos de acceso dis+capacidad">
+              <span class="epe-app-card-pill-icon" aria-hidden="true"></span>
+              Compatible dis+capacidad
+            </span>
           </span>
-          <span class="epe-tile-label">Piano</span>
-          <span class="epe-tile-desc">7 notas con teclado o puntero, para practicar acceso por switch.</span>
+          <span class="epe-app-card-body">
+            <span class="epe-app-card-title">Piano de 7 notas</span>
+            <span class="epe-app-card-desc">App para practicar la selección con switch tocando las 7 notas del piano.</span>
+          </span>
         </a>
 
-        <a class="epe-tile" href="barrido.html" data-section="barrido">
-          <span class="epe-tile-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="9" />
-              <circle cx="12" cy="12" r="4.5" />
-              <circle cx="12" cy="12" r="0.5" />
-            </svg>
+        <a class="epe-app-card" href="barrido.html" data-section="barrido">
+          <span class="epe-app-card-media">
+            <img src="../assets/img/apps/barrido.webp" alt="Captura de la app: grilla de letras con una celda resaltada" width="640" height="480" loading="lazy" decoding="async" />
+            <span class="epe-app-card-pill" title="Compatible con dispositivos de acceso dis+capacidad">
+              <span class="epe-app-card-pill-icon" aria-hidden="true"></span>
+              Compatible dis+capacidad
+            </span>
           </span>
-          <span class="epe-tile-label">Barrido</span>
-          <span class="epe-tile-desc">Entrenador de barrido por tiempo o por 2 pulsadores, copiando una palabra.</span>
+          <span class="epe-app-card-body">
+            <span class="epe-app-card-title">Barrido</span>
+            <span class="epe-app-card-desc">App para entrenar la habilidad de barrido, por tiempo o con 2 pulsadores, copiando una palabra.</span>
+          </span>
         </a>
 
-        <a class="epe-tile" href="vincular-imagen.html" data-section="vincular-imagen">
-          <span class="epe-tile-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="2" />
-              <circle cx="8.5" cy="8.5" r="1.5" />
-              <path d="M21 15l-5-5L5 21" />
-            </svg>
+        <a class="epe-app-card" href="vincular-imagen.html" data-section="vincular-imagen">
+          <span class="epe-app-card-media">
+            <img src="../assets/img/apps/vincular-imagen.webp" alt="Captura de la app: cuatro casilleros con imágenes" width="640" height="480" loading="lazy" decoding="async" />
+            <span class="epe-app-card-pill" title="Compatible con dispositivos de acceso dis+capacidad">
+              <span class="epe-app-card-pill-icon" aria-hidden="true"></span>
+              Compatible dis+capacidad
+            </span>
           </span>
-          <span class="epe-tile-label">Vincular imagen</span>
-          <span class="epe-tile-desc">De 1 a 8 casilleros con imagen propia, texto a voz y tecla asignable.</span>
+          <span class="epe-app-card-body">
+            <span class="epe-app-card-title">Vincular imagen</span>
+            <span class="epe-app-card-desc">App para practicar la asociación de imágenes propias con voz y tecla, de 1 a 8 casilleros.</span>
+          </span>
         </a>
 
-        <a class="epe-tile" href="lado-correcto.html" data-section="lado-correcto">
-          <span class="epe-tile-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M10 7 5 12l5 5" />
-              <path d="M5 12h7" />
-              <path d="M14 7l5 5-5 5" />
-              <path d="M19 12h-7" />
-            </svg>
+        <a class="epe-app-card" href="lado-correcto.html" data-section="lado-correcto">
+          <span class="epe-app-card-media">
+            <img src="../assets/img/apps/lado-correcto.webp" alt="Captura del juego: una fruta y dos opciones, izquierda y derecha" width="640" height="480" loading="lazy" decoding="async" />
+            <span class="epe-app-card-pill" title="Compatible con dispositivos de acceso dis+capacidad">
+              <span class="epe-app-card-pill-icon" aria-hidden="true"></span>
+              Compatible dis+capacidad
+            </span>
           </span>
-          <span class="epe-tile-label">Lado Correcto</span>
-          <span class="epe-tile-desc">Neuroestimulación de reacción y lateralidad: respondé con las flechas del teclado.</span>
+          <span class="epe-app-card-body">
+            <span class="epe-app-card-title">Lado Correcto</span>
+            <span class="epe-app-card-desc">Juego para entrenar la reacción y la lateralidad respondiendo con las flechas del teclado.</span>
+          </span>
         </a>
 
-        <a class="epe-tile" href="duracion-pulsacion.html" data-section="duracion-pulsacion">
-          <span class="epe-tile-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="10" width="12" height="4" rx="2" />
-              <circle cx="20" cy="12" r="1.6" />
-              <path d="M17.5 8.5a5 5 0 0 1 0 7" />
-            </svg>
+        <a class="epe-app-card" href="duracion-pulsacion.html" data-section="duracion-pulsacion">
+          <span class="epe-app-card-media">
+            <img src="../assets/img/apps/duracion-pulsacion.webp" alt="Captura del juego: cuatro carriles de colores con una zona marcada" width="640" height="480" loading="lazy" decoding="async" />
+            <span class="epe-app-card-pill" title="Compatible con dispositivos de acceso dis+capacidad">
+              <span class="epe-app-card-pill-icon" aria-hidden="true"></span>
+              Compatible dis+capacidad
+            </span>
           </span>
-          <span class="epe-tile-label">Duración de pulsación</span>
-          <span class="epe-tile-desc">Diferenciar pulsaciones cortas y largas de un botón, con dificultad creciente.</span>
+          <span class="epe-app-card-body">
+            <span class="epe-app-card-title">Duración de pulsación</span>
+            <span class="epe-app-card-desc">Juego para practicar la diferenciación entre pulsaciones cortas y largas de un botón.</span>
+          </span>
         </a>
 
-        <a class="epe-tile" href="hanoi.html" data-section="hanoi">
-          <span class="epe-tile-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 3v17" />
-              <rect x="9" y="9" width="6" height="3" rx="1.5" />
-              <rect x="6" y="13.5" width="12" height="3" rx="1.5" />
-              <rect x="3" y="18" width="18" height="2.4" rx="1.2" />
-            </svg>
+        <a class="epe-app-card" href="hanoi.html" data-section="hanoi">
+          <span class="epe-app-card-media">
+            <img src="../assets/img/apps/hanoi.webp" alt="Captura del juego: tres varillas con una torre de tres discos" width="640" height="480" loading="lazy" decoding="async" />
+            <span class="epe-app-card-pill" title="Compatible con dispositivos de acceso dis+capacidad">
+              <span class="epe-app-card-pill-icon" aria-hidden="true"></span>
+              Compatible dis+capacidad
+            </span>
           </span>
-          <span class="epe-tile-label">Torre de Hanói</span>
-          <span class="epe-tile-desc">Planificación con teclado o barrido: pasar la torre de discos sin apoyar uno grande sobre uno chico.</span>
+          <span class="epe-app-card-body">
+            <span class="epe-app-card-title">Torre de Hanói</span>
+            <span class="epe-app-card-desc">Juego para entrenar la planificación pasando una torre de discos de una varilla a otra.</span>
+          </span>
         </a>
 
-        <a class="epe-tile" href="nback.html" data-section="nback">
-          <span class="epe-tile-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="2" />
-              <path d="M3 9h18M3 15h18M9 3v18M15 3v18" />
-            </svg>
+        <a class="epe-app-card" href="nback.html" data-section="nback">
+          <span class="epe-app-card-media">
+            <img src="../assets/img/apps/nback.webp" alt="Captura del juego: grilla de 3 por 3 con un casillero iluminado" width="640" height="480" loading="lazy" decoding="async" />
+            <span class="epe-app-card-pill" title="Compatible con dispositivos de acceso dis+capacidad">
+              <span class="epe-app-card-pill-icon" aria-hidden="true"></span>
+              Compatible dis+capacidad
+            </span>
           </span>
-          <span class="epe-tile-label">N-back</span>
-          <span class="epe-tile-desc">Memoria de trabajo: indicar si el estímulo coincide con el de N pasos atrás, con 1 o 2 teclas.</span>
+          <span class="epe-app-card-body">
+            <span class="epe-app-card-title">N-back</span>
+            <span class="epe-app-card-desc">Juego para entrenar la memoria de trabajo comparando cada estímulo con el de N pasos atrás.</span>
+          </span>
         </a>
 
-        <a class="epe-tile" href="stroop.html" data-section="stroop">
-          <span class="epe-tile-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="9" cy="9" r="5" />
-              <circle cx="15" cy="15" r="5" />
-            </svg>
+        <a class="epe-app-card" href="stroop.html" data-section="stroop">
+          <span class="epe-app-card-media">
+            <img src="../assets/img/apps/stroop.webp" alt="Captura del juego: la palabra ROJO y cuatro botones de colores" width="640" height="480" loading="lazy" decoding="async" />
+            <span class="epe-app-card-pill" title="Compatible con dispositivos de acceso dis+capacidad">
+              <span class="epe-app-card-pill-icon" aria-hidden="true"></span>
+              Compatible dis+capacidad
+            </span>
           </span>
-          <span class="epe-tile-label">Stroop</span>
-          <span class="epe-tile-desc">Control inhibitorio: respondé al color de la tinta, no a la palabra escrita. Teclado o barrido.</span>
+          <span class="epe-app-card-body">
+            <span class="epe-app-card-title">Stroop</span>
+            <span class="epe-app-card-desc">Juego para entrenar el control inhibitorio respondiendo al color de la tinta, no a la palabra.</span>
+          </span>
         </a>
 
-        <a class="epe-tile" href="comunicacion-cabeza.html" data-section="comunicacion-cabeza">
-          <span class="epe-tile-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="8" r="4" />
-              <path d="M5 21a7 7 0 0 1 14 0" />
-              <path d="M19 5h2M20 3v4" />
-            </svg>
+        <a class="epe-app-card" href="comunicacion-cabeza.html" data-section="comunicacion-cabeza">
+          <span class="epe-app-card-media">
+            <img src="../assets/img/apps/comunicacion-cabeza.webp" alt="Captura de la app: tablero de letras con botón Hablar" width="640" height="480" loading="lazy" decoding="async" />
+            <span class="epe-app-card-pill" title="Compatible con dispositivos de acceso dis+capacidad">
+              <span class="epe-app-card-pill-icon" aria-hidden="true"></span>
+              Compatible dis+capacidad
+            </span>
           </span>
-          <span class="epe-tile-label">Comunicación con seguimiento de cabeza</span>
-          <span class="epe-tile-desc">Escribir con la cabeza (cámara web) y un pulsador o permanencia, y reproducir el texto por voz.</span>
+          <span class="epe-app-card-body">
+            <span class="epe-app-card-title">Comunicación con seguimiento de cabeza</span>
+            <span class="epe-app-card-desc">App para practicar la escritura con la cabeza y un pulsador, con salida por voz.</span>
+          </span>
         </a>
       </nav>
 

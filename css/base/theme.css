@@ -29,6 +29,11 @@
   --text-dim: var(--txt-2);
   --text-faint: var(--txt-3);
 
+  /* Pill sobre capturas: siempre clara (va sobre una imagen, no sobre el fondo del tema). */
+  --pill-bg: color-mix(in srgb, var(--surf) 92%, transparent);
+  --pill-border: color-mix(in srgb, var(--navy-800) 14%, transparent);
+  --pill-text: var(--navy-800);
+
   --badge-bg: var(--surf-2);
   --badge-border: var(--bdr);
   --badge-text: var(--txt-3);
