@@ -528,3 +528,47 @@
 .epe-comentario-borrar {
   margin-left: auto;
 }
+
+/* ── Zona de peligro (perfil) ── */
+
+.epe-zona-peligro {
+  margin-top: 28px;
+  padding-top: 18px;
+  border-top: 1px solid var(--tile-border);
+}
+
+.epe-zona-peligro h3 {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--red);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.epe-zona-peligro .epe-btn-peligro {
+  margin-top: 10px;
+}
+
+/* Modal de confirmación de borrado de cuenta */
+
+.epe-eliminar-cuenta-lista {
+  margin: 10px 0 14px;
+  padding-left: 18px;
+  font-size: 13px;
+  color: var(--text-strong);
+}
+
+.epe-eliminar-cuenta-lista li {
+  margin-bottom: 4px;
+}
+
+.epe-eliminar-cuenta-confirmar input {
+  margin-top: 6px;
+  width: 100%;
+  border: 1px solid var(--tile-border);
+  background: var(--shell-bg);
+  color: var(--text-strong);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-size: 13px;
+}

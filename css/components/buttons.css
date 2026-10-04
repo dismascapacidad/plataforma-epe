@@ -38,6 +38,30 @@
   background: var(--teal-700);
 }
 
+/* Acciones irreversibles (eliminar cuenta, y cualquier otra que se
+   agregue más adelante con el mismo peso) — color-mix en vez de
+   --red-dim como fondo porque --red-dim es un rosa clarito pensado
+   para tema claro nomás; con color-mix sobre "transparent" se adapta
+   solo a la superficie de abajo, en claro y en oscuro, igual que ya
+   hace .epe-caso-banner con --teal-600. */
+.epe-btn-peligro {
+  display: inline-flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--red);
+  border: 1px solid color-mix(in srgb, var(--red) 45%, transparent);
+  border-radius: var(--radius-sm);
+  padding: 8px 16px;
+  background: color-mix(in srgb, var(--red) 8%, transparent);
+  transition: all 0.15s var(--ease);
+}
+
+.epe-btn-peligro:hover {
+  background: color-mix(in srgb, var(--red) 18%, transparent);
+  border-color: var(--red);
+}
+
 /* ── Toggle de tema ── */
 .epe-theme-toggle {
   display: inline-flex;

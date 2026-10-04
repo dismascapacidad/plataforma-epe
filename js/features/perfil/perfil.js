@@ -407,6 +407,102 @@ var EpePerfil = (function () {
     return cargar();
   }
 
+  // ── Eliminar cuenta ───────────────────────────────────────────────
+  // Irreversible: borra auth.users (y todo lo que cascadea desde ahí —
+  // ver supabase/017_eliminar_cuenta.sql) sin aviso previo por email ni
+  // período de gracia. Por eso el modal detalla TODO lo que se pierde
+  // (a pedido explícito de Gon: "explicitar al máximo las
+  // consecuencias") y exige escribir "ELIMINAR" para habilitar el
+  // botón final — un confirm() del navegador es demasiado genérico
+  // para algo de este peso.
+  function initEliminarCuenta(root) {
+    var abrir = root.querySelector("[data-eliminar-cuenta-abrir]");
+    if (!abrir) return;
+
+    abrir.addEventListener("click", function () {
+      var contenedor = document.createElement("div");
+
+      var intro = document.createElement("p");
+      intro.textContent = "Esto borra tu cuenta para siempre. No hay forma de recuperarla después, ni dis+capacidad puede hacerlo por vos. Puntualmente, se pierde:";
+      contenedor.appendChild(intro);
+
+      var lista = document.createElement("ul");
+      lista.className = "epe-eliminar-cuenta-lista";
+      [
+        "Todas tus colecciones propias, con sus notas, actividades vinculadas y comentarios.",
+        "Tu pertenencia a cualquier institución verificada, y tu rol de administrador si tenías uno.",
+        "El acceso de cualquier colega, institución o dis+capacidad a lo que hayas compartido con ellos — deja de estar disponible para esas personas también.",
+      ].forEach(function (texto) {
+        var li = document.createElement("li");
+        li.textContent = texto;
+        lista.appendChild(li);
+      });
+      contenedor.appendChild(lista);
+
+      var aviso = document.createElement("p");
+      aviso.className = "epe-panel-sub";
+      aviso.textContent = "Si sos la única administradora o administrador activo de alguna institución, esa institución queda sin admin confirmado hasta que dis+capacidad apruebe a otra persona — no se transfiere nada de forma automática.";
+      contenedor.appendChild(aviso);
+
+      var confirmarWrap = document.createElement("div");
+      confirmarWrap.className = "epe-eliminar-cuenta-confirmar";
+      var lblConfirmar = document.createElement("label");
+      lblConfirmar.textContent = 'Para confirmar, escribí ELIMINAR:';
+      var inputConfirmar = document.createElement("input");
+      inputConfirmar.type = "text";
+      inputConfirmar.autocomplete = "off";
+      confirmarWrap.appendChild(lblConfirmar);
+      confirmarWrap.appendChild(inputConfirmar);
+      contenedor.appendChild(confirmarWrap);
+
+      var status = document.createElement("p");
+      status.className = "epe-panel-sub";
+      contenedor.appendChild(status);
+
+      var acciones = document.createElement("div");
+      acciones.className = "epe-form-actions";
+      var cancelar = document.createElement("button");
+      cancelar.type = "button";
+      cancelar.className = "epe-btn-ghost epe-btn-sm";
+      cancelar.textContent = "Cancelar";
+      cancelar.addEventListener("click", function () {
+        EpeModal.close();
+      });
+      var confirmar = document.createElement("button");
+      confirmar.type = "button";
+      confirmar.className = "epe-btn-peligro epe-btn-sm";
+      confirmar.textContent = "Eliminar mi cuenta para siempre";
+      confirmar.disabled = true;
+      acciones.appendChild(cancelar);
+      acciones.appendChild(confirmar);
+      contenedor.appendChild(acciones);
+
+      inputConfirmar.addEventListener("input", function () {
+        confirmar.disabled = inputConfirmar.value.trim().toUpperCase() !== "ELIMINAR";
+      });
+
+      confirmar.addEventListener("click", function () {
+        confirmar.disabled = true;
+        cancelar.disabled = true;
+        status.textContent = "Eliminando…";
+        EpeStore.eliminarCuenta()
+          .then(function () {
+            return EpeAuth.signOut();
+          })
+          .then(function () {
+            window.location.href = "login.html";
+          })
+          .catch(function (err) {
+            status.textContent = "No se pudo eliminar la cuenta." + detalleError(err);
+            confirmar.disabled = false;
+            cancelar.disabled = false;
+          });
+      });
+
+      EpeModal.open({ titulo: "Eliminar cuenta", contenido: contenedor });
+    });
+  }
+
   // email: el de la sesión (dashboard.js ya lo tiene, evita pedirlo de
   // nuevo acá) — se usa como respaldo cuando todavía no hay nombre
   // cargado en el perfil.
@@ -418,6 +514,7 @@ var EpePerfil = (function () {
     if (!form) return;
 
     actualizarResumen(root, { nombre: "", profesion: "" }, email);
+    initEliminarCuenta(root);
     initInstitucion(root).then(function (mias) {
       actualizarResumen(root, { nombre: form.elements.nombre.value, profesion: form.elements.profesion.value }, email, (mias || []).length);
     });

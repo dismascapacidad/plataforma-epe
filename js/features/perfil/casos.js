@@ -763,10 +763,6 @@ var EpeCasos = (function () {
           var li = document.createElement("li");
           li.className = "epe-entrada-item";
 
-          var badge = document.createElement("span");
-          badge.className = "epe-entrada-tipo epe-entrada-tipo-" + entrada.tipo;
-          badge.textContent = EpeSchema.ENTRADA_TIPO_LABELS[entrada.tipo] || entrada.tipo;
-
           var fecha = document.createElement("span");
           fecha.className = "epe-entrada-fecha";
           fecha.textContent = new Date(entrada.creado_en).toLocaleDateString("es-AR");
@@ -776,7 +772,17 @@ var EpeCasos = (function () {
 
           var header = document.createElement("div");
           header.className = "epe-entrada-header";
-          header.appendChild(badge);
+          // Ya no se elige el tipo al crear (ver onAgregarEntrada) — para
+          // las entradas nuevas ("nota") no hace falta mostrar la
+          // etiqueta repetida en cada una. Las entradas viejas guardadas
+          // como "evaluacion"/"sesion" la siguen mostrando, para no
+          // perder ese contexto ya escrito.
+          if (entrada.tipo && entrada.tipo !== "nota") {
+            var badge = document.createElement("span");
+            badge.className = "epe-entrada-tipo epe-entrada-tipo-" + entrada.tipo;
+            badge.textContent = EpeSchema.ENTRADA_TIPO_LABELS[entrada.tipo] || entrada.tipo;
+            header.appendChild(badge);
+          }
           header.appendChild(fecha);
 
           li.appendChild(header);
@@ -806,7 +812,12 @@ var EpeCasos = (function () {
     boton.disabled = true;
 
     EpeStore.addEntrada(casoId, {
-      tipo: form.elements.tipo.value,
+      // Se sacó el desplegable Nota/Evaluación/Sesión (ver dashboard.html)
+      // — todas las entradas nuevas son "nota", mismo default que ya
+      // tenía la columna en la base. Las entradas viejas guardadas como
+      // "evaluacion"/"sesion" siguen existiendo y mostrando su etiqueta
+      // (ver renderEntradas), esto no les cambia nada retroactivamente.
+      tipo: EpeSchema.ENTRADA_TIPOS.NOTA,
       contenido: contenido,
     })
       .then(function () {

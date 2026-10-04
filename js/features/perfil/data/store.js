@@ -194,6 +194,17 @@ var EpeStore = (function () {
     });
   }
 
+  // Borra la cuenta entera (auth.users y todo lo que cascadea desde
+  // ahí — ver supabase/017_eliminar_cuenta.sql). Irreversible. Quien
+  // llama (perfil.js) es responsable de cerrar la sesión y redirigir
+  // después de que esto resuelva — la sesión actual deja de tener un
+  // usuario real detrás.
+  function eliminarCuenta() {
+    return EpeSupabase.rpc("eliminar_cuenta").then(function (res) {
+      lanzarSiError(res);
+    });
+  }
+
   // ── Admin de institución ──────────────────────────────────────────
   // Ver supabase/016_admin_institucion.sql — cada función de acá valida
   // sus propios permisos del lado del servidor (ser admin activo, estar
@@ -610,6 +621,7 @@ var EpeStore = (function () {
     setInstitucionPendiente: setInstitucionPendiente,
     retirarInstitucionPendiente: retirarInstitucionPendiente,
     dejarInstitucion: dejarInstitucion,
+    eliminarCuenta: eliminarCuenta,
     solicitarAdminInstitucion: solicitarAdminInstitucion,
     listarColegasInstitucion: listarColegasInstitucion,
     quitarDeInstitucion: quitarDeInstitucion,
