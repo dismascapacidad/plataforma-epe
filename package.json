@@ -7,9 +7,9 @@
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "eslint --no-error-on-unmatched-pattern js/features/dispositivo js/features/apps-epe/comunicacion-cabeza tests dev",
-    "format": "prettier --write \"js/features/dispositivo/**/*.js\" \"js/features/apps-epe/comunicacion-cabeza/**/*.js\" \"tests/**/*.js\" \"dev/**/*.js\"",
-    "format:check": "prettier --check \"js/features/dispositivo/**/*.js\" \"js/features/apps-epe/comunicacion-cabeza/**/*.js\" \"tests/**/*.js\" \"dev/**/*.js\"",
+    "lint": "eslint --no-error-on-unmatched-pattern js/features/dispositivo js/features/apps-epe/comunicacion-cabeza js/features/apps-epe/vincular-imagen/arasaac.js tests dev",
+    "format": "prettier --write \"js/features/dispositivo/**/*.js\" \"js/features/apps-epe/comunicacion-cabeza/**/*.js\" \"js/features/apps-epe/vincular-imagen/arasaac.js\" \"tests/**/*.js\" \"dev/**/*.js\"",
+    "format:check": "prettier --check \"js/features/dispositivo/**/*.js\" \"js/features/apps-epe/comunicacion-cabeza/**/*.js\" \"js/features/apps-epe/vincular-imagen/arasaac.js\" \"tests/**/*.js\" \"dev/**/*.js\"",
     "typecheck": "tsc --noEmit",
     "check": "npm run lint && npm run typecheck && npm run test",
     "serve": "python -m http.server 8899 --bind 127.0.0.1"

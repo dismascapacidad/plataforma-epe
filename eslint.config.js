@@ -13,6 +13,7 @@ export default [
     files: [
       'js/features/dispositivo/**/*.js',
       'js/features/apps-epe/comunicacion-cabeza/**/*.js',
+      'js/features/apps-epe/vincular-imagen/arasaac.js',
       'dev/**/*.js',
     ],
     languageOptions: {

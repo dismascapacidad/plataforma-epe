@@ -17,6 +17,7 @@
   "include": [
     "js/features/dispositivo/**/*.js",
     "js/features/apps-epe/comunicacion-cabeza/**/*.js",
+    "js/features/apps-epe/vincular-imagen/arasaac.js",
     "tests/**/*.js",
     "dev/**/*.js"
   ],

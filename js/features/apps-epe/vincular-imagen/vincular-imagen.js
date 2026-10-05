@@ -1,9 +1,11 @@
 /**
  * vincular-imagen.js
- * App EpE — Vincular botón/tecla a imagen + texto a voz. De 1 a 8
- * casilleros configurables; cada uno tiene: una imagen propia (subida por
- * archivo, no URL — así funciona sin conexión y sin depender de que la
- * imagen esté alojada en otro lado), un texto que se lee en voz alta al
+ * App EpE — Vincular imagen-botón: vincula una imagen, un texto a voz y una
+ * tecla a cada botón. De 1 a 8 casilleros configurables; cada uno tiene: una
+ * imagen (subida por archivo desde la PC o, cuando esté habilitado, un
+ * pictograma de ARASAAC — ver arasaac.js; en ambos casos queda guardada en el
+ * navegador, así funciona sin conexión y sin depender de que la imagen esté
+ * alojada en otro lado), un texto que se lee en voz alta al
  * activar el casillero (Web Speech API), y una tecla propia que el mismo
  * usuario asigna presionándola (no hay un mapeo fijo: cada instalación de
  * switches puede tener sus propias teclas emuladas).
@@ -23,7 +25,10 @@ var EpeVincularImagen = (function () {
   var MIN_CASILLEROS = 1;
 
   function init(root) {
-    var casillas = []; // { imagen: dataURL|null, texto: string, tecla: string|null }
+    var casillas = []; // { imagen: dataURL|null, fuente: "arasaac"|null, texto: string, tecla: string|null }
+    var arasaac = null; // módulo arasaac.js, una vez cargado
+    var origenAbiertoIdx = null; // casillero cuyo "Agregar imagen" está mostrando las dos opciones
+    var enfocarOrigen = false;
     var esperandoTeclaIdx = null;
     var iniciado = false; // true después del primer "Empezar"
 
@@ -31,6 +36,7 @@ var EpeVincularImagen = (function () {
     var elCantidad = root.querySelector("[data-vi-cantidad]");
     var elEditor = root.querySelector("[data-vi-editor]");
     var elEmpezar = root.querySelector("[data-vi-empezar]");
+    var elAtribArasaac = root.querySelector("[data-vi-atrib-arasaac]");
     var elGrilla = root.querySelector("[data-vi-grilla]");
     var btnConfigurarDispositivo = root.querySelector("[data-configurar-dispositivo]");
     var btnRestaurarDispositivo = root.querySelector("[data-restaurar-dispositivo]");
@@ -74,7 +80,7 @@ var EpeVincularImagen = (function () {
     function ajustarCantidad(n) {
       n = Math.max(MIN_CASILLEROS, Math.min(MAX_CASILLEROS, n || MIN_CASILLEROS));
       while (casillas.length < n) {
-        casillas.push({ imagen: null, texto: "", tecla: null });
+        casillas.push({ imagen: null, fuente: null, texto: "", tecla: null });
       }
       casillas.length = n;
     }
@@ -138,7 +144,7 @@ var EpeVincularImagen = (function () {
     function configurarDispositivo() {
       if (!window.EpeConfigurarDispositivo) return; // widget.js no cargó
       window.EpeConfigurarDispositivo
-        .abrir(entradasDispositivo(), { titulo: "Configurar dispositivo — Vincular imagen" })
+        .abrir(entradasDispositivo(), { titulo: "Configurar dispositivo — Vincular imagen-botón" })
         .then(function (resultado) {
           if (resultado && resultado.restaurar) restaurarDispositivo = resultado.restaurar;
           actualizarBotonRestaurar();
@@ -288,11 +294,6 @@ var EpeVincularImagen = (function () {
         fila.appendChild(miniatura);
 
         var fileId = "vi-file-" + idx;
-        var fileLabel = document.createElement("label");
-        fileLabel.className = "epe-btn-ghost epe-btn-sm";
-        fileLabel.setAttribute("for", fileId);
-        fileLabel.textContent = "Imagen";
-
         var fileInput = document.createElement("input");
         fileInput.type = "file";
         fileInput.accept = "image/*";
@@ -304,10 +305,72 @@ var EpeVincularImagen = (function () {
           var reader = new FileReader();
           reader.onload = function (e) {
             casillas[idx].imagen = e.target.result;
+            casillas[idx].fuente = null;
+            origenAbiertoIdx = null;
             renderConfig();
           };
           reader.readAsDataURL(file);
         });
+
+        // "Agregar imagen": un solo botón. Con ARASAAC apagado abre directo el
+        // selector de archivos; con ARASAAC habilitado primero pregunta el origen.
+        var agregar;
+        if (arasaacActivo() && origenAbiertoIdx === idx) {
+          agregar = document.createElement("div");
+          agregar.className = "epe-vi-origen";
+          agregar.setAttribute("role", "group");
+          agregar.setAttribute("aria-label", "Origen de la imagen");
+
+          var desdePc = document.createElement("label");
+          desdePc.className = "epe-btn-ghost epe-btn-sm";
+          desdePc.setAttribute("for", fileId);
+          desdePc.textContent = "Desde mi PC";
+
+          var desdeAra = document.createElement("button");
+          desdeAra.type = "button";
+          desdeAra.className = "epe-btn-ghost epe-btn-sm";
+          desdeAra.textContent = "Desde ARASAAC";
+          desdeAra.addEventListener("click", function () {
+            origenAbiertoIdx = null;
+            renderConfig();
+            abrirPanelArasaac(idx);
+          });
+
+          var cancelar = document.createElement("button");
+          cancelar.type = "button";
+          cancelar.className = "epe-btn-ghost epe-btn-sm";
+          cancelar.setAttribute("aria-label", "Cancelar");
+          cancelar.textContent = "✕";
+          cancelar.addEventListener("click", function () {
+            origenAbiertoIdx = null;
+            renderConfig();
+          });
+
+          agregar.appendChild(desdePc);
+          agregar.appendChild(desdeAra);
+          agregar.appendChild(cancelar);
+          if (enfocarOrigen) {
+            enfocarOrigen = false;
+            window.setTimeout(function () {
+              desdeAra.focus();
+            }, 0);
+          }
+        } else if (arasaacActivo()) {
+          agregar = document.createElement("button");
+          agregar.type = "button";
+          agregar.className = "epe-btn-ghost epe-btn-sm";
+          agregar.textContent = "Agregar imagen";
+          agregar.addEventListener("click", function () {
+            origenAbiertoIdx = idx;
+            enfocarOrigen = true;
+            renderConfig();
+          });
+        } else {
+          agregar = document.createElement("label");
+          agregar.className = "epe-btn-ghost epe-btn-sm";
+          agregar.setAttribute("for", fileId);
+          agregar.textContent = "Agregar imagen";
+        }
 
         var textoInput = document.createElement("input");
         textoInput.type = "text";
@@ -328,17 +391,206 @@ var EpeVincularImagen = (function () {
           renderConfig();
         });
 
-        fila.appendChild(fileLabel);
+        fila.appendChild(agregar);
         fila.appendChild(fileInput);
         fila.appendChild(textoInput);
         fila.appendChild(teclaBtn);
 
         elEditor.appendChild(fila);
       });
+
+      // Atribución obligatoria de ARASAAC: visible mientras algún casillero use un pictograma.
+      if (elAtribArasaac) {
+        elAtribArasaac.hidden = !(
+          arasaacActivo() &&
+          casillas.some(function (c) {
+            return c.fuente === "arasaac";
+          })
+        );
+      }
+    }
+
+    // ── ARASAAC (apagado por el interruptor de arasaac.js) ───────────────
+    function arasaacActivo() {
+      return !!(arasaac && arasaac.ARASAAC_HABILITADO);
+    }
+
+    function abrirPanelArasaac(idx) {
+      if (!arasaacActivo() || !window.EpeModal) return;
+      var A = arasaac;
+      var todos = [];
+      var pagina = 0;
+      var pedido = 0; // descarta respuestas viejas si se busca de nuevo
+
+      var cont = document.createElement("div");
+      cont.className = "epe-vi-ara";
+
+      var form = document.createElement("form");
+      form.className = "epe-vi-ara-form";
+      var input = document.createElement("input");
+      input.type = "search";
+      input.className = "epe-vi-texto-input";
+      input.maxLength = A.LARGO_MAX_BUSQUEDA;
+      input.placeholder = "Ej.: casa, agua, mamá";
+      input.autocomplete = "off";
+      input.setAttribute("aria-label", "Buscar pictograma");
+      var btnBuscar = document.createElement("button");
+      btnBuscar.type = "submit";
+      btnBuscar.className = "epe-btn-acc epe-btn-sm";
+      btnBuscar.textContent = "Buscar";
+      form.appendChild(input);
+      form.appendChild(btnBuscar);
+
+      var aviso = document.createElement("p");
+      aviso.className = "epe-vi-ara-aviso";
+      aviso.textContent =
+        "Lo que escribas se envía a ARASAAC (un servicio externo). Escribí solo la palabra del " +
+        "pictograma, sin nombres de personas ni datos de pacientes.";
+
+      var estado = document.createElement("p");
+      estado.className = "epe-vi-ara-estado";
+      estado.setAttribute("role", "status");
+      estado.setAttribute("aria-live", "polite");
+
+      var grilla = document.createElement("div");
+      grilla.className = "epe-vi-ara-grilla";
+
+      var nav = document.createElement("div");
+      nav.className = "epe-vi-ara-nav";
+      nav.hidden = true;
+      var btnAnt = document.createElement("button");
+      btnAnt.type = "button";
+      btnAnt.className = "epe-btn-ghost epe-btn-sm";
+      btnAnt.textContent = "← Anteriores";
+      var btnSig = document.createElement("button");
+      btnSig.type = "button";
+      btnSig.className = "epe-btn-ghost epe-btn-sm";
+      btnSig.textContent = "Más resultados →";
+      nav.appendChild(btnAnt);
+      nav.appendChild(btnSig);
+
+      var atrib = document.createElement("p");
+      atrib.className = "epe-vi-ara-atrib";
+      atrib.textContent = A.ATRIBUCION_CORTA;
+
+      cont.appendChild(form);
+      cont.appendChild(aviso);
+      cont.appendChild(estado);
+      cont.appendChild(grilla);
+      cont.appendChild(nav);
+      cont.appendChild(atrib);
+
+      function mostrarPagina() {
+        grilla.innerHTML = "";
+        var desde = pagina * A.RESULTADOS_POR_PAGINA;
+        todos.slice(desde, desde + A.RESULTADOS_POR_PAGINA).forEach(function (r) {
+          var b = document.createElement("button");
+          b.type = "button";
+          b.className = "epe-vi-ara-item";
+          b.setAttribute("aria-label", "Usar pictograma: " + (r.palabra || "sin nombre"));
+          var img = document.createElement("img");
+          img.src = r.url;
+          img.alt = "";
+          img.loading = "lazy";
+          img.decoding = "async";
+          img.referrerPolicy = "no-referrer";
+          var nombre = document.createElement("span");
+          nombre.textContent = r.palabra;
+          b.appendChild(img);
+          b.appendChild(nombre);
+          b.addEventListener("click", function () {
+            elegir(r);
+          });
+          grilla.appendChild(b);
+        });
+        var paginas = Math.ceil(todos.length / A.RESULTADOS_POR_PAGINA);
+        nav.hidden = paginas <= 1;
+        btnAnt.disabled = pagina === 0;
+        btnSig.disabled = pagina >= paginas - 1;
+        estado.textContent =
+          todos.length + (todos.length === 1 ? " resultado" : " resultados") + ". Elegí uno.";
+      }
+
+      btnAnt.addEventListener("click", function () {
+        if (pagina > 0) {
+          pagina--;
+          mostrarPagina();
+        }
+      });
+      btnSig.addEventListener("click", function () {
+        pagina++;
+        mostrarPagina();
+      });
+
+      form.addEventListener("submit", function (ev) {
+        ev.preventDefault();
+        var termino = A.normalizarTermino(input.value);
+        if (!termino) {
+          estado.textContent = "Escribí una palabra para buscar.";
+          return;
+        }
+        var mio = ++pedido;
+        estado.textContent = "Buscando…";
+        grilla.innerHTML = "";
+        nav.hidden = true;
+        A.buscar(termino)
+          .then(function (lista) {
+            if (mio !== pedido) return;
+            todos = lista;
+            pagina = 0;
+            if (!lista.length) {
+              estado.textContent = "No encontramos pictogramas para “" + termino + "”. Probá con otra palabra.";
+              return;
+            }
+            mostrarPagina();
+          })
+          .catch(function () {
+            if (mio !== pedido) return;
+            estado.textContent =
+              "No se pudo buscar (¿hay conexión?). Podés agregar una imagen desde tu PC.";
+          });
+      });
+
+      function elegir(r) {
+        pedido++; // cancela cualquier búsqueda pendiente
+        grilla.querySelectorAll("button").forEach(function (b) {
+          b.disabled = true;
+        });
+        estado.textContent = "Descargando pictograma…";
+        A.descargarImagen(r.id)
+          .catch(function () {
+            // Plan B: si el navegador no deja descargarla, se usa el enlace directo.
+            return r.url;
+          })
+          .then(function (imagen) {
+            casillas[idx].imagen = imagen;
+            casillas[idx].fuente = "arasaac";
+            if (!casillas[idx].texto.trim() && r.palabra) casillas[idx].texto = r.palabra;
+            window.EpeModal.close();
+            renderConfig();
+          });
+      }
+
+      window.EpeModal.open({ titulo: "Pictogramas de ARASAAC", contenido: cont });
+      window.setTimeout(function () {
+        input.focus();
+      }, 0);
     }
 
     ajustarCantidad(Number(elCantidad.value) || 4);
     renderConfig();
+
+    // El módulo de ARASAAC es un módulo ES aparte. Si no carga, la opción
+    // simplemente no aparece y todo lo demás funciona igual.
+    import("./arasaac.js")
+      .then(function (m) {
+        arasaac = m;
+        if (elAtribArasaac) elAtribArasaac.textContent = m.ATRIBUCION_CORTA;
+        if (m.ARASAAC_HABILITADO) renderConfig();
+      })
+      .catch(function () {
+        arasaac = null;
+      });
   }
 
   return { init: init };

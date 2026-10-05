@@ -144,3 +144,113 @@
   flex: 0 0 auto;
   min-width: 140px;
 }
+
+/* ── Agregar imagen: opciones de origen (PC / ARASAAC) en la misma fila ── */
+.epe-vi-origen {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* Atribución de ARASAAC en el modal de configuración. */
+.epe-vi-atrib {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-faint);
+}
+
+/* ── Panel de búsqueda de pictogramas (usa el modal genérico EpeModal) ──
+   Se muestran de a 12 (4 × 3) para que entren sin scroll. */
+.epe-modal-overlay {
+  z-index: 110;
+}
+
+.epe-vi-ara {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.epe-vi-ara-form {
+  display: flex;
+  gap: 8px;
+}
+
+.epe-vi-ara-form .epe-vi-texto-input {
+  flex: 1 1 auto;
+  font-size: 14px;
+  padding: 8px 10px;
+}
+
+.epe-vi-ara-aviso,
+.epe-vi-ara-atrib {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-faint);
+}
+
+.epe-vi-ara-estado {
+  min-height: 1.3em;
+  font-size: 12.5px;
+  color: var(--text-dim);
+}
+
+.epe-vi-ara-grilla {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.epe-vi-ara-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 6px;
+  background: var(--shell-bg-2);
+  border: 2px solid var(--tile-border);
+  border-radius: var(--radius-md);
+  color: var(--text-strong);
+  font-size: 11.5px;
+  cursor: pointer;
+}
+
+.epe-vi-ara-item:hover:not(:disabled),
+.epe-vi-ara-item:focus-visible {
+  border-color: var(--teal-600);
+}
+
+.epe-vi-ara-item img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: contain;
+  background: #fff;
+  border-radius: var(--radius-sm);
+}
+
+.epe-vi-ara-item span {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.epe-vi-ara-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.epe-vi-ara-nav[hidden] {
+  display: none;
+}
+
+/* En pantallas bajas (notebooks, tablets apaisadas) los pictogramas se achican
+   para que el panel entre sin scroll. */
+@media (max-height: 760px) {
+  .epe-vi-ara-grilla {
+    width: min(100%, 400px);
+    margin-inline: auto;
+  }
+}
