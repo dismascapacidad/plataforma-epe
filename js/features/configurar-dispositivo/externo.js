@@ -23,13 +23,12 @@
 
 import { abrir } from './widget.js';
 import {
-  crearConexionUsb,
-  crearConexionBle,
   snapshotATexto,
   snapshotDeTexto,
   TransporteUsb,
   TransporteBle,
 } from '../dispositivo/index.js';
+import { conectarCompartida, olvidarRespaldoOriginal } from './conexion-activa.js';
 import { validarTeclas, urlSegura } from './teclas-externas.js';
 import * as pendiente from './pendiente.js';
 
@@ -96,9 +95,23 @@ export async function configurarYAbrir(app) {
   if (!teclas) return { ok: false, motivo: 'teclas-invalidas' };
   const url = urlSegura(app.url);
 
+  // Si quedó un respaldo sin resolver de antes (página recargada con el dispositivo
+  // sin restaurar), ese es el estado original: se usa como destino de "restaurar".
+  /** @type {any} */
+  let originalPrevio = null;
+  const guardado = pendiente.leer(almacen());
+  if (guardado) {
+    try {
+      originalPrevio = snapshotDeTexto(guardado.snapshotTexto);
+    } catch {
+      originalPrevio = null;
+    }
+  }
+
   const r = await abrir(teclas, {
     titulo: 'Configurar dispositivo',
     externo: { nombre: app.nombre },
+    originalPrevio,
   });
 
   // Sin snapshot ni `restaurar` no se aplicó nada (canceló, o deshizo desde el widget).
@@ -163,7 +176,7 @@ function mostrarRestauracion(ctx) {
       ? `La última vez, el dispositivo quedó configurado para «${ctx.nombre}», un recurso externo, y no se restauró.`
       : ctx.origen === 'error-al-aplicar'
         ? `No se pudo terminar de configurar el dispositivo para «${ctx.nombre}». Conviene dejarlo como estaba.`
-        : `El dispositivo quedó con los botones asignados a «${ctx.nombre}», un recurso externo.`,
+        : `El dispositivo quedó configurado para «${ctx.nombre}», un recurso externo.`,
   );
   contenido.appendChild(intro);
   contenido.appendChild(
@@ -230,15 +243,16 @@ function mostrarRestauracion(ctx) {
     acciones.innerHTML = '';
     decir('intro', 'Conectando…');
     try {
-      const { conexion } = tipo === 'usb' ? crearConexionUsb() : crearConexionBle();
-      if (tipo === 'usb') {
-        // Primero sin selector (puerto ya autorizado); si no hay, con selector.
-        await conexion.conectar({ silencioso: true }).catch(() => conexion.conectar());
-      } else {
-        await conexion.conectar();
-      }
+      // Reutiliza la conexión abierta de esta página, si la hay (ver conexion-activa.js).
+      const { conexion } =
+        tipo === 'usb'
+          ? // Primero sin selector (puerto ya autorizado); si no hay, con selector.
+            await conectarCompartida('usb', { silencioso: true }).catch(() => conectarCompartida('usb'))
+          : await conectarCompartida('ble');
       decir('intro', 'Restaurando…');
-      resultado(await conexion.restaurar(snapshotDeTexto(ctx.snapshotTexto)));
+      const r = await conexion.restaurar(snapshotDeTexto(ctx.snapshotTexto));
+      if (r.ok) olvidarRespaldoOriginal(conexion);
+      resultado(r);
     } catch (e) {
       const cancelado = e && /** @type {any} */ (e).codigo === 'cancelado';
       decir('error', cancelado ? 'Se canceló la conexión.' : `No se pudo restaurar: ${(e && /** @type {any} */ (e).message) || e}`);

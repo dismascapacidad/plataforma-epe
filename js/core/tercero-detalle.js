@@ -131,11 +131,11 @@ var EpeTerceroDetalle = (function () {
       .filter(Boolean)
       .join(", ");
     p.textContent =
-      "Este recurso responde a: " +
+      "Este recurso necesita: " +
       nombres +
-      ". Antes de abrirlo vas a elegir a qué botón de tu dispositivo asignar cada tecla. " +
-      "Como es un recurso externo, para restaurar el dispositivo hay que volver a esta pestaña de la " +
-      "plataforma y presionar «Restaurar».";
+      ". Antes de abrirlo, la plataforma deja tu dispositivo listo para usarlo: solo te pregunta con qué " +
+      "botón querés hacer cada cosa. Como es un recurso externo, para restaurar el dispositivo hay que " +
+      "volver a esta pestaña de la plataforma y presionar «Restaurar».";
     wrap.appendChild(h4);
     wrap.appendChild(p);
     return wrap;

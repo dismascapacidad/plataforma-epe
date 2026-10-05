@@ -3,7 +3,7 @@
  * Widget "Configurar dispositivo" (paso 2 del roadmap, 26/09/2026).
  *
  * Lo que hace: detecta un dispositivo dis+ conectado, y para cada acción que
- * la app que lo invoca necesita ({ id, etiqueta, tecla }) le pregunta al
+ * la app que lo invoca necesita ({ id, etiqueta, tecla } o un requisito de mouse/cursor) le pregunta al
  * usuario a qué botón físico asignarla — con un modal de instrucciones tipo
  * "Asigná «Varilla 1» a un botón" — arma y manda los comandos con el núcleo
  * del dispositivo, y ofrece deshacer.
@@ -14,76 +14,43 @@
  * al cargarse — mismo criterio que el resto de los puentes ES↔clásico de la
  * plataforma.
  *
- * Fuera de alcance de esta primera versión (a propósito, ver el doc del
- * proyecto "Widget Configurar dispositivo - análisis y plan"):
- * - Guardar el perfil (recién en el paso 4, cuando exista la tabla en Supabase).
- * - Acciones que necesitan "mantener apretado" (Piano, Duración de pulsación):
- *   esta versión solo arma botones de "al presionar" (modo P), que alcanza
- *   para las acciones de tipo "una tecla = un disparo" (Hanói, N-back, Stroop,
- *   Lado Correcto, Vincular imagen).
+ * Criterio: configurar el dispositivo de la forma MÁS SIMPLE y solo para usar
+ * el recurso en concreto. Pregunta únicamente lo imprescindible (con qué
+ * botón se hace cada cosa; para arrastrar, cómo) y, si el recurso pide mover
+ * el cursor, muestra velocidad y aceleración. La personalización detallada
+ * es del configurador, no de este asistente.
+ *
+ * Fuera de alcance (a propósito): guardar el perfil (paso 4 del roadmap, con
+ * la tabla en Supabase) y los botones con acción corta/larga (Tap-Hold).
  */
 
 import {
-  crearConexionUsb,
-  crearConexionBle,
   TransporteUsb,
   TransporteBle,
   productoPorModelo,
   todasLasEntradas,
-  buildButtonCfg,
 } from '../dispositivo/index.js';
+import {
+  conectarCompartida,
+  obtenerActiva,
+  soltarActivas,
+  respaldoOriginal,
+  olvidarRespaldoOriginal,
+} from './conexion-activa.js';
+import {
+  armarComandos,
+  cursorInicial,
+  describir,
+  pideCursor,
+  requisitosConBoton,
+  VEL_MIN,
+  VEL_MAX,
+} from './comandos.js';
 
 /** Códigos de flecha (ver productos.js: solo asignables una por una si FMODE=0). */
 const CODIGOS_FLECHA = ['FU', 'FD', 'FL', 'FR'];
 
-/**
- * @typedef {Object} EntradaNecesaria
- * @property {string} id       Identificador de la acción (lo define la app).
- * @property {string} etiqueta Nombre legible ("Varilla 1", "Avanzar").
- * @property {string} tecla    Tecla en formato `KeyboardEvent.key` en
- *   minúscula (lo que ya usan `EpeTeclas`/`EpeAcceso`): `"a"`, `" "`,
- *   `"arrowleft"`, `"escape"`...
- */
-
-// ─────────────────────────────────────────────────────────────────────────
-// Traducción de tecla: formato de las apps (EpeTeclas) → token que entiende
-// `buildButtonCfg`/`cvKey` del núcleo. Ver "Widget Configurar dispositivo -
-// análisis y plan" (doc del proyecto) — sin esto, espacio/flechas/escape
-// quedarían mal configurados en el dispositivo sin ningún aviso.
-// ─────────────────────────────────────────────────────────────────────────
-const TOKEN_ESPECIAL = {
-  ' ': 'SPACE',
-  arrowleft: 'LEFT_ARROW',
-  arrowright: 'RIGHT_ARROW',
-  arrowup: 'UP_ARROW',
-  arrowdown: 'DOWN_ARROW',
-  escape: 'ESC',
-};
-
-/** @param {string} tecla */
-function tokenParaNucleo(tecla) {
-  return TOKEN_ESPECIAL[tecla] ?? tecla;
-}
-
-/** @param {string} tecla Igual criterio de etiqueta legible que `EpeTeclas.etiqueta`. */
-function teclaLegible(tecla) {
-  const NOMBRES = {
-    ' ': 'Espacio',
-    enter: 'Enter',
-    tab: 'Tab',
-    escape: 'Esc',
-    arrowleft: '←',
-    arrowright: '→',
-    arrowup: '↑',
-    arrowdown: '↓',
-    backspace: 'Retroceso',
-    delete: 'Supr',
-  };
-  if (!tecla) return '—';
-  if (NOMBRES[tecla]) return NOMBRES[tecla];
-  if (tecla.length === 1) return tecla.toUpperCase();
-  return tecla.charAt(0).toUpperCase() + tecla.slice(1);
-}
+/** @typedef {import('./teclas-externas.js').Requisito} Requisito */
 
 // ─────────────────────────────────────────────────────────────────────────
 // Textos según para qué se abre el widget: un juego propio (Apps EpE) o un
@@ -94,7 +61,7 @@ function teclaLegible(tecla) {
 const TEXTOS_JUEGO = {
   sujeto: 'el juego',
   conectar:
-    'Conectá el dispositivo de dis+capacidad (disMouse, disHub…) para asignarle los botones que necesita este juego.',
+    'Conectá el dispositivo de dis+capacidad (disMouse, disHub…) para dejarlo listo para este juego.',
   exito: 'Listo, el dispositivo ya está configurado para este juego.',
   continuar: 'Empezar',
   aviso: null,
@@ -104,7 +71,7 @@ const TEXTOS_JUEGO = {
 function textosExterno(nombre) {
   return {
     sujeto: 'el recurso',
-    conectar: `Conectá el dispositivo de dis+capacidad (disMouse, disHub…) para asignarle los botones que necesita «${nombre}».`,
+    conectar: `Conectá el dispositivo de dis+capacidad (disMouse, disHub…) para dejarlo listo para «${nombre}».`,
     exito: `Listo, el dispositivo ya está configurado para «${nombre}».`,
     continuar: 'Abrir recurso',
     aviso:
@@ -115,6 +82,17 @@ function textosExterno(nombre) {
 
 /** Textos del widget abierto ahora (hay un solo widget a la vez: comparte el modal). */
 let T = TEXTOS_JUEGO;
+/** Respaldo guardado de una sesión anterior (ver `abrir`). @type {any} */
+let originalPrevio = null;
+/** Estado ORIGINAL del dispositivo: adonde vuelve "restaurar" (ver conexion-activa.js). @type {any} */
+let destino = null;
+
+/** Restaura al estado original y, si quedó idéntico, lo da por resuelto. */
+async function restaurarOriginal(conexion, snapshot) {
+  const r = await conexion.restaurar(destino || snapshot);
+  if (r.ok) olvidarRespaldoOriginal(conexion);
+  return r;
+}
 
 function el(tag, clase, texto) {
   const e = document.createElement(tag);
@@ -141,8 +119,10 @@ function mostrarCabecera(cabecera, info) {
  * lleva al usuario por el flujo completo. No lanza excepciones: cualquier
  * problema se muestra dentro del modal mismo.
  *
- * @param {EntradaNecesaria[]} entradas Lo que la app necesita ahora mismo.
- * @param {{ titulo?: string, externo?: { nombre: string } }} [opciones]
+ * @param {Requisito[]} entradas Lo que la app necesita ahora mismo (ver teclas-externas.js).
+ * @param {{ titulo?: string, externo?: { nombre: string }, originalPrevio?: any }} [opciones]
+ *   `originalPrevio`: respaldo del estado original guardado en una sesión anterior
+ *   (se usa como destino de "restaurar" si es del mismo modelo).
  *   `externo`: se abre para un recurso de terceros (cambia los textos y suma
  *   el aviso de cómo restaurar; ver `textosExterno`).
  * @returns {Promise<{ ok: boolean, motivo?: string, snapshot?: object, restaurar?: () => Promise<{ok: boolean, diferencias: any[]}>, continuar?: boolean }>}
@@ -155,7 +135,11 @@ function mostrarCabecera(cabecera, info) {
  *   app puede arrancar el juego directo, sin pedirle un segundo click. `ok:false`
  *   si se canceló antes de aplicar nada.
  */
-export function abrir(entradas, opciones = {}) {
+export function abrir(entradasPedidas, opciones = {}) {
+  originalPrevio = opciones.originalPrevio || null;
+  destino = null;
+  // Las Apps EpE siguen pasando `{ id, etiqueta, tecla }` sin `tipo`: son teclas.
+  const entradas = (entradasPedidas || []).map((e) => (e && e.tipo ? e : { ...e, tipo: 'tecla' }));
   T = opciones.externo ? textosExterno(opciones.externo.nombre) : TEXTOS_JUEGO;
   return new Promise((resolve) => {
     if (!window.EpeModal) {
@@ -190,7 +174,14 @@ export function abrir(entradas, opciones = {}) {
       onClose: () => cerrar({ ok: false, motivo: 'cerrado' }),
     });
 
-    pasoConectar(cuerpo, entradas, cerrar, cabecera);
+    // Si el dispositivo ya está conectado en esta página (por un juego o recurso
+    // anterior), se salta el paso de conectar: no hace falta volver a elegirlo.
+    const activa = obtenerActiva();
+    if (activa && activa.conexion.info) {
+      despuesDeConectar(cuerpo, entradas, cerrar, cabecera, activa.conexion, activa.conexion.info);
+    } else {
+      pasoConectar(cuerpo, entradas, cerrar, cabecera);
+    }
   });
 }
 
@@ -240,24 +231,10 @@ async function conectar(tipo, raiz, entradas, cerrar, cabecera) {
   raiz.innerHTML = '';
   raiz.appendChild(el('p', 'epe-cd-intro', 'Conectando…'));
 
-  const { conexion } = tipo === 'usb' ? crearConexionUsb() : crearConexionBle();
   try {
-    const info = await conexion.conectar();
-    const producto = productoPorModelo(info.modelo);
-    if (!producto) {
-      raiz.innerHTML = '';
-      raiz.appendChild(
-        el(
-          'p',
-          'epe-cd-error',
-          `No reconozco este dispositivo (${info.modelo || 'sin modelo'}). Probá con otro, o avisale a dis+capacidad.`,
-        ),
-      );
-      agregarVolver(raiz, () => pasoConectar(raiz, entradas, cerrar, cabecera));
-      return;
-    }
-    mostrarCabecera(cabecera, info);
-    pasoSnapshot(raiz, entradas, cerrar, conexion, producto, cabecera);
+    // Reutiliza la conexión ya abierta en esta página, si la hay (ver conexion-activa.js).
+    const { conexion, info } = await conectarCompartida(tipo);
+    despuesDeConectar(raiz, entradas, cerrar, cabecera, conexion, info);
   } catch (e) {
     raiz.innerHTML = '';
     const cancelado = e && e.codigo === 'cancelado';
@@ -270,6 +247,25 @@ async function conectar(tipo, raiz, entradas, cerrar, cabecera) {
   }
 }
 
+/** Ya hay una conexión abierta: reconoce el modelo y sigue con el respaldo. */
+function despuesDeConectar(raiz, entradas, cerrar, cabecera, conexion, info) {
+  const producto = productoPorModelo(info.modelo);
+  if (!producto) {
+    raiz.innerHTML = '';
+    raiz.appendChild(
+      el(
+        'p',
+        'epe-cd-error',
+        `No reconozco este dispositivo (${info.modelo || 'sin modelo'}). Probá con otro, o avisale a dis+capacidad.`,
+      ),
+    );
+    agregarVolver(raiz, () => pasoConectar(raiz, entradas, cerrar, cabecera));
+    return;
+  }
+  mostrarCabecera(cabecera, info);
+  pasoSnapshot(raiz, entradas, cerrar, conexion, producto, cabecera);
+}
+
 // ─────────────────────────────────────────────────────────────────────────
 // Paso 2: respaldo obligatorio (no hay "aplicar sin guardar" en este protocolo)
 // ─────────────────────────────────────────────────────────────────────────
@@ -278,14 +274,27 @@ async function pasoSnapshot(raiz, entradas, cerrar, conexion, producto, cabecera
   raiz.innerHTML = '';
   raiz.appendChild(el('p', 'epe-cd-intro', 'Leyendo la configuración actual del dispositivo…'));
   try {
-    const snapshot = await conexion.tomarSnapshot();
-    // Mostramos siempre todas las entradas, incluidas las flechas: si el
-    // usuario asigna alguna, "Aplicar" pone el dispositivo en modo botones
-    // individuales (FMODE:0) para que se puedan configurar una por una (ver
-    // entradasAsignables en productos.js).
-    const disponibles = todasLasEntradas(producto);
+    const actual = await conexion.tomarSnapshot();
+    // `actual` es lo que tiene el dispositivo ahora (sirve para los valores iniciales
+    // de los controles). Pero el destino de "restaurar" es el estado ORIGINAL: si
+    // ya se configuró otro recurso antes sin restaurar, `actual` ya no es el original.
+    // `originalPrevio` es un respaldo guardado de una sesión anterior (misma máquina
+    // y modelo), por si se recargó la página con el dispositivo sin restaurar.
+    const previo = originalPrevio;
+    const candidato = previo && previo.modelo === actual.modelo ? previo : actual;
+    destino = respaldoOriginal(conexion, candidato);
+    const snapshot = actual;
+    // Si el recurso pide mover el cursor con las flechas, las flechas quedan
+    // reservadas para eso y solo se ofrecen los botones principales. Si no, se
+    // ofrecen todas las entradas: si el usuario asigna una flecha, "Aplicar"
+    // pone el dispositivo en modo botones individuales (FMODE:0) para que se
+    // pueda configurar una por una (ver entradasAsignables en productos.js).
+    const disponibles = pideCursor(entradas) ? producto.botones : todasLasEntradas(producto);
     pasoAsignar(raiz, entradas, cerrar, conexion, producto, snapshot, disponibles);
   } catch (e) {
+    // La conexión puede haber quedado en mal estado: se suelta para que
+    // "Volver a intentar" abra una nueva en lugar de repetir el mismo fallo.
+    await soltarActivas();
     raiz.innerHTML = '';
     raiz.appendChild(
       el('p', 'epe-cd-error', `No se pudo leer el dispositivo: ${(e && e.message) || e}`),
@@ -295,27 +304,106 @@ async function pasoSnapshot(raiz, entradas, cerrar, conexion, producto, cabecera
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// Paso 3: asignar cada tecla a un botón físico, una por una
+// Paso 3: elegir con qué botón se hace cada cosa que el recurso necesita.
+// Solo se pregunta lo imprescindible: qué botón (y, para arrastrar, cómo).
 // ─────────────────────────────────────────────────────────────────────────
 
+/**
+ * Una opción de radio con título y detalle (mismo estilo que la lista de botones).
+ * @param {string} nombre
+ * @param {string} valor
+ * @param {string} titulo
+ * @param {string} detalle
+ * @param {() => void} alElegir
+ */
+function opcionRadio(nombre, valor, titulo, detalle, alElegir) {
+  const label = el('label', 'epe-cd-entrada');
+  const radio = el('input');
+  radio.type = 'radio';
+  radio.name = nombre;
+  radio.value = valor;
+  radio.addEventListener('change', alElegir);
+  const texto = el('span', 'epe-cd-entrada-texto');
+  texto.appendChild(el('strong', null, titulo));
+  texto.appendChild(el('small', null, detalle));
+  label.appendChild(radio);
+  label.appendChild(texto);
+  return label;
+}
+
 function pasoAsignar(raiz, entradas, cerrar, conexion, producto, snapshot, disponibles) {
-  const aUsar = entradas.slice(0, disponibles.length);
-  const asignaciones = []; // { entrada, codigo }
+  const pedidas = requisitosConBoton(entradas);
+  const aUsar = pedidas.slice(0, disponibles.length);
+  const asignaciones = []; // { requisito, codigo }
+  /** @type {import('./comandos.js').Arrastre | undefined} */
+  let arrastre;
+
+  function filaBotonesBasica(onAtras) {
+    const filaBotones = el('div', 'epe-cd-botones');
+    if (onAtras) {
+      const btnAtras = el('button', 'epe-btn-ghost', 'Atrás');
+      btnAtras.type = 'button';
+      btnAtras.addEventListener('click', onAtras);
+      filaBotones.appendChild(btnAtras);
+    }
+    const btnCancelar = el('button', 'epe-btn-ghost', 'Cancelar');
+    btnCancelar.type = 'button';
+    btnCancelar.addEventListener('click', () => cerrar({ ok: false, motivo: 'cancelado' }));
+    filaBotones.appendChild(btnCancelar);
+    return filaBotones;
+  }
+
+  // Arrastrar y soltar se puede hacer de dos formas con el mismo botón de clic.
+  function preguntarArrastre(idx) {
+    raiz.innerHTML = '';
+    raiz.appendChild(el('p', 'epe-cd-intro', 'Para arrastrar y soltar, ¿cómo preferís usar el botón?'));
+    const lista = el('div', 'epe-cd-lista-entradas');
+    lista.appendChild(
+      opcionRadio(
+        'epe-cd-arrastre',
+        'toque',
+        'Un toque agarra y otro toque suelta',
+        'No hace falta mantener el botón apretado mientras movés el cursor.',
+        () => {
+          arrastre = 'toque';
+          pedir(idx);
+        },
+      ),
+    );
+    lista.appendChild(
+      opcionRadio(
+        'epe-cd-arrastre',
+        'mantener',
+        'Mantener el botón presionado',
+        'Agarra mientras lo mantenés apretado y suelta cuando lo largás.',
+        () => {
+          arrastre = 'mantener';
+          pedir(idx);
+        },
+      ),
+    );
+    raiz.appendChild(lista);
+    raiz.appendChild(filaBotonesBasica(idx > 0 ? () => { asignaciones.pop(); pedir(idx - 1); } : null));
+  }
 
   function pedir(idx) {
     if (idx >= aUsar.length) {
-      pasoResumen(raiz, entradas, aUsar, asignaciones, cerrar, conexion, producto, snapshot);
+      pasoResumen(raiz, entradas, aUsar, asignaciones, arrastre, cerrar, conexion, producto, snapshot);
       return;
     }
     const entrada = aUsar[idx];
+    if (entrada.tipo === 'arrastrar' && !arrastre) {
+      preguntarArrastre(idx);
+      return;
+    }
     raiz.innerHTML = '';
 
-    if (idx === 0 && entradas.length > disponibles.length) {
+    if (idx === 0 && pedidas.length > disponibles.length) {
       raiz.appendChild(
         el(
           'p',
           'epe-cd-aviso',
-          `Este dispositivo tiene ${disponibles.length} entradas y ${T.sujeto} necesita ${entradas.length}. ` +
+          `Este dispositivo tiene ${disponibles.length} entradas y ${T.sujeto} necesita ${pedidas.length}. ` +
             `Se van a asignar las primeras ${disponibles.length}; el resto queda sin configurar.`,
         ),
       );
@@ -325,7 +413,7 @@ function pasoAsignar(raiz, entradas, cerrar, conexion, producto, snapshot, dispo
       el(
         'p',
         'epe-cd-intro',
-        `Elegí a qué botón asignar «${entrada.etiqueta}» (tecla ${teclaLegible(entrada.tecla)}):`,
+        `Elegí a qué botón asignar «${entrada.etiqueta}» (${describir(entrada, arrastre)}):`,
       ),
     );
 
@@ -339,14 +427,14 @@ function pasoAsignar(raiz, entradas, cerrar, conexion, producto, snapshot, dispo
       radio.value = d.codigo;
       radio.disabled = !!yaUsada;
       radio.addEventListener('change', () => {
-        asignaciones.push({ entrada, codigo: d.codigo });
+        asignaciones.push({ requisito: entrada, codigo: d.codigo });
         pedir(idx + 1);
       });
       const punto = el('span', 'epe-cd-color');
       punto.style.backgroundColor = d.color;
       const texto = el('span', 'epe-cd-entrada-texto');
       texto.appendChild(el('strong', null, d.etiqueta));
-      if (yaUsada) texto.appendChild(el('small', null, `ya asignado a «${yaUsada.entrada.etiqueta}»`));
+      if (yaUsada) texto.appendChild(el('small', null, `ya asignado a «${yaUsada.requisito.etiqueta}»`));
       else if (d.nota) texto.appendChild(el('small', null, d.nota));
       label.appendChild(radio);
       label.appendChild(punto);
@@ -355,35 +443,74 @@ function pasoAsignar(raiz, entradas, cerrar, conexion, producto, snapshot, dispo
     });
     raiz.appendChild(lista);
 
-    const filaBotones = el('div', 'epe-cd-botones');
-    if (idx > 0) {
-      const btnAtras = el('button', 'epe-btn-ghost', 'Atrás');
-      btnAtras.type = 'button';
-      btnAtras.addEventListener('click', () => {
-        asignaciones.pop();
-        pedir(idx - 1);
-      });
-      filaBotones.appendChild(btnAtras);
-    }
-    const btnCancelar = el('button', 'epe-btn-ghost', 'Cancelar');
-    btnCancelar.type = 'button';
-    btnCancelar.addEventListener('click', () => cerrar({ ok: false, motivo: 'cancelado' }));
-    filaBotones.appendChild(btnCancelar);
-    raiz.appendChild(filaBotones);
+    raiz.appendChild(
+      filaBotonesBasica(
+        idx > 0
+          ? () => {
+              asignaciones.pop();
+              pedir(idx - 1);
+            }
+          : null,
+      ),
+    );
   }
 
   pedir(0);
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// Paso 4: resumen y aplicar
+// Paso 4: resumen y aplicar. Si el recurso pide mover el cursor, acá mismo
+// están los dos únicos controles: velocidad y aceleración.
 // ─────────────────────────────────────────────────────────────────────────
 
-function pasoResumen(raiz, entradasPedidas, aUsar, asignaciones, cerrar, conexion, producto, snapshot) {
+/**
+ * Velocidad (deslizador) y aceleración (casilla) del cursor.
+ * @param {{ vel: number, acel: boolean }} inicial
+ */
+function crearControlesCursor(inicial) {
+  const caja = el('div', 'epe-cd-controles');
+
+  const filaVel = el('div', 'epe-cd-control');
+  const etiquetaVel = el('label', null, 'Velocidad del cursor');
+  etiquetaVel.htmlFor = 'epe-cd-vel';
+  const slider = el('input');
+  slider.type = 'range';
+  slider.id = 'epe-cd-vel';
+  slider.min = String(VEL_MIN);
+  slider.max = String(VEL_MAX);
+  slider.step = '1';
+  slider.value = String(inicial.vel);
+  const valor = el('output', 'epe-cd-control-valor', String(inicial.vel));
+  valor.htmlFor = 'epe-cd-vel';
+  slider.addEventListener('input', () => {
+    valor.textContent = slider.value;
+  });
+  filaVel.appendChild(etiquetaVel);
+  filaVel.appendChild(slider);
+  filaVel.appendChild(valor);
+  caja.appendChild(filaVel);
+
+  const filaAcel = el('label', 'epe-cd-control epe-cd-control-check');
+  const casilla = el('input');
+  casilla.type = 'checkbox';
+  casilla.checked = inicial.acel;
+  filaAcel.appendChild(casilla);
+  filaAcel.appendChild(el('span', null, 'Aceleración (el cursor va más rápido cuanto más tiempo se mantiene la flecha)'));
+  caja.appendChild(filaAcel);
+
+  return {
+    el: caja,
+    leer: () => ({ vel: parseInt(slider.value, 10) || inicial.vel, acel: casilla.checked }),
+  };
+}
+
+function pasoResumen(raiz, entradas, aUsar, asignaciones, arrastre, cerrar, conexion, producto, snapshot) {
   raiz.innerHTML = '';
+  const conCursor = pideCursor(entradas);
   raiz.appendChild(el('p', 'epe-cd-intro', 'Así va a quedar configurado el dispositivo:'));
 
   const lista = el('ul', 'epe-cd-resumen');
+  if (conCursor) lista.appendChild(el('li', null, 'Las flechas del dispositivo → mueven el cursor'));
   asignaciones.forEach((a) => {
     const entradaInfo = [...producto.botones, ...producto.secundarias].find(
       (d) => d.codigo === a.codigo,
@@ -392,20 +519,25 @@ function pasoResumen(raiz, entradasPedidas, aUsar, asignaciones, cerrar, conexio
       el(
         'li',
         null,
-        `${entradaInfo ? entradaInfo.etiqueta : a.codigo} → ${a.entrada.etiqueta} (${teclaLegible(a.entrada.tecla)})`,
+        `${entradaInfo ? entradaInfo.etiqueta : a.codigo} → ${a.requisito.etiqueta} (${describir(a.requisito, arrastre)})`,
       ),
     );
   });
   raiz.appendChild(lista);
 
-  if (entradasPedidas.length > aUsar.length) {
-    const sinAsignar = entradasPedidas.slice(aUsar.length).map((e) => e.etiqueta);
+  const controles = conCursor ? crearControlesCursor(cursorInicial(snapshot && snapshot.cfg)) : null;
+  if (controles) raiz.appendChild(controles.el);
+
+  const pedidas = requisitosConBoton(entradas);
+  if (pedidas.length > aUsar.length) {
+    const sinAsignar = pedidas.slice(aUsar.length).map((e) => e.etiqueta);
     raiz.appendChild(
       el('p', 'epe-cd-aviso', `Sin configurar (no alcanzaron los botones): ${sinAsignar.join(', ')}.`),
     );
   }
 
   const necesitaModoIndividual =
+    !conCursor &&
     producto.secundariasSoloModoIndividual &&
     asignaciones.some((a) => CODIGOS_FLECHA.includes(a.codigo));
   if (necesitaModoIndividual) {
@@ -425,7 +557,18 @@ function pasoResumen(raiz, entradasPedidas, aUsar, asignaciones, cerrar, conexio
   const btnAplicar = el('button', 'epe-btn-acc', 'Aplicar');
   btnAplicar.type = 'button';
   btnAplicar.addEventListener('click', () =>
-    aplicar(raiz, cerrar, conexion, asignaciones, snapshot, necesitaModoIndividual),
+    aplicar(
+      raiz,
+      cerrar,
+      conexion,
+      armarComandos({
+        asignaciones,
+        cursor: controles ? controles.leer() : null,
+        arrastre,
+        modoIndividual: necesitaModoIndividual,
+      }),
+      snapshot,
+    ),
   );
   filaBotones.appendChild(btnAplicar);
   const btnCancelar = el('button', 'epe-btn-ghost', 'Cancelar');
@@ -435,19 +578,9 @@ function pasoResumen(raiz, entradasPedidas, aUsar, asignaciones, cerrar, conexio
   raiz.appendChild(filaBotones);
 }
 
-async function aplicar(raiz, cerrar, conexion, asignaciones, snapshot, necesitaModoIndividual) {
+async function aplicar(raiz, cerrar, conexion, comandos, snapshot) {
   raiz.innerHTML = '';
   raiz.appendChild(el('p', 'epe-cd-intro', 'Aplicando…'));
-
-  const comandos = asignaciones.map((a) =>
-    buildButtonCfg({
-      code: a.codigo,
-      tipo: 'K',
-      modo: 'P',
-      key: tokenParaNucleo(a.entrada.tecla),
-    }),
-  );
-  if (necesitaModoIndividual) comandos.push('FMODE:0');
 
   try {
     const { errorDispositivo } = await conexion.aplicar(comandos);
@@ -473,7 +606,12 @@ async function aplicar(raiz, cerrar, conexion, asignaciones, snapshot, necesitaM
     const btnContinuar = el('button', 'epe-btn-acc', exito ? T.continuar : 'Cerrar');
     btnContinuar.type = 'button';
     btnContinuar.addEventListener('click', () =>
-      cerrar({ ok: true, snapshot, restaurar: () => conexion.restaurar(snapshot), continuar: exito }),
+      cerrar({
+        ok: true,
+        snapshot: destino || snapshot,
+        restaurar: () => restaurarOriginal(conexion, snapshot),
+        continuar: exito,
+      }),
     );
     filaBotones.appendChild(btnContinuar);
     raiz.appendChild(filaBotones);
@@ -495,7 +633,7 @@ async function deshacer(raiz, cerrar, conexion, snapshot) {
   raiz.innerHTML = '';
   raiz.appendChild(el('p', 'epe-cd-intro', 'Restaurando la configuración anterior…'));
   try {
-    const r = await conexion.restaurar(snapshot);
+    const r = await restaurarOriginal(conexion, snapshot);
     raiz.innerHTML = '';
     raiz.appendChild(
       el(

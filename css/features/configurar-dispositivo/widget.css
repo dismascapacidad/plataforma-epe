@@ -115,3 +115,36 @@
 .epe-cd-resumen li {
   margin-bottom: 4px;
 }
+
+/* Controles del cursor (velocidad y aceleración) en el resumen del asistente. */
+.epe-cd-controles {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--tile-border);
+  border-radius: var(--radius-sm);
+}
+
+.epe-cd-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-strong);
+}
+
+.epe-cd-control input[type="range"] {
+  flex: 1;
+  min-width: 0;
+  accent-color: var(--teal-600);
+}
+
+.epe-cd-control-valor {
+  min-width: 2ch;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.epe-cd-control-check {
+  cursor: pointer;
+}

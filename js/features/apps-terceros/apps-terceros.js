@@ -70,6 +70,9 @@ var EpeAppsTerceros = (function () {
     "https://arcade.makeymakey.com/play/#bouncey%20face": "../assets/img/terceros/bouncey-face-makey.webp",
     "https://apps.makeymakey.com/play/#timer": "../assets/img/terceros/timer-makey.webp",
     "https://apps.makeymakey.com/bongos/": "../assets/img/terceros/bongos-makey.webp",
+    "https://elbuhoboo.com/juegos-educativos/animalitos/": "../assets/img/terceros/buho-animalitos.webp",
+    "https://elbuhoboo.com/juegos-educativos/formitas/": "../assets/img/terceros/buho-formitas.webp",
+    "https://elbuhoboo.com/juegos-educativos/completar-panda/": "../assets/img/terceros/buho-completar.webp",
   };
 
   // Clave tolerante: sin protocolo, sin "www." y sin "/" final, en minúsculas,

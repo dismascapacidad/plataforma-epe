@@ -10,11 +10,22 @@
  */
 
 /**
- * Misma forma que usa el widget (`EntradaNecesaria` en widget.js).
- * @typedef {Object} EntradaNecesaria
+ * Un requisito de un recurso: qué necesita del dispositivo para poder usarlo.
+ * Cuatro clases, siempre la más simple que sirva (la plataforma no pide
+ * configuraciones de más; la personalización fina se hace en el configurador):
+ *  - `tecla`: un botón que emite una tecla (con modificadores opcionales).
+ *  - `mouse`: un botón que hace una acción de mouse (clic, doble clic, scroll…).
+ *  - `cursor`: las flechas del dispositivo mueven el cursor. No usa ningún botón.
+ *  - `arrastrar`: arrastrar y soltar; se resuelve con UN botón de clic izquierdo
+ *    mantenido (el usuario elige cómo en el asistente).
+ *
+ * @typedef {Object} Requisito
  * @property {string} id
  * @property {string} etiqueta
- * @property {string} tecla  Formato `KeyboardEvent.key` en minúscula.
+ * @property {'tecla'|'mouse'|'cursor'|'arrastrar'} tipo
+ * @property {string} [tecla]    Solo `tecla`. Formato `KeyboardEvent.key` en minúscula.
+ * @property {string[]} [mods]   Solo `tecla`: subconjunto de ctrl, shift, alt, gui.
+ * @property {string} [mouse]    Solo `mouse`: ver ACCIONES_MOUSE.
  */
 
 /** Teclas con nombre que el widget sabe traducir (ver TOKEN_ESPECIAL + las que coinciden tal cual). */
@@ -31,6 +42,12 @@ const TECLAS_CON_NOMBRE = new Set([
   'delete',
 ]);
 
+/** Acciones de mouse que se pueden pedir (lista cerrada; ver comandos.js). */
+export const ACCIONES_MOUSE = ['clic', 'clic-derecho', 'clic-central', 'doble-clic', 'scroll-arriba', 'scroll-abajo'];
+
+/** Modificadores aceptados, en el orden en que se normalizan. */
+const MODIFICADORES = ['ctrl', 'shift', 'alt', 'gui'];
+
 /** Un dispositivo tiene como mucho 8 entradas (BR BA BN BC FU FD FL FR). */
 export const MAX_TECLAS = 8;
 
@@ -46,26 +63,66 @@ function teclaValida(tecla) {
 }
 
 /**
- * Devuelve la lista normalizada (objetos nuevos, solo los 3 campos conocidos)
- * o `null` si algo no es válido: no se aceptan listas a medias.
+ * @param {unknown} mods
+ * @returns {string[] | null} lista normalizada (sin repetidos, orden fijo) o null si es inválida
+ */
+function modsValidos(mods) {
+  if (mods === undefined) return [];
+  if (!Array.isArray(mods) || mods.length > MODIFICADORES.length) return null;
+  for (const m of mods) if (typeof m !== 'string' || !MODIFICADORES.includes(m)) return null;
+  return MODIFICADORES.filter((m) => mods.includes(m));
+}
+
+/**
+ * Devuelve la lista normalizada (objetos nuevos, solo los campos conocidos de
+ * la clase de cada requisito) o `null` si algo no es válido: no se aceptan
+ * listas a medias. Cada ítem tiene exactamente UNA clase (tecla, mouse,
+ * cursor o arrastrar); como mucho un `cursor` y un `arrastrar`.
  * @param {unknown} valor
- * @returns {EntradaNecesaria[] | null}
+ * @returns {Requisito[] | null}
  */
 export function validarTeclas(valor) {
   if (!Array.isArray(valor) || valor.length < 1 || valor.length > MAX_TECLAS) return null;
-  /** @type {EntradaNecesaria[]} */
+  /** @type {Requisito[]} */
   const salida = [];
   const ids = new Set();
+  let cursores = 0;
+  let arrastres = 0;
   for (const item of valor) {
     if (!item || typeof item !== 'object') return null;
-    const { id, etiqueta, tecla } = /** @type {Record<string, unknown>} */ (item);
+    const o = /** @type {Record<string, unknown>} */ (item);
+    const { id, etiqueta } = o;
     if (typeof id !== 'string' || !RE_ID.test(id) || ids.has(id)) return null;
     if (typeof etiqueta !== 'string') return null;
     const et = etiqueta.trim();
     if (et.length < 1 || et.length > 40) return null;
-    if (!teclaValida(tecla)) return null;
+
+    const clases = ['tecla', 'mouse', 'cursor', 'arrastrar'].filter((k) => o[k] !== undefined);
+    if (clases.length !== 1) return null;
+    const clase = clases[0];
+
+    if (clase === 'tecla') {
+      if (!teclaValida(o.tecla)) return null;
+      const mods = modsValidos(o.mods);
+      if (mods === null) return null;
+      /** @type {Requisito} */
+      const r = { id, etiqueta: et, tipo: 'tecla', tecla: o.tecla };
+      if (mods.length) r.mods = mods;
+      salida.push(r);
+    } else {
+      if (o.mods !== undefined) return null; // los modificadores solo van con una tecla
+      if (clase === 'mouse') {
+        if (typeof o.mouse !== 'string' || !ACCIONES_MOUSE.includes(o.mouse)) return null;
+        salida.push({ id, etiqueta: et, tipo: 'mouse', mouse: o.mouse });
+      } else if (clase === 'cursor') {
+        if (o.cursor !== true || ++cursores > 1) return null;
+        salida.push({ id, etiqueta: et, tipo: 'cursor' });
+      } else {
+        if (o.arrastrar !== true || ++arrastres > 1) return null;
+        salida.push({ id, etiqueta: et, tipo: 'arrastrar' });
+      }
+    }
     ids.add(id);
-    salida.push({ id, etiqueta: et, tecla });
   }
   return salida;
 }

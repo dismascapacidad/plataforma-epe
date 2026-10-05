@@ -10,10 +10,10 @@ const flechas = () => [
 ];
 
 describe('validarTeclas', () => {
-  it('acepta las 4 flechas y devuelve objetos nuevos con solo los 3 campos', () => {
+  it('acepta las 4 flechas y devuelve objetos nuevos con solo los campos conocidos', () => {
     const entrada = flechas().map((t) => ({ ...t, extra: 'x' }));
     const r = validarTeclas(entrada);
-    expect(r).toEqual(flechas());
+    expect(r).toEqual(flechas().map((t) => ({ ...t, tipo: 'tecla' })));
     expect(r[0]).not.toBe(entrada[0]);
   });
 
@@ -67,6 +67,44 @@ describe('validarTeclas', () => {
     expect(validarTeclas(num)).toBeNull();
     expect(validarTeclas([null])).toBeNull();
     expect(validarTeclas(['arrowup'])).toBeNull();
+  });
+});
+
+describe('validarTeclas: mouse, cursor y arrastrar', () => {
+  it('acepta cursor + arrastrar (Completar) y solo cursor (Formitas)', () => {
+    const completar = validarTeclas([
+      { id: 'cursor', etiqueta: 'Mover el cursor', cursor: true },
+      { id: 'arrastrar', etiqueta: 'Arrastrar y soltar', arrastrar: true },
+    ]);
+    expect(completar).toEqual([
+      { id: 'cursor', etiqueta: 'Mover el cursor', tipo: 'cursor' },
+      { id: 'arrastrar', etiqueta: 'Arrastrar y soltar', tipo: 'arrastrar' },
+    ]);
+    expect(validarTeclas([{ id: 'cursor', etiqueta: 'Mover el cursor', cursor: true }])).toHaveLength(1);
+  });
+
+  it('acepta acciones de mouse de la lista cerrada y rechaza el resto', () => {
+    expect(validarTeclas([{ id: 'c', etiqueta: 'Clic', mouse: 'clic' }])[0].mouse).toBe('clic');
+    expect(validarTeclas([{ id: 'c', etiqueta: 'Clic', mouse: 'mantener-clic' }])).toBeNull();
+    expect(validarTeclas([{ id: 'c', etiqueta: 'Clic', mouse: 1 }])).toBeNull();
+  });
+
+  it('acepta modificadores solo con teclas y los normaliza', () => {
+    const r = validarTeclas([{ id: 'z', etiqueta: 'Deshacer', tecla: 'z', mods: ['shift', 'ctrl', 'ctrl'] }]);
+    expect(r[0].mods).toEqual(['ctrl', 'shift']);
+    expect(validarTeclas([{ id: 'z', etiqueta: 'Z', tecla: 'z', mods: ['super'] }])).toBeNull();
+    expect(validarTeclas([{ id: 'z', etiqueta: 'Z', mouse: 'clic', mods: ['ctrl'] }])).toBeNull();
+  });
+
+  it('rechaza ítems con más de una clase, ninguna, o cursor/arrastrar repetidos', () => {
+    expect(validarTeclas([{ id: 'x', etiqueta: 'X', tecla: 'a', mouse: 'clic' }])).toBeNull();
+    expect(validarTeclas([{ id: 'x', etiqueta: 'X' }])).toBeNull();
+    expect(validarTeclas([{ id: 'x', etiqueta: 'X', cursor: 'si' }])).toBeNull();
+    const dos = [
+      { id: 'a', etiqueta: 'A', cursor: true },
+      { id: 'b', etiqueta: 'B', cursor: true },
+    ];
+    expect(validarTeclas(dos)).toBeNull();
   });
 });
 
