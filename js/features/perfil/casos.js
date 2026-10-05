@@ -38,6 +38,17 @@ var EpeCasos = (function () {
 
   function init(rootEl) {
     root = rootEl;
+
+    // Módulo que configura el dispositivo dis+capacidad antes de abrir un recurso
+    // de terceros compatible (ES, import dinámico relativo a ESTE archivo). Sin él,
+    // el detalle del recurso solo ofrece "Abrir página externa" (ver tercero-detalle.js).
+    // Si no carga, la sección funciona igual. También ofrece restaurar el
+    // dispositivo si quedó configurado y no se restauró (pestaña recargada o cerrada).
+    import("../configurar-dispositivo/externo.js")
+      .then(function () {
+        if (window.EpeDispositivoExterno) window.EpeDispositivoExterno.revisarPendiente();
+      })
+      .catch(function () {});
     if (!root) return;
 
     root.querySelector("[data-caso-nuevo]").addEventListener("click", onCrearCaso);
