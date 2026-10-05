@@ -67,6 +67,9 @@ var EpeAppsTerceros = (function () {
   // Las capturas de sitios ajenos llevan atribución en el detalle del recurso.
   var IMAGENES = {
     "https://apps.makeymakey.com/play/#counter": "../assets/img/terceros/counter-makey.webp",
+    "https://arcade.makeymakey.com/play/#bouncey%20face": "../assets/img/terceros/bouncey-face-makey.webp",
+    "https://apps.makeymakey.com/play/#timer": "../assets/img/terceros/timer-makey.webp",
+    "https://apps.makeymakey.com/bongos/": "../assets/img/terceros/bongos-makey.webp",
   };
 
   // Clave tolerante: sin protocolo, sin "www." y sin "/" final, en minúsculas,
