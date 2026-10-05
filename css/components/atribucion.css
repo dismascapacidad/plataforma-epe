@@ -50,6 +50,7 @@
 }
 
 .epe-atribucion-pie {
+  justify-content: center;
   margin-top: auto;
   padding: 28px clamp(16px, 4vw, 40px) 24px;
 }

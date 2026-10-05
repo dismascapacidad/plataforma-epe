@@ -8,6 +8,7 @@
 .epe-acerca {
   width: 100%;
   max-width: 760px;
+  margin-inline: auto;
   display: flex;
   flex-direction: column;
   gap: clamp(10px, 1.6vw, 16px);
@@ -67,4 +68,12 @@
 
 .epe-acerca-enlace:hover {
   color: var(--text-strong);
+}
+
+/* La introducción comparte la misma columna centrada que las tarjetas. */
+.epe-intro-acerca {
+  width: 100%;
+  max-width: 760px;
+  margin-inline: auto;
+  padding: 8px clamp(16px, 4vw, 40px) 4px;
 }
