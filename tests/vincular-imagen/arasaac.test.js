@@ -1,5 +1,6 @@
 import {
   ARASAAC_HABILITADO,
+  ATRIBUCION_CORTA,
   LARGO_MAX_BUSQUEDA,
   MAX_BYTES_IMAGEN,
   buscar,
@@ -11,9 +12,15 @@ import {
   urlImagen,
 } from '../../js/features/apps-epe/vincular-imagen/arasaac.js';
 
-describe('interruptor', () => {
-  it('queda apagado hasta tener autorización escrita de ARASAAC', () => {
-    expect(ARASAAC_HABILITADO).toBe(false);
+describe('habilitación y atribución', () => {
+  it('está habilitado (ARASAAC autorizó el uso de la API, 06/10/2026)', () => {
+    expect(ARASAAC_HABILITADO).toBe(true);
+  });
+  it('la atribución es el texto exacto que pidió ARASAAC', () => {
+    expect(ATRIBUCION_CORTA).toBe(
+      'Autor pictogramas: Sergio Palao. Origen: ARASAAC (http://www.arasaac.org). ' +
+        'Licencia: CC (BY-NC-SA). Propiedad: Gobierno de Aragón (España)',
+    );
   });
 });
 
