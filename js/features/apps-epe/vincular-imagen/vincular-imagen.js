@@ -399,18 +399,12 @@ var EpeVincularImagen = (function () {
         elEditor.appendChild(fila);
       });
 
-      // Atribución obligatoria de ARASAAC: visible mientras algún casillero use un pictograma.
-      if (elAtribArasaac) {
-        elAtribArasaac.hidden = !(
-          arasaacActivo() &&
-          casillas.some(function (c) {
-            return c.fuente === "arasaac";
-          })
-        );
-      }
+      // Atribución obligatoria de ARASAAC: siempre visible en la configuración
+      // mientras la opción esté habilitada (condición de su autorización).
+      if (elAtribArasaac) elAtribArasaac.hidden = !arasaacActivo();
     }
 
-    // ── ARASAAC (apagado por el interruptor de arasaac.js) ───────────────
+    // ── ARASAAC (interruptor ARASAAC_HABILITADO en arasaac.js) ───────────────
     function arasaacActivo() {
       return !!(arasaac && arasaac.ARASAAC_HABILITADO);
     }

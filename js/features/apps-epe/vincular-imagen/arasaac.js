@@ -7,13 +7,18 @@
  * import() dinámico.
  *
  * ┌─────────────────────────────────────────────────────────────────────┐
- * │ INTERRUPTOR: ARASAAC_HABILITADO = false                             │
- * │ Los términos de ARASAAC (CC BY-NC-SA) excluyen el uso dentro de      │
- * │ productos con fines comerciales y exigen autorización escrita para   │
- * │ cualquier otro uso. Mientras esa autorización no exista, la opción   │
- * │ "Desde ARASAAC" NO se muestra y no se hace ninguna petición a        │
- * │ ARASAAC. Cambiar a true solo con la autorización en mano, y a la vez │
- * │ mostrar la sección de atribución de acerca/index.html.               │
+ * │ AUTORIZADO por ARASAAC (respuesta por correo, 06/10/2026).           │
+ * │ Su licencia CC BY-NC-SA no permite fines comerciales ni editoriales  │
+ * │ y no hay licencia comercial. Nos autorizaron a usar la API SIEMPRE   │
+ * │ QUE la plataforma y esta actividad sean abiertas y gratuitas para    │
+ * │ cualquier persona, haya o no comprado productos de dis+capacidad.    │
+ * │ Si eso cambia (cuenta obligatoria de pago, acceso solo para clientes │
+ * │ o cualquier otro cobro), poner ARASAAC_HABILITADO en false y quitar  │
+ * │ la sección #arasaac de acerca/index.html.                            │
+ * │ Condición de uso: mostrar ATRIBUCION_CORTA en la página de           │
+ * │ configuración de la actividad y en la búsqueda de pictogramas.       │
+ * │ ARASAAC nos anotó como usuarios de su API y puede avisarnos de       │
+ * │ cambios y controlar que el uso respete la licencia.                  │
  * └─────────────────────────────────────────────────────────────────────┘
  *
  * Decisiones de seguridad:
@@ -26,7 +31,7 @@
  * - Nada de esto se envía ni se guarda en nuestros servidores.
  */
 
-export const ARASAAC_HABILITADO = false;
+export const ARASAAC_HABILITADO = true;
 
 export const ARASAAC_API = 'https://api.arasaac.org/v1/pictograms';
 export const ARASAAC_IMAGENES = 'https://static.arasaac.org/pictograms';
@@ -45,9 +50,10 @@ export const ATRIBUCION_COMPLETA =
   'por Sergio Palao para ARASAAC (https://arasaac.org), que los distribuye bajo licencia ' +
   'Creative Commons BY-NC-SA.';
 
+// Texto EXACTO que pidió ARASAAC para la configuración de la actividad y la búsqueda.
 export const ATRIBUCION_CORTA =
-  'Pictogramas: Sergio Palao · Origen: ARASAAC (arasaac.org) · Licencia: CC BY-NC-SA · ' +
-  'Propiedad: Gobierno de Aragón (España)';
+  'Autor pictogramas: Sergio Palao. Origen: ARASAAC (http://www.arasaac.org). ' +
+  'Licencia: CC (BY-NC-SA). Propiedad: Gobierno de Aragón (España)';
 
 /** Recorta espacios, junta los repetidos y acota el largo. '' si no queda nada. */
 export function normalizarTermino(texto) {
