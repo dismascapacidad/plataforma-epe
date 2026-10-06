@@ -23,9 +23,13 @@
 var EpeVincularImagen = (function () {
   var MAX_CASILLEROS = 8;
   var MIN_CASILLEROS = 1;
+  // Cada casillero nace con una letra asignada (el primero A, el segundo B…),
+  // así no hace falta preparar las teclas una por una. Se puede cambiar
+  // con "Tecla: X". Son 8 letras para los 8 casilleros como máximo.
+  var TECLAS_POR_DEFECTO = ["a", "b", "c", "d", "e", "f", "g", "h"];
 
   function init(root) {
-    var casillas = []; // { imagen: dataURL|null, fuente: "arasaac"|null, texto: string, tecla: string|null }
+    var casillas = []; // { imagen: dataURL|null, fuente: "arasaac"|null, texto: string, tecla: string|null (por defecto A, B, C…) }
     var arasaac = null; // módulo arasaac.js, una vez cargado
     var origenAbiertoIdx = null; // casillero cuyo "Agregar imagen" está mostrando las dos opciones
     var enfocarOrigen = false;
@@ -80,9 +84,22 @@ var EpeVincularImagen = (function () {
     function ajustarCantidad(n) {
       n = Math.max(MIN_CASILLEROS, Math.min(MAX_CASILLEROS, n || MIN_CASILLEROS));
       while (casillas.length < n) {
-        casillas.push({ imagen: null, fuente: null, texto: "", tecla: null });
+        casillas.push({ imagen: null, fuente: null, texto: "", tecla: teclaPorDefectoLibre() });
       }
       casillas.length = n;
+    }
+
+    // Primera letra por defecto que ningún casillero esté usando (si el usuario
+    // ya le puso la "A" a otro, el casillero nuevo toma la "B", etc.).
+    function teclaPorDefectoLibre() {
+      for (var i = 0; i < TECLAS_POR_DEFECTO.length; i++) {
+        var t = TECLAS_POR_DEFECTO[i];
+        var usada = casillas.some(function (c) {
+          return c.tecla === t;
+        });
+        if (!usada) return t;
+      }
+      return null;
     }
 
     function asignarTecla(idx, tecla) {
@@ -223,10 +240,34 @@ var EpeVincularImagen = (function () {
     // cantidad de casilleros por esas columnas, y grid-template-rows: 1fr
     // hace que todas las filas quepan siempre en el alto disponible, sin
     // scroll, sin importar cuántas sean.
+    //
+    // Se elige la cantidad de columnas que deja los casilleros lo más cerca
+    // posible de cuadrados (las imágenes y los pictogramas son cuadrados): se
+    // prueba cada opción y se queda la que da el lado menor más grande. Así,
+    // en una pantalla apaisada con 4 casilleros no quedan 4 tiras altas y
+    // finas, y en un celular vertical se arma una grilla de 2 columnas.
     function actualizarLayout() {
-      var maxColumnas = window.innerWidth < 720 ? 2 : 4;
-      var columnas = Math.min(maxColumnas, casillas.length);
-      var filas = Math.ceil(casillas.length / columnas);
+      var n = casillas.length;
+      var cs = window.getComputedStyle(elGrilla);
+      var gap = parseFloat(cs.columnGap) || 14;
+      var ancho = elGrilla.clientWidth - (parseFloat(cs.paddingLeft) || 0) - (parseFloat(cs.paddingRight) || 0);
+      var alto = elGrilla.clientHeight - (parseFloat(cs.paddingTop) || 0) - (parseFloat(cs.paddingBottom) || 0);
+      var columnas = Math.min(n, window.innerWidth < 720 ? 2 : 4);
+      var mejorLado = -1;
+      if (ancho > 0 && alto > 0) {
+        for (var c = 1; c <= Math.min(n, 4); c++) {
+          var f = Math.ceil(n / c);
+          var lado = Math.min((ancho - (c - 1) * gap) / c, (alto - (f - 1) * gap) / f);
+          if (lado > mejorLado + 0.5) {
+            mejorLado = lado;
+            columnas = c;
+          }
+        }
+      }
+      var filas = Math.ceil(n / columnas);
+      // Casilleros cuadrados de ese lado, agrupados y centrados en la pantalla.
+      if (mejorLado > 0) elGrilla.style.setProperty("--vi-lado", Math.floor(mejorLado) + "px");
+      else elGrilla.style.removeProperty("--vi-lado");
       elGrilla.style.setProperty("--vi-columnas", String(columnas));
       elGrilla.style.setProperty("--vi-filas", String(filas));
     }
@@ -551,10 +592,10 @@ var EpeVincularImagen = (function () {
           b.disabled = true;
         });
         estado.textContent = "Descargando pictograma…";
-        A.descargarImagen(r.id)
+        A.descargarImagen(r.id, { resolucion: 500 })
           .catch(function () {
             // Plan B: si el navegador no deja descargarla, se usa el enlace directo.
-            return r.url;
+            return A.urlImagen(r.id, 500) || r.url;
           })
           .then(function (imagen) {
             casillas[idx].imagen = imagen;

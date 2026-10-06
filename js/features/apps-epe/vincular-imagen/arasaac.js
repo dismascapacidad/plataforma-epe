@@ -148,7 +148,7 @@ export async function blobADataUrl(blob) {
  * @param {number} id
  * @param {OpcionesRed} [opciones]
  */
-export async function descargarImagen(id, { fetchFn = fetch, resolucion = 300, signal } = {}) {
+export async function descargarImagen(id, { fetchFn = fetch, resolucion = 500, signal } = {}) {
   const url = urlImagen(id, resolucion);
   if (!url) throw new Error('arasaac_id_invalido');
   const resp = await fetchFn(url, { signal });
