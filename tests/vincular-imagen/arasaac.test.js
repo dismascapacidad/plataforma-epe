@@ -142,6 +142,13 @@ describe('descargarImagen', () => {
     const url = await descargarImagen(2317, { fetchFn: async () => imagen('image/png') });
     expect(url).toBe('data:image/png;base64,AAAAAA==');
   });
+  it('descarga por defecto la versión de 500 px (se ve nítida en casilleros grandes)', async () => {
+    const fetchFn = vi.fn(async (_url) => imagen('image/png'));
+    await descargarImagen(2317, { fetchFn });
+    expect(fetchFn.mock.calls[0][0]).toBe(
+      'https://static.arasaac.org/pictograms/2317/2317_500.png',
+    );
+  });
   it('rechaza ids inválidos sin hacer peticiones', async () => {
     const fetchFn = vi.fn();
     await expect(descargarImagen(/** @type {any} */ ('1/../2'), { fetchFn })).rejects.toThrow(

@@ -64,7 +64,8 @@
 .epe-vi-editor-miniatura img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  background: #fff;
 }
 
 .epe-vi-editor-miniatura .epe-vi-vacio {
@@ -79,8 +80,12 @@
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: repeat(var(--vi-columnas), 1fr);
-  grid-template-rows: repeat(var(--vi-filas), 1fr);
+  /* --vi-lado lo calcula actualizarLayout(): casilleros cuadrados, juntos y
+     centrados. Sin él (antes del primer cálculo) se reparten el espacio. */
+  grid-template-columns: repeat(var(--vi-columnas), var(--vi-lado, 1fr));
+  grid-template-rows: repeat(var(--vi-filas), var(--vi-lado, 1fr));
+  justify-content: center;
+  align-content: center;
   gap: 14px;
   padding: 12px clamp(16px, 4vw, 40px) clamp(16px, 3vw, 28px);
 }
@@ -109,10 +114,18 @@
   transition: border-color 0.12s ease, transform 0.1s ease;
 }
 
+/* La imagen se ve ENTERA (contain), nunca recortada: un pictograma cortado
+   puede cambiar de significado. Los pictogramas de ARASAAC son PNG con fondo
+   transparente y trazo negro, así que el área de juego con imagen va sobre
+   blanco (también en modo oscuro), si no el trazo se pierde. */
 .epe-vi-play img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+}
+
+.epe-vi-play:has(img) {
+  background: #fff;
 }
 
 .epe-vi-vacio {
