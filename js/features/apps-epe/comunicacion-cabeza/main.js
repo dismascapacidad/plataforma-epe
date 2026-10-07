@@ -13,7 +13,7 @@
  */
 import { medirTablero, celdasTablero, plantillaTablero } from './grilla.js';
 import { aplicarCelda, textoParaHablar } from './texto.js';
-import { ordenarVoces, elegirVoz } from './voz.js';
+import { ordenarVoces, elegirVoz } from '../_comun/voz.js';
 import { crearSeleccion } from './seleccion.js';
 import { crearSesion, resumenTexto, desvioEstandar } from './metricas.js';
 import { CALIDAD, textoCalidad } from './cabeza-estado.js';
@@ -25,7 +25,7 @@ import {
   etiquetaTecla,
 } from './config.js';
 import { crearCabeza } from './cabeza.js';
-import { crearVoz } from './voz-web.js';
+import { crearVoz } from '../_comun/voz-web.js';
 import { factorDesdeSlider } from './sensibilidad.js';
 
 const GAP = 8;

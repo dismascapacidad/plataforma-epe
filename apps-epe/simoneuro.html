@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SimoNeuro — Apps EpE</title>
+    <link rel="icon" href="../assets/img/logo-epe.png" />
+
+    <script src="../js/core/theme-boot.js"></script>
+
+    <link rel="stylesheet" href="../css/base/reset.css" />
+    <link rel="stylesheet" href="../css/base/tokens.css" />
+    <link rel="stylesheet" href="../css/base/theme.css" />
+    <link rel="stylesheet" href="../css/base/typography.css" />
+    <link rel="stylesheet" href="../css/components/buttons.css" />
+    <link rel="stylesheet" href="../css/components/atribucion.css" />
+    <link rel="stylesheet" href="../css/components/app-nav.css" />
+    <link rel="stylesheet" href="../css/components/juego-base.css" />
+    <link rel="stylesheet" href="../css/components/modal.css" />
+    <link rel="stylesheet" href="../css/features/configurar-dispositivo/widget.css" />
+    <link rel="stylesheet" href="../css/features/apps-epe/simoneuro.css" />
+  </head>
+  <body>
+    <div class="epe-juego-shell epe-simon-shell">
+      <header class="epe-juego-header">
+        <div class="epe-app-header-left">
+          <a class="epe-app-back" href="index.html" data-volver-apps>← Apps EpE</a>
+          <a href="../index.html"><img class="epe-logo-chip" src="../assets/img/logo-epe.png" alt="Equipar para Equipar" height="26" /></a>
+        </div>
+        <button
+          class="epe-theme-toggle"
+          type="button"
+          id="theme-toggle"
+          aria-pressed="false"
+          aria-label="Cambiar a modo oscuro"
+        >
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4" />
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+          </svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" />
+          </svg>
+        </button>
+      </header>
+
+      <!-- ── Configuración: modal (ver stroop.html para el criterio) ── -->
+      <div class="epe-juego-overlay" data-juego-config>
+        <div class="epe-juego-modal" role="dialog" aria-modal="true" aria-labelledby="simon-titulo">
+          <h1 id="simon-titulo">SimoNeuro</h1>
+          <p class="epe-juego-intro">
+            "Simón dice" con 4 colores. Se enciende (y en algunos modos también se
+            dice en voz alta) una secuencia que crece de a uno; hay que repetirla
+            tocando los mismos colores en el mismo orden. Un error no termina la
+            partida: se muestra cuál era el correcto y se sigue.
+          </p>
+
+          <div class="epe-juego-columnas">
+            <div>
+              <div class="epe-juego-grupo">
+                <label for="simon-modo">Modo de juego</label>
+                <select id="simon-modo" data-simon-modo>
+                  <option value="visual" selected>Solo visual</option>
+                  <option value="visual-auditivo">Visual + Auditivo</option>
+                  <option value="inhibir-visual">Inhibir visual (seguir el audio)</option>
+                  <option value="inhibir-auditivo">Inhibir auditivo (seguir la luz)</option>
+                </select>
+              </div>
+              <div class="epe-juego-grupo">
+                <label for="simon-finalizacion">Termina</label>
+                <select id="simon-finalizacion" data-simon-finalizacion>
+                  <optgroup label="Por tiempo">
+                    <option value="t60" selected>1 minuto</option>
+                    <option value="t120">2 minutos</option>
+                    <option value="t180">3 minutos</option>
+                  </optgroup>
+                  <optgroup label="Por longitud de secuencia">
+                    <option value="l6">Secuencia de 6</option>
+                    <option value="l8">Secuencia de 8</option>
+                    <option value="l10">Secuencia de 10</option>
+                  </optgroup>
+                  <optgroup label="Por cantidad de errores">
+                    <option value="e2">2 errores</option>
+                    <option value="e3">3 errores</option>
+                    <option value="e5">5 errores</option>
+                  </optgroup>
+                </select>
+              </div>
+              <!-- Deslizantes propios de SimoNeuro: etiqueta arriba y el
+                   deslizante+valor abajo (en vez del patrón horizontal de
+                   .epe-acceso-velocidad), porque esta columna es angosta y
+                   ese patrón se parte en varias líneas acá. -->
+              <div class="epe-juego-grupo">
+                <label for="simon-duracion-estimulo">Duración del estímulo</label>
+                <div class="epe-simon-slider-fila">
+                  <input
+                    type="range"
+                    id="simon-duracion-estimulo"
+                    data-simon-duracion-estimulo
+                    min="0.5"
+                    max="2"
+                    step="0.1"
+                    value="1"
+                  />
+                  <span class="epe-simon-slider-valor" data-simon-duracion-estimulo-valor>1,0 s</span>
+                </div>
+              </div>
+              <div class="epe-juego-grupo epe-juego-opciones">
+                <label><input type="checkbox" data-simon-acelerar /> Acelerar la secuencia en cada ronda</label>
+              </div>
+              <div class="epe-juego-grupo" data-simon-acelerar-detalle hidden>
+                <label for="simon-porcentaje-acel">Cuánto se acelera por ronda</label>
+                <div class="epe-simon-slider-fila">
+                  <input
+                    type="range"
+                    id="simon-porcentaje-acel"
+                    data-simon-porcentaje-acel
+                    min="10"
+                    max="50"
+                    step="10"
+                    value="10"
+                  />
+                  <span class="epe-simon-slider-valor" data-simon-porcentaje-acel-valor>10% más rápido</span>
+                </div>
+              </div>
+            </div>
+            <div class="epe-juego-grupo" data-acceso-panel></div>
+          </div>
+
+          <button class="epe-btn-ghost" type="button" data-configurar-dispositivo>
+            Configurar dispositivo…
+          </button>
+          <button class="epe-btn-ghost" type="button" data-restaurar-dispositivo hidden>
+            Restaurar dispositivo
+          </button>
+
+          <div class="epe-juego-pie">
+            <a class="epe-btn-ghost" href="index.html" data-volver-apps>Volver a Apps EpE</a>
+            <div data-atribucion="by"></div>
+            <button class="epe-btn-acc" type="button" data-juego-empezar>Empezar</button>
+          </div>
+        </div>
+      </div>
+
+      <main class="epe-juego-main">
+        <div class="epe-simon-juego" data-simon-juego hidden>
+          <div class="epe-juego-hud epe-simon-hud" data-simon-hud>
+            <span data-simon-progreso></span>
+            <span>Errores: <strong data-simon-errores>0</strong></span>
+            <!-- "Tu turno" vive acá (ver simoneuro.js empezarEspera()); esta
+                 misma barra se pinta de verde/rojo según la respuesta. -->
+            <span class="epe-simon-hud-turno" data-simon-hud-turno aria-live="polite"></span>
+          </div>
+
+          <p class="epe-simon-estado" data-simon-estado aria-live="polite"></p>
+
+          <div class="epe-simon-tablero-wrap">
+            <!-- Cuenta regresiva ("3","2","1"), solo al empezar la partida
+                 (ver simoneuro.js reproducirRonda()). -->
+            <div class="epe-simon-aviso" data-simon-aviso aria-live="polite" hidden></div>
+            <div class="epe-simon-tablero" data-simon-tablero>
+              <button class="epe-simon-bloque color-naranja" type="button" data-color="naranja" style="grid-column: 1; grid-row: 1">
+                <kbd class="epe-tecla epe-simon-tecla" data-tecla-color="naranja"></kbd>
+              </button>
+              <button class="epe-simon-bloque color-celeste" type="button" data-color="celeste" style="grid-column: 2; grid-row: 1">
+                <kbd class="epe-tecla epe-simon-tecla" data-tecla-color="celeste"></kbd>
+              </button>
+              <button class="epe-simon-bloque color-rojo" type="button" data-color="rojo" style="grid-column: 1; grid-row: 2">
+                <kbd class="epe-tecla epe-simon-tecla" data-tecla-color="rojo"></kbd>
+              </button>
+              <button class="epe-simon-bloque color-azul" type="button" data-color="azul" style="grid-column: 2; grid-row: 2">
+                <kbd class="epe-tecla epe-simon-tecla" data-tecla-color="azul"></kbd>
+              </button>
+            </div>
+          </div>
+
+          <p class="epe-juego-ayuda" data-juego-ayuda></p>
+
+          <div class="epe-juego-acciones">
+            <button class="epe-btn-ghost" type="button" data-simon-salir>Salir <kbd class="epe-tecla">Esc</kbd></button>
+          </div>
+        </div>
+      </main>
+
+      <!-- ── Resumen final ── -->
+      <div class="epe-juego-overlay" data-juego-resumen hidden>
+        <div class="epe-juego-modal epe-juego-modal-resumen" role="dialog" aria-modal="true" aria-labelledby="simon-resumen-titulo">
+          <h2 id="simon-resumen-titulo">¡Listo!</h2>
+          <div class="epe-juego-stats" data-juego-stats></div>
+          <div class="epe-juego-resumen-acciones">
+            <button class="epe-btn-acc" type="button" data-juego-de-nuevo>Jugar de nuevo</button>
+            <button class="epe-btn-ghost" type="button" data-juego-configurar>Cambiar configuración</button>
+            <a class="epe-btn-ghost" href="index.html" data-volver-apps>Volver a Apps EpE</a>
+          </div>
+          <div data-atribucion="by"></div>
+        </div>
+      </div>
+    </div>
+
+    <script src="../js/core/theme.js"></script>
+    <script src="../js/core/atribucion.js"></script>
+    <script src="../js/core/ajuste-modal.js"></script>
+    <script src="../js/core/modal.js"></script>
+    <script type="module" src="../js/features/configurar-dispositivo/widget.js"></script>
+    <script src="../js/features/apps-epe/_comun/teclas.js"></script>
+    <script src="../js/features/apps-epe/_comun/entrada.js"></script>
+    <script src="../js/features/apps-epe/_comun/acceso.js"></script>
+    <!-- simoneuro.js es un módulo ES (necesita import de voz-web.js): se
+         ejecuta diferido, DESPUÉS de cualquier script clásico de acá abajo
+         aunque aparezca antes en el documento. Por eso se inicializa a sí
+         mismo al final de su propio código en vez de esperar una llamada
+         desde un <script> clásico posterior (que correría antes de que el
+         módulo exista). -->
+    <script type="module" src="../js/features/apps-epe/simoneuro/simoneuro.js"></script>
+    <script>
+      EpeTheme.initThemeToggle(document.getElementById("theme-toggle"));
+    </script>
+  </body>
+</html>

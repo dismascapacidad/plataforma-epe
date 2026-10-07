@@ -48,6 +48,29 @@
   --amb: #d97706;
   --amb-dim: #fffbeb;
 
+  /* ── SimoNeuro: colores del juego ──
+     06/10: el naranja y el rojo originales (paleta Okabe-Ito "orange"
+     #E69F00 / "vermillion" #D55E00) se veían, en la práctica, como
+     amarillo y naranja respectivamente — Gon lo marcó y tenía razón: esos
+     dos tonos de Okabe-Ito están deliberadamente corridos hacia el naranja
+     para seguir siendo distinguibles bajo daltonismo rojo-verde
+     (deuteranopia/protanopia), a costa de no leerse como "rojo" y
+     "naranja" puros para el resto de la gente. Como acá el nombre del
+     color importa (en los modos con voz se DICE el nombre), se priorizó
+     que cada color se lea como lo que dice ser, usando naranja/rojo más
+     reconocibles (tomados de paletas de uso común, no inventados) pero
+     manteniendo la MISMA lógica de seguridad que ya tenía la paleta: el
+     naranja se mantiene claro y el rojo oscuro y saturado, para que seguir
+     diferenciándose por luminosidad además de matiz (no es tan seguro
+     como Okabe-Ito puro para daltonismo rojo-verde, pero sí mucho más
+     reconocible). Celeste/azul no cambiaron (nadie los señaló) y siguen
+     difiriendo en luminosidad y matiz, por lo que se distinguen incluso
+     bajo tritanopia. */
+  --simon-naranja: #e67e22;
+  --simon-rojo: #c0392b;
+  --simon-celeste: #56b4e9;
+  --simon-azul: #0072b2;
+
   /* ── Forma ── */
   --radius-sm: 8px;
   --radius-md: 12px;

@@ -1,0 +1,263 @@
+/*
+  simoneuro.css
+  "SimoNeuro": Simón dice con 4 colores (naranja, rojo, celeste, azul) en 4
+  modos (ver simoneuro.js) — grilla de 2x2 bloques con separadores
+  transparentes, pensada para verse como 4 "luces" sueltas, no como una
+  tabla con líneas.
+
+  Mismo criterio que el resto de Apps EpE: el shell/modal/HUD/resumen salen
+  de css/components/juego-base.css; acá solo lo propio de SimoNeuro. Los
+  colores de marca salen de --simon-* en tokens.css (paleta accesible para
+  daltonismo); el gris de "apagado" sale de --simon-apagado en theme.css
+  (varía con el tema).
+*/
+
+/* Deslizantes de "preparación" (duración del estímulo, % de aceleración):
+   etiqueta de .epe-juego-grupo arriba (label normal) y esta fila abajo, en
+   vez del patrón horizontal de .epe-acceso-velocidad — ese patrón de 3
+   columnas se parte en varias líneas en la columna angosta del modal. */
+.epe-simon-slider-fila {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.epe-simon-slider-fila input[type='range'] {
+  flex: 1 1 auto;
+  min-width: 0;
+  accent-color: var(--teal-600);
+}
+
+.epe-simon-slider-valor {
+  flex: 0 0 auto;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-strong);
+  white-space: nowrap;
+}
+
+.epe-simon-juego {
+  width: 100%;
+  max-width: 900px;
+  height: 100%;
+  min-height: 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+/* Aviso de "Tu turno" dentro de la barra del HUD (reemplaza el aviso que
+   antes se superponía al tablero). 07/10/2026: Gon pidió que se note más —
+   antes tenía el mismo peso visual que "Secuencia"/"Errores" y se perdía
+   en la barra. Ahora usa el color de acento de la marca, negrita y un
+   tamaño mayor para que salte a la vista apenas aparece. */
+.epe-simon-hud-turno {
+  color: var(--teal-600);
+  font-weight: 700;
+  font-size: 1.05em;
+}
+
+/* "Pop" de aparición (07/10/2026): se agrega/saca en JS (empezarEspera())
+   cada vez que arranca la espera de respuesta, incluso si el texto no
+   cambió, para que el cambio de turno se note aunque no se esté mirando
+   justo esa parte del HUD. Mismo criterio que epe-simon-rebote (aviso de
+   cuenta regresiva), pero más sutil: esto vive en una barra chica, no en
+   el centro del tablero. */
+.epe-simon-hud-turno-anim {
+  animation: epe-simon-turno-pop 0.3s var(--ease);
+}
+
+@keyframes epe-simon-turno-pop {
+  0% {
+    transform: scale(0.75);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Feedback de la respuesta en la misma barra: verde sostenido si fue
+   correcta, destello rojo si fue un error — se agregan/sacan en
+   simoneuro.js (responder()/limpiarMarcas()) en sincro con las marcas de
+   los bloques. Se mezcla con --tile-bg (el fondo propio de la barra, ver
+   .epe-juego-hud en juego-base.css) para no perder el aspecto de "pill". */
+.epe-simon-hud.es-correcto {
+  background: color-mix(in srgb, var(--grn) 28%, var(--tile-bg));
+}
+
+.epe-simon-hud.es-error {
+  animation: epe-simon-destello-error 0.5s var(--ease);
+}
+
+@keyframes epe-simon-destello-error {
+  0%,
+  100% {
+    background: var(--tile-bg);
+  }
+  35% {
+    background: color-mix(in srgb, var(--red) 45%, var(--tile-bg));
+  }
+}
+
+.epe-simon-estado {
+  flex: 0 0 auto;
+  font-size: 13px;
+  color: var(--text-dim);
+  text-align: center;
+  min-height: 1.4em;
+}
+
+/* Capa intermedia que sí se estira dentro de .epe-simon-juego (flex:1 +
+   min-height:0): es lo que le da al tablero una altura REAL contra la que
+   calcular el `max-height: 100%` de abajo. Sin esto el tablero no tiene de
+   dónde tomar un alto disponible y `aspect-ratio` + `max-height` no tienen
+   nada que respetar (mismo problema que ya resolvimos en Lado Correcto). */
+.epe-simon-tablero-wrap {
+  position: relative; /* referencia para el aviso superpuesto (cuenta regresiva / "Tu turno") */
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Aviso superpuesto al centro del tablero: cuenta regresiva ("3","2","1")
+   antes de la secuencia y "Tu turno" al terminarla (mismo elemento, ver
+   comentario en simoneuro.html — nunca se muestran a la vez). Mismo criterio
+   visual que .epe-juego-modal (fondo --tile-bg, sombra --shadow-lg) para que
+   se lea como parte de la misma plataforma. `pointer-events: none` para que
+   nunca tape un click sobre un bloque de color. */
+.epe-simon-aviso {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(1);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 90%;
+  padding: 0.3em 0.9em;
+  border-radius: var(--radius-lg);
+  background: var(--tile-bg);
+  box-shadow: var(--shadow-lg);
+  font-size: clamp(22px, 5vw, 42px);
+  font-weight: 700;
+  color: var(--text-strong);
+  text-align: center;
+  pointer-events: none;
+}
+
+[data-theme="dark"] .epe-simon-aviso {
+  background: var(--shell-bg-2);
+}
+
+/* Se agrega/saca por JS (ver mostrarAviso() en simoneuro.js) para poder
+   reiniciar el rebote aunque el texto cambie rápido (cuenta regresiva). */
+.epe-simon-aviso-anim {
+  animation: epe-simon-rebote 0.35s var(--ease);
+}
+
+@keyframes epe-simon-rebote {
+  0% {
+    transform: translate(-50%, -50%) scale(0.3);
+    opacity: 0;
+  }
+  60% {
+    transform: translate(-50%, -50%) scale(1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Ancho = 80% de pantalla, alto = según la relación de aspecto de la
+   pantalla (--simon-aspect, actualizada por JS en simoneuro.js con
+   innerWidth/innerHeight) — nunca ambas cosas a la vez si no entran: se
+   acota con max-width/max-height contra el espacio que le queda
+   realmente disponible (header + HUD ya ocupan parte de la pantalla), el
+   mismo criterio de "nunca forzar scroll" de toda la plataforma. */
+.epe-simon-tablero {
+  position: relative;
+  width: 80vw;
+  aspect-ratio: var(--simon-aspect, 1.6);
+  max-width: 100%;
+  max-height: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  /* `gap` con un solo valor en porcentaje se resuelve contra cada eje por
+     separado (el de filas contra el alto, el de columnas contra el
+     ancho) — es justo la proporción "separador = un tercio de un bloque"
+     en cada eje, sin necesidad de armar la tabla de 3x3 a mano. */
+  gap: calc(100% / 7);
+}
+
+.epe-simon-bloque {
+  appearance: none;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-lg);
+  background: var(--simon-apagado);
+  cursor: pointer;
+  transition: background 0.1s var(--ease), box-shadow 0.15s var(--ease), transform 0.08s var(--ease);
+}
+
+.epe-simon-bloque:active {
+  transform: scale(0.97);
+}
+
+.epe-simon-bloque.color-naranja.is-lit {
+  background: var(--simon-naranja);
+  box-shadow: 0 0 6vw color-mix(in srgb, var(--simon-naranja) 55%, transparent);
+}
+.epe-simon-bloque.color-rojo.is-lit {
+  background: var(--simon-rojo);
+  box-shadow: 0 0 6vw color-mix(in srgb, var(--simon-rojo) 55%, transparent);
+}
+.epe-simon-bloque.color-celeste.is-lit {
+  background: var(--simon-celeste);
+  box-shadow: 0 0 6vw color-mix(in srgb, var(--simon-celeste) 55%, transparent);
+}
+.epe-simon-bloque.color-azul.is-lit {
+  background: var(--simon-azul);
+  box-shadow: 0 0 6vw color-mix(in srgb, var(--simon-azul) 55%, transparent);
+}
+
+/* Feedback de una posición de la secuencia ya respondida: el botón que se
+   apretó mal queda marcado en rojo; el que SÍ era correcto se enciende con
+   su color real (si no estaba ya encendido) y se marca en verde — así se
+   ve, a la vez, qué se apretó y cuál era la respuesta (ver "Decisiones" en
+   el doc del proyecto: un error no termina la partida pero siempre se
+   indica cuál era el estímulo correcto). */
+.epe-simon-bloque.es-error {
+  outline: 6px solid var(--red);
+  outline-offset: 4px;
+}
+
+.epe-simon-bloque.es-correcto-ahora {
+  outline: 6px solid var(--grn);
+  outline-offset: 4px;
+}
+
+/* Chip de tecla por color: igual criterio que Stroop (se oculta con
+   barrido, ver simoneuro.js actualizarChips()), pero acá va apoyado sobre
+   el bloque en vez de al lado, para no competirle espacio a la luz. */
+.epe-simon-tecla {
+  position: absolute;
+  bottom: 6%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+}

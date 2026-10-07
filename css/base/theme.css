@@ -47,6 +47,11 @@
 
   /* Fondo de los logos (PNG transparentes con texto azul marino). */
   --logo-chip-bg: transparent;
+
+  /* SimoNeuro: bloque "sin luz". En oscuro --tile-border queda casi
+     invisible (ver más abajo) para servir de fondo de bloque, así que
+     hace falta un rol propio en vez de reusar uno existente. */
+  --simon-apagado: var(--bdr);
 }
 
 [data-theme="dark"] {
@@ -79,4 +84,6 @@
   --header-icon: var(--txt-on-navy-dim);
 
   --logo-chip-bg: var(--surf);
+
+  --simon-apagado: #3a4255;
 }
