@@ -1,9 +1,7 @@
 /*
   typography.css
-  Fuente: DM Sans (misma que ya usa el configurador, por continuidad de marca).
+  Fuente: DM Sans, autoalojada en css/diseno/fonts.css (repo dismascapacidad-design).
 */
-
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap");
 
 body {
   font-family: var(--font-display);

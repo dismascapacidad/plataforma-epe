@@ -1,0 +1,43 @@
+/*
+  fonts.css — dismascapacidad-design
+  DM Sans autoalojada (subconjunto latin: cubre ñ, tildes, ¿ y ¡).
+  Licencia de la fuente: SIL OFL 1.1, ver fonts/OFL.txt.
+  Origen de los archivos: paquete npm @fontsource/dm-sans 5.3.0.
+  Las rutas son relativas a este archivo: no mover fonts.css sin mover fonts/.
+*/
+
+@font-face {
+  font-family: "DM Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("fonts/dm-sans-latin-400-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "DM Sans";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("fonts/dm-sans-latin-500-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "DM Sans";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("fonts/dm-sans-latin-600-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "DM Sans";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("fonts/dm-sans-latin-700-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "DM Sans";
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("fonts/dm-sans-latin-800-normal.woff2") format("woff2");
+}

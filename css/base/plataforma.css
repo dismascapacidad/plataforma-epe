@@ -1,0 +1,60 @@
+/*
+  plataforma.css
+  Lo que es PROPIO de la plataforma y por eso no está en el repo de diseño
+  (dismascapacidad-design, copiado en css/diseno/):
+    - colores del juego SimoNeuro (--simon-*)
+    - roles de las tarjetas (--tile-*), las pills sobre capturas (--pill-*),
+      el fondo de los logos (--logo-chip-bg) y el bloque "apagado" de SimoNeuro.
+  Usa los tokens de marca de css/diseno/tokens.css, por eso se carga después.
+  Va ANTES de typography.css y de los componentes.
+*/
+
+:root {
+  /* ── SimoNeuro: colores del juego ──
+     06/10: el naranja y el rojo originales (paleta Okabe-Ito "orange"
+     #E69F00 / "vermillion" #D55E00) se veían, en la práctica, como
+     amarillo y naranja respectivamente — Gon lo marcó y tenía razón: esos
+     dos tonos de Okabe-Ito están deliberadamente corridos hacia el naranja
+     para seguir siendo distinguibles bajo daltonismo rojo-verde
+     (deuteranopia/protanopia), a costa de no leerse como "rojo" y
+     "naranja" puros para el resto de la gente. Como acá el nombre del
+     color importa (en los modos con voz se DICE el nombre), se priorizó
+     que cada color se lea como lo que dice ser, usando naranja/rojo más
+     reconocibles (tomados de paletas de uso común, no inventados) pero
+     manteniendo la MISMA lógica de seguridad que ya tenía la paleta: el
+     naranja se mantiene claro y el rojo oscuro y saturado, para que seguir
+     diferenciándose por luminosidad además de matiz (no es tan seguro
+     como Okabe-Ito puro para daltonismo rojo-verde, pero sí mucho más
+     reconocible). Celeste/azul no cambiaron (nadie los señaló) y siguen
+     difiriendo en luminosidad y matiz, por lo que se distinguen incluso
+     bajo tritanopia. */
+  --simon-naranja: #e67e22;
+  --simon-rojo: #c0392b;
+  --simon-celeste: #56b4e9;
+  --simon-azul: #0072b2;
+
+  --tile-bg: var(--surf);
+  --tile-bg-hover: var(--surf);
+  --tile-border: var(--bdr);
+  --tile-border-hover: color-mix(in srgb, var(--teal-600) 35%, var(--bdr));
+  --tile-shadow: 0 1px 2px rgba(23, 26, 33, 0.04), 0 1px 3px rgba(23, 26, 33, 0.06);
+  --tile-shadow-hover: 0 4px 10px rgba(23, 26, 33, 0.06), 0 12px 28px rgba(23, 26, 33, 0.09);
+  --tile-glow-opacity: 0;
+  --pill-bg: color-mix(in srgb, var(--surf) 92%, transparent);
+  --pill-border: color-mix(in srgb, var(--navy-800) 14%, transparent);
+  --pill-text: var(--navy-800);
+  --logo-chip-bg: transparent;
+  --simon-apagado: var(--bdr);
+}
+
+[data-theme="dark"] {
+  --tile-bg: rgba(255, 255, 255, 0.04);
+  --tile-bg-hover: rgba(255, 255, 255, 0.07);
+  --tile-border: rgba(255, 255, 255, 0.07);
+  --tile-border-hover: rgba(255, 255, 255, 0.16);
+  --tile-shadow: none;
+  --tile-shadow-hover: 0 12px 32px rgba(0, 0, 0, 0.35);
+  --tile-glow-opacity: 0.16;
+  --logo-chip-bg: var(--surf);
+  --simon-apagado: #3a4255;
+}
