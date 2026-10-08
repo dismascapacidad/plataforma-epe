@@ -1,0 +1,56 @@
+/*
+  theme.css — dismascapacidad-design
+  Roles (semánticos) genéricos: a diferencia de tokens.css, estos SÍ cambian
+  según el tema activo. Todo componente que deba verse distinto en
+  claro/oscuro usa estas variables, nunca los tokens crudos de marca.
+
+  Tema claro = default (:root). Tema oscuro = [data-theme="dark"] en <html>.
+  Quién pone el atributo (y cuándo) es decisión de cada sitio.
+
+  Los roles propios de una app o de un componente (tiles, pills, juegos)
+  se definen en el repo de esa app, no acá.
+*/
+
+:root {
+  color-scheme: light;
+
+  --shell-bg: var(--bg);
+  --shell-bg-2: var(--surf-2);
+
+  --text-strong: var(--txt);
+  --text-dim: var(--txt-2);
+  --text-faint: var(--txt-3);
+
+  --badge-bg: var(--surf-2);
+  --badge-border: var(--bdr);
+  --badge-text: var(--txt-3);
+
+  --btn-ghost-border: var(--bdr);
+  --btn-ghost-text: var(--txt-2);
+  --btn-ghost-text-hover: var(--txt);
+  --btn-ghost-bg-hover: var(--surf-2);
+
+  --header-icon: var(--txt-2);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --shell-bg: var(--navy-800);
+  --shell-bg-2: var(--navy-700);
+
+  --text-strong: var(--txt-on-navy);
+  --text-dim: var(--txt-on-navy-dim);
+  --text-faint: var(--txt-on-navy-dim);
+
+  --badge-bg: transparent;
+  --badge-border: var(--bdr-on-navy);
+  --badge-text: var(--txt-on-navy-dim);
+
+  --btn-ghost-border: var(--bdr-on-navy);
+  --btn-ghost-text: var(--txt-on-navy-dim);
+  --btn-ghost-text-hover: var(--txt-on-navy);
+  --btn-ghost-bg-hover: rgba(255, 255, 255, 0.04);
+
+  --header-icon: var(--txt-on-navy-dim);
+}
