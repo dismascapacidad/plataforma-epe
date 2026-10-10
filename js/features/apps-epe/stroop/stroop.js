@@ -119,6 +119,7 @@ var EpeStroop = (function () {
     var aceptando = false; // false durante la pausa entre estímulos
     var corriendo = false;
     var respuestas = []; // { tipo, correcto, rt }
+    var origenes = {}; // con qué se respondió: teclado, toque, mouse, lapiz (ver _comun/pulsar.js)
     var aciertos = 0;
     var errores = 0;
     var finTiempo = 0;
@@ -221,9 +222,10 @@ var EpeStroop = (function () {
     }
 
     // ── Respuesta ────────────────────────────────────────────────────
-    function responder(idColor) {
+    function responder(idColor, origen) {
       if (!corriendo || !aceptando || !actual) return;
       aceptando = false;
+      origenes[origen || "teclado"] = true;
 
       var rt = Math.round(window.performance.now() - t0);
       var correcto = idColor === actual.tinta.id;
@@ -261,6 +263,7 @@ var EpeStroop = (function () {
       limpiarTimers();
       limpiarBotones();
       respuestas = [];
+      origenes = {};
       aciertos = 0;
       errores = 0;
       actual = null;
@@ -329,6 +332,7 @@ var EpeStroop = (function () {
       elStats.appendChild(fila("Estímulos respondidos", String(total)));
       elStats.appendChild(fila("Aciertos", aciertos + " (" + porcentaje(aciertos, total) + ")"));
       elStats.appendChild(fila("Errores", String(errores)));
+      elStats.appendChild(fila("Entrada usada", EpePulsar.resumen(origenes)));
 
       [
         { clave: "cong", texto: "Coinciden palabra y tinta" },
@@ -386,6 +390,13 @@ var EpeStroop = (function () {
         if (suficientes) {
           elStats.appendChild(titulo("Efecto de interferencia"));
           elStats.appendChild(fila("Incongruentes − congruentes", ms(mInc - mCong)));
+        }
+        if (origenes.toque) {
+          var notaTactil = document.createElement("p");
+          notaTactil.className = "epe-juego-stat-nota";
+          notaTactil.textContent =
+            "Jugaste tocando la pantalla: el tiempo de respuesta incluye la demora propia de la pantalla táctil, que es distinta a la del teclado. No lo compares con partidas jugadas con teclado.";
+          elStats.appendChild(notaTactil);
         }
         if (usoBotonCombinado) {
           var notaCombinado = document.createElement("p");
@@ -589,8 +600,8 @@ var EpeStroop = (function () {
       actualizarBotonRestaurar();
     }
     COLORES.forEach(function (c) {
-      botones[c.id].addEventListener("click", function () {
-        responder(c.id);
+      EpePulsar.vincular(botones[c.id], function (origen) {
+        responder(c.id, origen);
       });
     });
 
