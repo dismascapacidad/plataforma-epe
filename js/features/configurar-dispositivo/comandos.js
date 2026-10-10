@@ -11,7 +11,15 @@
  * (`esComandoDeConfiguracion`, en `Conexion.aplicar`).
  */
 
-import { buildButtonCfg } from '../dispositivo/protocolo.js';
+import {
+  buildButtonCfg,
+  normalizeThreshold,
+  TH_DEFAULT_MS,
+  TH_MIN_MS,
+  TH_MAX_MS,
+} from '../dispositivo/protocolo.js';
+
+export { TH_DEFAULT_MS, TH_MIN_MS, TH_MAX_MS };
 
 /** @typedef {import('./teclas-externas.js').Requisito} Requisito */
 
@@ -107,15 +115,99 @@ export function describir(r, arrastre) {
 }
 
 /**
- * Datos de la línea `CFG:` de un requisito, sin el código de botón.
- * @param {Requisito} r
- * @param {Arrastre} [arrastre]
- * @returns {Omit<import('../dispositivo/protocolo.js').ButtonSpec, 'code'>}
+ * ¿Se puede usar `largo` como pulsación larga del mismo botón que `corto`?
+ * En el protocolo, la acción corta y la larga comparten el tipo (las dos teclas
+ * o las dos de mouse), y el doble clic no existe como acción larga. Arrastrar y
+ * cursor nunca se combinan: arrastrar ya ocupa el botón mantenido y el cursor
+ * no usa botón.
+ * @param {Requisito} corto
+ * @param {Requisito} largo
+ * @returns {boolean}
  */
-function especificacion(r, arrastre) {
+export function puedeCombinar(corto, largo) {
+  if (!corto || !largo) return false;
+  if (corto.tipo !== largo.tipo) return false;
+  if (corto.tipo === 'tecla') return true;
+  if (corto.tipo === 'mouse') return largo.mouse !== 'doble-clic';
+  return false;
+}
+
+/**
+ * Asignaciones a las que `entrada` podría sumarse como pulsación larga: las que
+ * todavía no tienen larga y son compatibles (ver `puedeCombinar`).
+ * @template {{ requisito: Requisito, largo?: Requisito|null }} A
+ * @param {A[]} asignaciones
+ * @param {Requisito} entrada
+ * @returns {A[]}
+ */
+export function candidatasParaLarga(asignaciones, entrada) {
+  return asignaciones.filter((a) => !a.largo && puedeCombinar(a.requisito, entrada));
+}
+
+/**
+ * Cuántos eventos entran en `botones` botones: uno por botón y, si el
+ * dispositivo soporta Tap-Hold y el recurso lo permite, dos.
+ * @param {number} botones
+ * @param {boolean} conLarga
+ */
+export function capacidadEventos(botones, conLarga) {
+  return conLarga ? botones * 2 : botones;
+}
+
+/**
+ * Umbral válido para mostrar/enviar: vacío o inválido = el default del firmware.
+ * @param {unknown} v
+ * @returns {number}
+ */
+export function umbralEfectivo(v) {
+  return normalizeThreshold(/** @type {any} */ (v)) || TH_DEFAULT_MS;
+}
+
+/**
+ * Frase del botón combinado para el resumen.
+ * @param {Requisito} corto
+ * @param {Requisito} largo
+ * @param {number} [umbral]
+ */
+export function describirCombinado(corto, largo, umbral) {
+  return `toque: ${corto.etiqueta} (${describir(corto)}) · pulsación larga de ${umbralEfectivo(umbral)} ms: ${largo.etiqueta} (${describir(largo)})`;
+}
+
+/**
+ * Acción larga (`LongSpec` del núcleo) a partir de un requisito.
+ * @param {Requisito} r
+ * @returns {import('../dispositivo/protocolo.js').LongSpec}
+ */
+function especificacionLarga(r) {
   if (r.tipo === 'tecla') {
     const mods = r.mods || [];
     return {
+      key: tokenParaNucleo(r.tecla || ''),
+      ctrl: mods.includes('ctrl'),
+      shift: mods.includes('shift'),
+      alt: mods.includes('alt'),
+      gui: mods.includes('gui'),
+    };
+  }
+  const m = /** @type {any} */ (MOUSE)[r.mouse || ''];
+  return { mouseAction: m ? m.accion : '1' };
+}
+
+/**
+ * Datos de la línea `CFG:` de un requisito, sin el código de botón.
+ * Con `largo` (y un `corto` de su mismo tipo) arma un botón Tap-Hold.
+ * @param {Requisito} r
+ * @param {Arrastre} [arrastre]
+ * @param {Requisito|null} [largo]
+ * @param {number} [umbral]
+ * @returns {Omit<import('../dispositivo/protocolo.js').ButtonSpec, 'code'>}
+ */
+function especificacion(r, arrastre, largo = null, umbral = 0) {
+  /** @type {Omit<import('../dispositivo/protocolo.js').ButtonSpec, 'code'>} */
+  let base;
+  if (r.tipo === 'tecla') {
+    const mods = r.mods || [];
+    base = {
       tipo: 'K',
       modo: 'P',
       key: tokenParaNucleo(r.tecla || ''),
@@ -124,13 +216,17 @@ function especificacion(r, arrastre) {
       alt: mods.includes('alt'),
       gui: mods.includes('gui'),
     };
-  }
-  if (r.tipo === 'mouse') {
+  } else if (r.tipo === 'mouse') {
     const m = /** @type {any} */ (MOUSE)[r.mouse || ''];
-    return { tipo: 'M', modo: 'P', mouseAction: m ? m.accion : '1' };
+    base = { tipo: 'M', modo: 'P', mouseAction: m ? m.accion : '1' };
+  } else {
+    // arrastrar: clic izquierdo; con "toque" queda mantenido hasta el siguiente toque.
+    base = { tipo: 'M', modo: 'P', mouseAction: arrastre === 'mantener' ? '1' : '1M' };
   }
-  // arrastrar: clic izquierdo; con "toque" queda mantenido hasta el siguiente toque.
-  return { tipo: 'M', modo: 'P', mouseAction: arrastre === 'mantener' ? '1' : '1M' };
+  if (largo && puedeCombinar(r, largo)) {
+    return { ...base, modo: 'T', largo: especificacionLarga(largo), umbral: umbralEfectivo(umbral) };
+  }
+  return base;
 }
 
 /**
@@ -149,7 +245,7 @@ export function cursorInicial(cfg) {
  * Arma la lista de comandos. Solo toca los botones asignados y, si se pidió,
  * el modo de las flechas (cursor) con su velocidad y aceleración.
  * @param {{
- *   asignaciones: { requisito: Requisito, codigo: string }[],
+ *   asignaciones: { requisito: Requisito, codigo: string, largo?: Requisito|null, umbral?: number }[],
  *   cursor?: { vel: number, acel: boolean } | null,
  *   arrastre?: Arrastre,
  *   modoIndividual?: boolean,
@@ -158,7 +254,10 @@ export function cursorInicial(cfg) {
  */
 export function armarComandos({ asignaciones, cursor = null, arrastre, modoIndividual = false }) {
   const comandos = asignaciones.map((a) =>
-    buildButtonCfg({ code: a.codigo, ...especificacion(a.requisito, arrastre) }),
+    buildButtonCfg({
+      code: a.codigo,
+      ...especificacion(a.requisito, arrastre, a.largo, a.umbral),
+    }),
   );
   if (cursor) {
     const vel = Math.min(VEL_MAX, Math.max(VEL_MIN, Math.round(cursor.vel)));

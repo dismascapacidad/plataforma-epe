@@ -20,8 +20,13 @@
  * el cursor, muestra velocidad y aceleración. La personalización detallada
  * es del configurador, no de este asistente.
  *
+ * Un botón, dos eventos (Tap-Hold): si la app lo pide (`abrir(entradas,
+ * { combinar: true })`) y el firmware lo soporta, un evento puede asignarse
+ * como pulsación larga de un botón ya elegido para otro (toque corto). Es
+ * opt-in: sin `combinar` el flujo es exactamente el de siempre.
+ *
  * Fuera de alcance (a propósito): guardar el perfil (paso 4 del roadmap, con
- * la tabla en Supabase) y los botones con acción corta/larga (Tap-Hold).
+ * la tabla en Supabase).
  */
 
 import {
@@ -39,10 +44,17 @@ import {
 } from './conexion-activa.js';
 import {
   armarComandos,
+  candidatasParaLarga,
+  capacidadEventos,
   cursorInicial,
   describir,
+  describirCombinado,
   pideCursor,
   requisitosConBoton,
+  umbralEfectivo,
+  TH_DEFAULT_MS,
+  TH_MIN_MS,
+  TH_MAX_MS,
   VEL_MIN,
   VEL_MAX,
 } from './comandos.js';
@@ -82,6 +94,8 @@ function textosExterno(nombre) {
 
 /** Textos del widget abierto ahora (hay un solo widget a la vez: comparte el modal). */
 let T = TEXTOS_JUEGO;
+/** ¿La app que abrió el widget permite un botón con dos eventos? (ver `abrir`). */
+let combinar = false;
 /** Respaldo guardado de una sesión anterior (ver `abrir`). @type {any} */
 let originalPrevio = null;
 /** Estado ORIGINAL del dispositivo: adonde vuelve "restaurar" (ver conexion-activa.js). @type {any} */
@@ -120,7 +134,9 @@ function mostrarCabecera(cabecera, info) {
  * problema se muestra dentro del modal mismo.
  *
  * @param {Requisito[]} entradas Lo que la app necesita ahora mismo (ver teclas-externas.js).
- * @param {{ titulo?: string, externo?: { nombre: string }, originalPrevio?: any }} [opciones]
+ * @param {{ titulo?: string, externo?: { nombre: string }, originalPrevio?: any, combinar?: boolean }} [opciones]
+ *   `combinar`: la app acepta que un botón dé dos eventos (toque y pulsación larga).
+ *   Solo se ofrece si además el firmware conectado soporta Tap-Hold. Opt-in.
  *   `originalPrevio`: respaldo del estado original guardado en una sesión anterior
  *   (se usa como destino de "restaurar" si es del mismo modelo).
  *   `externo`: se abre para un recurso de terceros (cambia los textos y suma
@@ -137,6 +153,7 @@ function mostrarCabecera(cabecera, info) {
  */
 export function abrir(entradasPedidas, opciones = {}) {
   originalPrevio = opciones.originalPrevio || null;
+  combinar = opciones.combinar === true;
   destino = null;
   // Las Apps EpE siguen pasando `{ id, etiqueta, tecla }` sin `tipo`: son teclas.
   const entradas = (entradasPedidas || []).map((e) => (e && e.tipo ? e : { ...e, tipo: 'tecla' }));
@@ -333,10 +350,32 @@ function opcionRadio(nombre, valor, titulo, detalle, alElegir) {
 
 function pasoAsignar(raiz, entradas, cerrar, conexion, producto, snapshot, disponibles) {
   const pedidas = requisitosConBoton(entradas);
-  const aUsar = pedidas.slice(0, disponibles.length);
-  const asignaciones = []; // { requisito, codigo }
+  // Un botón puede dar dos eventos (toque + pulsación larga) solo si la app lo
+  // permite Y el firmware lo soporta (ver `abrir`).
+  const firmwareConTapHold = !!(conexion.info && conexion.info.soportaTapHold);
+  const conLarga = combinar && firmwareConTapHold;
+  const capacidad = capacidadEventos(disponibles.length, conLarga);
+  const aUsar = pedidas.slice(0, capacidad);
+  /** @type {{ requisito: Requisito, codigo: string, largo?: Requisito|null, umbral?: number }[]} */
+  const asignaciones = [];
+  /** Historial para "Atrás": cada paso fue un botón nuevo o una larga sumada a uno. */
+  /** @type {{ tipo: 'boton'|'larga', asignacion: any }[]} */
+  const pasos = [];
   /** @type {import('./comandos.js').Arrastre | undefined} */
   let arrastre;
+
+  function atras(idx) {
+    const ultimo = pasos.pop();
+    if (ultimo) {
+      if (ultimo.tipo === 'larga') {
+        ultimo.asignacion.largo = null;
+        ultimo.asignacion.umbral = undefined;
+      } else {
+        asignaciones.splice(asignaciones.indexOf(ultimo.asignacion), 1);
+      }
+    }
+    pedir(idx - 1);
+  }
 
   function filaBotonesBasica(onAtras) {
     const filaBotones = el('div', 'epe-cd-botones');
@@ -383,7 +422,7 @@ function pasoAsignar(raiz, entradas, cerrar, conexion, producto, snapshot, dispo
       ),
     );
     raiz.appendChild(lista);
-    raiz.appendChild(filaBotonesBasica(idx > 0 ? () => { asignaciones.pop(); pedir(idx - 1); } : null));
+    raiz.appendChild(filaBotonesBasica(idx > 0 ? () => atras(idx) : null));
   }
 
   function pedir(idx) {
@@ -398,13 +437,32 @@ function pasoAsignar(raiz, entradas, cerrar, conexion, producto, snapshot, dispo
     }
     raiz.innerHTML = '';
 
-    if (idx === 0 && pedidas.length > disponibles.length) {
+    if (idx === 0 && pedidas.length > capacidad) {
       raiz.appendChild(
         el(
           'p',
           'epe-cd-aviso',
-          `Este dispositivo tiene ${disponibles.length} entradas y ${T.sujeto} necesita ${pedidas.length}. ` +
-            `Se van a asignar las primeras ${disponibles.length}; el resto queda sin configurar.`,
+          `Este dispositivo permite ${capacidad} ${capacidad === 1 ? 'evento' : 'eventos'} y ${T.sujeto} necesita ${pedidas.length}. ` +
+            `Se van a asignar los primeros ${capacidad}; el resto queda sin configurar.`,
+        ),
+      );
+    }
+    if (idx === 0 && conLarga && pedidas.length > 1) {
+      raiz.appendChild(
+        el(
+          'p',
+          'epe-cd-intro',
+          'Este dispositivo permite dos eventos por botón (toque y pulsación larga): después del primero, ' +
+            'vas a poder asignar otro evento como pulsación larga de un botón ya elegido.',
+        ),
+      );
+    } else if (idx === 0 && combinar && !firmwareConTapHold && pedidas.length > disponibles.length) {
+      raiz.appendChild(
+        el(
+          'p',
+          'epe-cd-aviso',
+          'Con un firmware que soporte Tap-Hold, un mismo botón podría dar dos eventos (toque y pulsación ' +
+            'larga) y entrarían todos. Actualizá el firmware desde el configurador si querés usarlo.',
         ),
       );
     }
@@ -427,7 +485,9 @@ function pasoAsignar(raiz, entradas, cerrar, conexion, producto, snapshot, dispo
       radio.value = d.codigo;
       radio.disabled = !!yaUsada;
       radio.addEventListener('change', () => {
-        asignaciones.push({ requisito: entrada, codigo: d.codigo });
+        const nueva = { requisito: entrada, codigo: d.codigo };
+        asignaciones.push(nueva);
+        pasos.push({ tipo: 'boton', asignacion: nueva });
         pedir(idx + 1);
       });
       const punto = el('span', 'epe-cd-color');
@@ -443,16 +503,38 @@ function pasoAsignar(raiz, entradas, cerrar, conexion, producto, snapshot, dispo
     });
     raiz.appendChild(lista);
 
-    raiz.appendChild(
-      filaBotonesBasica(
-        idx > 0
-          ? () => {
-              asignaciones.pop();
-              pedir(idx - 1);
-            }
-          : null,
-      ),
-    );
+    // Un botón, dos eventos: este evento como pulsación larga de un botón ya asignado.
+    const candidatas = conLarga ? candidatasParaLarga(asignaciones, entrada) : [];
+    if (candidatas.length) {
+      raiz.appendChild(el('p', 'epe-cd-intro', 'O como pulsación larga de un botón que ya elegiste:'));
+      const listaLarga = el('div', 'epe-cd-lista-entradas');
+      candidatas.forEach((c) => {
+        const d = disponibles.find((x) => x.codigo === c.codigo);
+        const label = el('label', 'epe-cd-entrada');
+        const radio = el('input');
+        radio.type = 'radio';
+        radio.name = 'epe-cd-entrada';
+        radio.value = `larga:${c.codigo}`;
+        radio.addEventListener('change', () => {
+          c.largo = entrada;
+          c.umbral = TH_DEFAULT_MS;
+          pasos.push({ tipo: 'larga', asignacion: c });
+          pedir(idx + 1);
+        });
+        const punto = el('span', 'epe-cd-color');
+        if (d) punto.style.backgroundColor = d.color;
+        const texto = el('span', 'epe-cd-entrada-texto');
+        texto.appendChild(el('strong', null, `Pulsación larga de ${d ? d.etiqueta : c.codigo}`));
+        texto.appendChild(el('small', null, `El toque corto de este botón es «${c.requisito.etiqueta}».`));
+        label.appendChild(radio);
+        label.appendChild(punto);
+        label.appendChild(texto);
+        listaLarga.appendChild(label);
+      });
+      raiz.appendChild(listaLarga);
+    }
+
+    raiz.appendChild(filaBotonesBasica(idx > 0 ? () => atras(idx) : null));
   }
 
   pedir(0);
@@ -511,19 +593,57 @@ function pasoResumen(raiz, entradas, aUsar, asignaciones, arrastre, cerrar, cone
 
   const lista = el('ul', 'epe-cd-resumen');
   if (conCursor) lista.appendChild(el('li', null, 'Las flechas del dispositivo → mueven el cursor'));
+  /** Botones con dos eventos: cada uno tiene su umbral ajustable. */
+  const combinados = [];
   asignaciones.forEach((a) => {
     const entradaInfo = [...producto.botones, ...producto.secundarias].find(
       (d) => d.codigo === a.codigo,
     );
-    lista.appendChild(
-      el(
-        'li',
-        null,
-        `${entradaInfo ? entradaInfo.etiqueta : a.codigo} → ${a.requisito.etiqueta} (${describir(a.requisito, arrastre)})`,
-      ),
-    );
+    const nombre = entradaInfo ? entradaInfo.etiqueta : a.codigo;
+    const texto = () =>
+      a.largo
+        ? `${nombre} → ${describirCombinado(a.requisito, a.largo, a.umbral)}`
+        : `${nombre} → ${a.requisito.etiqueta} (${describir(a.requisito, arrastre)})`;
+    const li = el('li', null, texto());
+    lista.appendChild(li);
+    if (a.largo) combinados.push({ a, nombre, li, texto });
   });
   raiz.appendChild(lista);
+
+  if (combinados.length) {
+    const caja = el('div', 'epe-cd-controles');
+    combinados.forEach(({ a, nombre, li, texto }, i) => {
+      const fila = el('div', 'epe-cd-control');
+      const etiqueta = el('label', null, `Desde cuándo es pulsación larga (${nombre})`);
+      etiqueta.htmlFor = `epe-cd-umbral-${i}`;
+      const slider = el('input');
+      slider.type = 'range';
+      slider.id = `epe-cd-umbral-${i}`;
+      slider.min = String(TH_MIN_MS);
+      slider.max = String(TH_MAX_MS);
+      slider.step = '50';
+      slider.value = String(umbralEfectivo(a.umbral));
+      const valor = el('output', 'epe-cd-control-valor', `${slider.value} ms`);
+      valor.htmlFor = slider.id;
+      slider.addEventListener('input', () => {
+        a.umbral = parseInt(slider.value, 10);
+        valor.textContent = `${slider.value} ms`;
+        li.textContent = texto();
+      });
+      fila.appendChild(etiqueta);
+      fila.appendChild(slider);
+      fila.appendChild(valor);
+      caja.appendChild(fila);
+    });
+    raiz.appendChild(caja);
+    raiz.appendChild(
+      el(
+        'p',
+        'epe-cd-aviso',
+        'Si soltás el botón antes de ese tiempo cuenta como toque; si lo mantenés más, como pulsación larga.',
+      ),
+    );
+  }
 
   const controles = conCursor ? crearControlesCursor(cursorInicial(snapshot && snapshot.cfg)) : null;
   if (controles) raiz.appendChild(controles.el);
