@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="../css/base/plataforma.css" />
     <link rel="stylesheet" href="../css/base/typography.css" />
     <link rel="stylesheet" href="../css/components/buttons.css" />
+    <link rel="stylesheet" href="../css/components/form-field.css" />
     <link rel="stylesheet" href="../css/components/atribucion.css" />
     <link rel="stylesheet" href="../css/components/app-nav.css" />
     <link rel="stylesheet" href="../css/components/juego-base.css" />
@@ -23,7 +24,7 @@
     <link rel="stylesheet" href="../css/features/configurar-dispositivo/widget.css" />
   </head>
   <body>
-    <div class="epe-barrido-shell">
+    <div class="epe-barrido-shell" data-bar-raiz>
       <header class="epe-barrido-header">
         <div class="epe-app-header-left">
           <a class="epe-app-back" href="index.html" data-volver-apps>← Apps EpE</a>
@@ -46,108 +47,155 @@
         </button>
       </header>
 
-      <!-- ── Configuración: modal. Al arrancar se cierra solo con
-           "Empezar"; una vez en juego, Escape la vuelve a abrir (ver
-           barrido.js) para poder cambiar algo sin perder lo escrito. ── -->
-      <div class="epe-barrido-modal-overlay" data-barrido-config>
-        <div class="epe-barrido-modal">
-          <h1>Barrido</h1>
+      <!-- ── Preparación (para el profesional): modal principal, sin scroll.
+           "Empezar" la cierra; con la práctica iniciada, Esc la vuelve a abrir. ── -->
+      <div class="epe-barrido-modal-overlay" data-bar-config>
+        <div class="epe-barrido-modal" role="dialog" aria-modal="true" aria-labelledby="bar-titulo">
+          <h1 id="bar-titulo">Barrido</h1>
           <p class="epe-barrido-intro">
-            Entrenador de barrido (scanning): copiá la palabra eligiendo letras de la grilla, con
-            teclado o con los botones en pantalla. Con el juego iniciado, Escape vuelve a abrir
-            esta configuración.
+            Practicá cómo se elige en un tablero cuando no se puede señalar directamente: el foco recorre las
+            opciones y la persona confirma con un evento de entrada. Esc reabre esta pantalla.
           </p>
 
           <div class="epe-barrido-config-fila">
-            <div class="epe-barrido-config-grupo">
-              <h2>Disposición de la grilla</h2>
-              <select data-barrido-disposicion>
-                <option value="abecedario">Abecedario</option>
-                <option value="qwerty">QWERTY</option>
-              </select>
+            <div class="epe-barrido-grupo">
+              <h2>1. Qué se practica</h2>
+              <div class="epe-barrido-opciones">
+                <label>
+                  <input type="radio" name="bar-objetivo" value="copiar" />
+                  Copiar una palabra
+                </label>
+                <label>
+                  <input type="radio" name="bar-objetivo" value="comunicacion" />
+                  Comunicación (texto libre)
+                </label>
+              </div>
+              <div class="epe-barrido-bloque" data-bar-bloque-copiar>
+                <div class="epe-barrido-inline">
+                  <label for="bar-palabra">Palabra</label>
+                  <select id="bar-palabra" data-bar-palabra></select>
+                  <button class="epe-btn-ghost epe-btn-sm" type="button" data-bar-abrir-palabras>Agregar…</button>
+                </div>
+                <div class="epe-barrido-inline">
+                  <label for="bar-reproduccion">Al completarla</label>
+                  <select id="bar-reproduccion" data-bar-reproduccion>
+                    <option value="auto">Se dice sola y sigue la próxima</option>
+                    <option value="tecla">Se dice con un evento de entrada</option>
+                  </select>
+                </div>
+              </div>
+              <p class="epe-field-hint-privacidad" data-bar-aviso-privacidad hidden>
+                Esto no es un caso clínico: no identifiques a la persona ni incluyas datos sensibles.
+              </p>
             </div>
 
-            <div class="epe-barrido-config-grupo">
-              <h2>Reproducir la palabra</h2>
-              <div class="epe-barrido-modo-opciones">
+            <div class="epe-barrido-grupo">
+              <h2>2. Cómo se barre</h2>
+              <div class="epe-barrido-opciones epe-barrido-opciones-fila">
                 <label>
-                  <input type="radio" name="barrido-reproduccion" value="auto" checked />
-                  Automática, al completarla
+                  <input type="radio" name="bar-metodo" value="auto" />
+                  Automático
                 </label>
                 <label>
-                  <input type="radio" name="barrido-reproduccion" value="tecla" />
-                  Con tecla dedicada (P)
+                  <input type="radio" name="bar-metodo" value="dirigido" />
+                  Dirigido
                 </label>
+              </div>
+              <p class="epe-barrido-nota" data-bar-nota-metodo></p>
+              <div class="epe-barrido-inline">
+                <label for="bar-patron">Recorrido</label>
+                <select id="bar-patron" data-bar-patron></select>
+              </div>
+              <label class="epe-barrido-check" data-bar-retroceso-wrap>
+                <input type="checkbox" data-bar-retroceso />
+                Con evento para retroceder
+              </label>
+              <div data-bar-velocidad-wrap>
+                <label for="bar-velocidad">Velocidad: <output data-bar-velocidad-out></output></label>
+                <input type="range" id="bar-velocidad" data-bar-velocidad min="400" max="3000" step="100" />
+                <div class="epe-barrido-escala"><span>Más lento</span><span>Más rápido</span></div>
+              </div>
+              <div class="epe-barrido-inline">
+                <label for="bar-vueltas">Vueltas por grupo</label>
+                <select id="bar-vueltas" data-bar-vueltas>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5">5</option>
+                </select>
               </div>
             </div>
           </div>
 
           <div class="epe-barrido-config-fila">
-            <div class="epe-barrido-config-grupo">
-              <h2>Modo de barrido</h2>
-              <p class="epe-barrido-modo-sublabel">Pulsadores</p>
-              <div class="epe-barrido-modo-opciones epe-barrido-modo-opciones-compacta">
-                <label>
-                  <input type="radio" name="barrido-pulsadores" value="1" checked />
-                  1 (automático)
-                </label>
-                <label>
-                  <input type="radio" name="barrido-pulsadores" value="2" />
-                  2 (manual)
-                </label>
-              </div>
-              <p class="epe-barrido-modo-sublabel">Recorrido</p>
-              <div class="epe-barrido-modo-opciones epe-barrido-modo-opciones-compacta">
-                <label>
-                  <input type="radio" name="barrido-patron" value="lineal" checked />
-                  Celda por celda
-                </label>
-                <label>
-                  <input type="radio" name="barrido-patron" value="filacol" />
-                  Fila y columna
-                </label>
+            <div class="epe-barrido-grupo">
+              <h2>3. Eventos de entrada</h2>
+              <div class="epe-barrido-eventos" data-bar-eventos></div>
+              <p class="epe-barrido-nota">
+                Un evento es lo que hace la persona. Un mismo pulsador puede producir dos eventos distintos
+                (toque corto y pulsación larga): eso se asigna en «Configurar dispositivo».
+              </p>
+              <p class="epe-barrido-aviso" data-bar-aviso-teclas></p>
+              <div class="epe-barrido-fila-botones">
+                <button class="epe-btn-ghost epe-btn-sm" type="button" data-configurar-dispositivo>
+                  Configurar dispositivo…
+                </button>
+                <button class="epe-btn-ghost epe-btn-sm" type="button" data-restaurar-dispositivo hidden>
+                  Restaurar dispositivo
+                </button>
               </div>
             </div>
 
-            <div class="epe-barrido-config-grupo">
-              <p class="epe-barrido-teclas-label">Teclas de este modo</p>
-              <div class="epe-barrido-teclas" data-barrido-teclas></div>
+            <div class="epe-barrido-grupo">
+              <h2>4. Tablero y voz</h2>
+              <div class="epe-barrido-inline">
+                <label for="bar-layout">Disposición</label>
+                <select id="bar-layout" data-bar-layout>
+                  <option value="abc">ABC (alfabético)</option>
+                  <option value="qwerty">QWERTY</option>
+                </select>
+              </div>
+              <div class="epe-barrido-inline">
+                <label for="bar-voz">Voz</label>
+                <select id="bar-voz" data-bar-voz></select>
+              </div>
+              <label for="bar-voz-vel">Velocidad de la voz: <output data-bar-voz-vel-out></output></label>
+              <input type="range" id="bar-voz-vel" data-bar-voz-vel min="0.6" max="1.4" step="0.1" />
+              <div class="epe-barrido-fila-botones">
+                <button class="epe-btn-ghost epe-btn-sm" type="button" data-bar-probar-voz>Probar voz</button>
+              </div>
+              <p class="epe-barrido-aviso" data-bar-voz-aviso></p>
             </div>
           </div>
-
-          <div class="epe-barrido-config-grupo" data-barrido-velocidad-wrap>
-            <label for="barrido-velocidad">Velocidad del barrido automático</label>
-            <input type="range" id="barrido-velocidad" data-barrido-velocidad min="400" max="2000" step="100" value="1500" />
-            <div class="epe-barrido-velocidad-escala">
-              <span>Lento</span>
-              <span>Rápido</span>
-            </div>
-          </div>
-
-          <div class="epe-barrido-config-grupo epe-barrido-palabra">
-            <h2>Palabra a copiar</h2>
-            <select data-barrido-palabra-select></select>
-            <div class="epe-barrido-palabra-nueva-row">
-              <input type="text" data-barrido-palabra-nueva placeholder="Agregar palabra propia" />
-              <button class="epe-btn-ghost epe-btn-sm" type="button" data-barrido-palabra-agregar>+</button>
-            </div>
-          </div>
-
-          <div class="epe-barrido-acciones">
-            <button class="epe-btn-ghost epe-btn-sm" type="button" data-barrido-reiniciar>Borrar todo</button>
-          </div>
-
-          <button class="epe-btn-ghost" type="button" data-configurar-dispositivo>
-            Configurar dispositivo…
-          </button>
-          <button class="epe-btn-ghost" type="button" data-restaurar-dispositivo hidden>
-            Restaurar dispositivo
-          </button>
 
           <div class="epe-juego-pie">
             <a class="epe-btn-ghost" href="index.html" data-volver-apps>Volver a Apps EpE</a>
             <div data-atribucion="by"></div>
-            <button class="epe-btn-acc" type="button" data-barrido-empezar>Empezar</button>
+            <button class="epe-btn-acc" type="button" data-bar-empezar>Empezar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Modal secundario: agregar una palabra propia. ── -->
+      <div class="epe-barrido-modal-overlay epe-barrido-modal-2" data-bar-modal-palabras hidden>
+        <div class="epe-barrido-modal epe-barrido-modal-chico" role="dialog" aria-modal="true" aria-labelledby="bar-pal-titulo">
+          <h1 id="bar-pal-titulo">Agregar una palabra</h1>
+          <p class="epe-barrido-intro">
+            Se escribe letra por letra en el tablero, así que solo admite letras (con o sin tilde) y espacios.
+            La palabra vale mientras esta página esté abierta; no se guarda.
+          </p>
+          <p class="epe-field-hint-privacidad">
+            Esto no es un caso clínico: no identifiques a la persona ni incluyas datos sensibles.
+          </p>
+          <div class="epe-barrido-inline">
+            <input type="text" data-bar-palabra-nueva maxlength="20" placeholder="Por ejemplo: canción" aria-label="Palabra nueva" />
+            <button class="epe-btn-acc epe-btn-sm" type="button" data-bar-palabra-agregar>Agregar</button>
+          </div>
+          <p class="epe-barrido-aviso" data-bar-palabra-aviso></p>
+          <div class="epe-juego-pie">
+            <span></span>
+            <button class="epe-btn-ghost" type="button" data-bar-cerrar-palabras>Listo</button>
           </div>
         </div>
       </div>
@@ -155,29 +203,16 @@
       <div class="epe-barrido-body">
         <div class="epe-barrido-juego">
           <div class="epe-barrido-panel-texto">
-            <p class="epe-barrido-objetivo-label">Copiá esta palabra</p>
-            <div class="epe-barrido-objetivo" data-barrido-objetivo></div>
-
-            <p class="epe-barrido-escrito-label">Escribiste</p>
-            <div class="epe-barrido-escrito-row">
-              <p class="epe-barrido-escrito" data-barrido-escrito></p>
-              <button
-                class="epe-barrido-escrito-escuchar"
-                type="button"
-                data-barrido-escrito-escuchar
-                disabled
-                aria-label="Escuchar lo escrito"
-                title="Escuchar lo escrito"
-              >
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M8 5v14l11-7z" />
-                </svg>
-              </button>
+            <div data-bar-bloque-objetivo>
+              <p class="epe-barrido-etiqueta">Copiá esta palabra</p>
+              <div class="epe-barrido-objetivo" data-bar-objetivo aria-live="polite"></div>
             </div>
-            <p class="epe-barrido-estado" data-barrido-estado></p>
+            <p class="epe-barrido-etiqueta" data-bar-etiqueta-texto>Escribiste</p>
+            <p class="epe-barrido-texto" data-bar-texto aria-live="polite"></p>
+            <div class="epe-barrido-leyenda" data-bar-leyenda aria-label="Eventos de entrada"></div>
+            <p class="epe-barrido-estado" data-bar-estado role="status" aria-live="polite"></p>
           </div>
-
-          <div class="epe-barrido-grilla" data-barrido-grilla></div>
+          <div class="epe-barrido-grilla" data-bar-grilla aria-label="Tablero"></div>
         </div>
       </div>
     </div>
@@ -187,10 +222,9 @@
     <script src="../js/core/ajuste-modal.js"></script>
     <script src="../js/core/modal.js"></script>
     <script type="module" src="../js/features/configurar-dispositivo/widget.js"></script>
-    <script src="../js/features/apps-epe/barrido/barrido.js"></script>
+    <script type="module" src="../js/features/apps-epe/barrido/main.js"></script>
     <script>
       EpeTheme.initThemeToggle(document.getElementById("theme-toggle"));
-      EpeBarrido.init(document.querySelector(".epe-barrido-shell"));
     </script>
   </body>
 </html>
