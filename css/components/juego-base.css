@@ -221,6 +221,16 @@
   font-size: 14px;
 }
 
+/* En pantallas angostas, menos relleno lateral para que "Volver" y "Empezar"
+   entren en la misma fila. */
+@media (max-width: 480px) {
+  .epe-juego-pie .epe-btn-acc,
+  .epe-juego-pie .epe-btn-ghost {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+}
+
 /* Si el modal no entra ni achicado (pantallas bajas, ver ajuste-modal.js) y
    pasa a tener scroll, el pie queda pegado abajo: "Empezar" siempre a la vista.
    Con fondo sólido para que no se lea el contenido que pasa por detrás. */
