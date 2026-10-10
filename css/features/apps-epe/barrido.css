@@ -1,14 +1,19 @@
 /*
   barrido.css
-  Entrenador de barrido: grilla de letras + panel de control. Resaltado de
-  alto contraste (el elemento activo debe notarse de un vistazo, incluso
-  para alguien con baja visión) y botones grandes para las acciones de
-  pulsador (avanzar/activar), pensados para mouse o switch-mouse.
+  Barrido: modal de preparación para el profesional + tablero de práctica.
+  Mismo lenguaje visual que Comunicación (comunicacion-cabeza.css), pero
+  autocontenido: no depende de sus estilos (que traen cosas de Tracky).
+  Todo el color sale de tokens semánticos (tokens.css / theme.css), nada
+  hardcodeado, para que el modo oscuro funcione solo.
+
+  Regla de la plataforma: un modal no tiene scroll. ajuste-modal.js lo achica
+  (transform: scale) si no entra; el overflow-y: auto de abajo es solo el
+  último recurso que ese script devuelve cuando haría falta achicar demasiado.
+
+  El tablero se reparte el alto disponible sin desbordar (el JS calcula las
+  columnas con medirTablero; ver comunicacion-cabeza/grilla.js).
 */
 
-/* Altura fija a la pantalla, sin scroll: todo lo que sigue (header, panel,
-   grilla de letras) tiene que repartirse ese alto exacto, no crecer más
-   allá — por eso tantos flex:1 + min-height:0 en cascada. */
 .epe-barrido-shell {
   height: 100vh;
   height: 100dvh;
@@ -18,9 +23,7 @@
   background: var(--shell-bg);
 }
 
-/* `hidden` pierde contra cualquier display: flex/inline-flex de una clase
-   con la misma especificidad (p. ej. .epe-btn-ghost) — se fuerza acá para
-   que hidden funcione en todo lo que vive dentro del shell. */
+/* `hidden` pierde contra display:flex de una clase: se fuerza. */
 .epe-barrido-shell [hidden] {
   display: none !important;
 }
@@ -30,24 +33,15 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px clamp(16px, 4vw, 40px);
+  padding: 12px clamp(16px, 4vw, 40px);
 }
 
-.epe-barrido-body {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  padding: 0 clamp(16px, 4vw, 40px) clamp(16px, 3vw, 28px);
+.epe-barrido-shell .epe-btn-sm {
+  padding: 6px 12px;
+  font-size: 13px;
 }
 
-/* ── Configuración: modal ──
-   Mismo tratamiento que el resto de Apps EpE (ver duracion-pulsacion.css
-   / lado-correcto.css): se cierra solo con "Empezar" al arrancar, y con
-   el juego en marcha Escape la vuelve a abrir (ver barrido.js) — nunca
-   por click afuera ni por Escape "para cerrar", porque acá Escape hace
-   lo contrario (abre). Sin scroll interno a propósito: por eso el
-   layout de acá abajo es compacto (filas de 2 columnas, paddings
-   chicos) en vez de depender de poder scrollear. */
+/* ── Modal ── */
 .epe-barrido-modal-overlay {
   position: fixed;
   inset: 0;
@@ -55,56 +49,35 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 16px;
   background: rgba(15, 20, 20, 0.55);
 }
-
-.epe-barrido-modal-overlay[hidden] {
-  display: none;
+/* El segundo modal (agregar palabra) se apila sobre el principal. */
+.epe-barrido-modal-2 {
+  z-index: 110;
 }
 
 .epe-barrido-modal {
-  width: min(620px, 94vw);
-  max-height: 96vh;
-  overflow: hidden;
+  width: min(900px, 96vw);
+  max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
   background: var(--tile-bg);
   border: 1px solid var(--tile-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
-  padding: 16px 20px;
+  padding: 12px 16px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
+}
+.epe-barrido-modal-chico {
+  width: min(460px, 96vw);
 }
 
 .epe-barrido-modal h1 {
-  font-size: 19px;
+  font-size: 17px;
   color: var(--text-strong);
-}
-
-.epe-barrido-intro {
-  font-size: 13px;
-  line-height: 1.45;
-  color: var(--text-dim);
-}
-
-.epe-barrido-config-fila {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-@media (max-width: 480px) {
-  .epe-barrido-config-fila {
-    grid-template-columns: 1fr;
-  }
-}
-
-.epe-barrido-config-grupo {
-  background: var(--shell-bg-2);
-  border: 1px solid var(--tile-border);
-  border-radius: var(--radius-md);
-  padding: 10px 14px;
 }
 
 .epe-barrido-modal h2 {
@@ -112,103 +85,209 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--text-dim);
-  margin-bottom: 8px;
+  margin-bottom: 0;
 }
 
-.epe-barrido-config-grupo > label {
-  display: block;
-  font-size: 12px;
+.epe-barrido-intro {
+  font-size: 12.5px;
+  line-height: 1.35;
   color: var(--text-dim);
-  margin-bottom: 6px;
 }
 
-.epe-barrido-modo-opciones {
+.epe-barrido-config-fila {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+@media (max-width: 640px) {
+  .epe-barrido-config-fila {
+    grid-template-columns: 1fr;
+  }
+}
+
+.epe-barrido-grupo {
+  background: var(--shell-bg-2);
+  border: 1px solid var(--tile-border);
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
   display: flex;
   flex-direction: column;
   gap: 6px;
   font-size: 12.5px;
   color: var(--text-strong);
+  min-width: 0;
 }
 
-.epe-barrido-modo-opciones label {
+.epe-barrido-grupo label {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.epe-barrido-opciones {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.epe-barrido-opciones-fila {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+}
+.epe-barrido-opciones label,
+.epe-barrido-check {
   display: flex;
   align-items: flex-start;
   gap: 8px;
+  color: var(--text-strong);
+  font-size: 12.5px;
 }
 
-/* Modo de barrido: en vez de una lista de 4 combinaciones ya armadas
-   (que ocupaba demasiado alto), se elige por separado cantidad de
-   pulsadores y patrón de recorrido — el JS combina las dos elecciones
-   en el modo real (ver calcularModo() en barrido.js). Las dos opciones
-   de cada sub-elección van en fila, no en columna, porque son cortas y
-   así ocupan la mitad del alto. */
-.epe-barrido-modo-sublabel {
-  font-size: 10.5px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  color: var(--text-faint);
-  margin: 8px 0 4px;
-}
-
-.epe-barrido-modo-sublabel:first-of-type {
-  margin-top: 0;
-}
-
-.epe-barrido-modo-opciones-compacta {
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: 4px 16px;
-}
-
-.epe-barrido-velocidad-escala {
+.epe-barrido-bloque {
   display: flex;
-  justify-content: space-between;
-  font-size: 10.5px;
-  color: var(--text-faint);
-  margin-top: 2px;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.epe-barrido-modal input[type="range"] {
-  width: 100%;
-  accent-color: var(--teal-600);
+/* Etiqueta + control en una fila (el control ocupa el resto). */
+.epe-barrido-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.epe-barrido-inline label {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+.epe-barrido-inline select,
+.epe-barrido-inline input[type='text'] {
+  flex: 1;
+  min-width: 0;
 }
 
 .epe-barrido-modal select,
-.epe-barrido-modal input[type="text"] {
+.epe-barrido-modal input[type='text'] {
   width: 100%;
   border: 1px solid var(--tile-border);
   background: var(--shell-bg);
   color: var(--text-strong);
   border-radius: var(--radius-sm);
-  padding: 8px 10px;
+  padding: 7px 10px;
   font-size: 13px;
 }
 
-.epe-barrido-palabra-nueva-row {
+.epe-barrido-modal input[type='range'] {
+  width: 100%;
+  accent-color: var(--teal-600);
+}
+
+.epe-barrido-escala {
   display: flex;
-  gap: 6px;
-  margin-top: 6px;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-faint);
 }
 
-.epe-barrido-palabra-nueva-row input {
-  flex: 1;
+.epe-barrido-nota {
+  font-size: 12px;
+  line-height: 1.3;
+  color: var(--text-dim);
 }
 
-.epe-barrido-acciones {
+.epe-barrido-aviso {
+  font-size: 12px;
+  line-height: 1.3;
+  color: var(--text-dim);
+}
+.epe-barrido-aviso:empty {
+  display: none;
+}
+.epe-barrido-aviso.is-alerta {
+  color: var(--red);
+  font-weight: 700;
+}
+
+.epe-barrido-fila-botones {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ── Eventos de entrada (lista con la tecla de cada uno) ── */
+.epe-barrido-eventos {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
-/* ── Área de juego ── */
+.epe-barrido-evento {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 8px;
+  background: var(--tile-bg);
+  border: 1px solid var(--tile-border);
+  border-radius: var(--radius-sm);
+}
+.epe-barrido-evento > div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.epe-barrido-evento strong {
+  font-size: 13px;
+  color: var(--text-strong);
+}
+.epe-barrido-evento small {
+  font-size: 11.5px;
+  line-height: 1.25;
+  color: var(--text-dim);
+}
+
+.epe-barrido-tecla-boton,
+.epe-barrido-tecla {
+  min-width: 34px;
+  text-align: center;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-strong);
+  border: 1px solid var(--tile-border);
+  border-radius: 6px;
+  padding: 5px 10px;
+  background: var(--shell-bg);
+}
+.epe-barrido-tecla-boton {
+  flex: 0 0 auto;
+  cursor: pointer;
+}
+.epe-barrido-tecla-boton:hover {
+  border-color: var(--teal-600);
+}
+.epe-barrido-tecla-boton:focus-visible {
+  outline: 2px solid var(--teal-600);
+  outline-offset: 2px;
+}
+.epe-barrido-tecla-boton.is-capturando {
+  border-color: var(--teal-600);
+  color: var(--teal-700);
+}
+
+/* ── Tablero ── */
+.epe-barrido-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  padding: 0 clamp(12px, 3vw, 32px) clamp(12px, 2vw, 24px);
+}
+
 .epe-barrido-juego {
   flex: 1;
   min-width: 0;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .epe-barrido-panel-texto {
@@ -216,231 +295,151 @@
   background: var(--tile-bg);
   border: 1px solid var(--tile-border);
   border-radius: var(--radius-lg);
-  padding: 12px 20px;
-}
-
-.epe-barrido-objetivo-label,
-.epe-barrido-escrito-label {
-  font-size: 11.5px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text-faint);
-}
-
-.epe-barrido-objetivo {
-  display: flex;
-  gap: 6px;
-  margin: 6px 0 14px;
-}
-
-/* ── Teclas explícitas del modo activo ──
-   renderTeclas() en JS arma esta lista según el modo de barrido y la
-   opción de reproducción elegidos — para que siempre esté claro qué
-   tecla hace qué, sin tener que adivinar. */
-.epe-barrido-teclas-label {
-  font-size: 11.5px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text-faint);
-}
-
-.epe-barrido-teclas {
+  padding: 10px 20px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin: 6px 0 14px;
+  gap: 2px;
+}
+.epe-barrido-panel-texto p {
+  margin: 0;
 }
 
-.epe-barrido-tecla-fila {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12.5px;
-  color: var(--text-dim);
-}
-
-.epe-barrido-tecla-badge {
-  flex-shrink: 0;
-  min-width: 22px;
-  text-align: center;
+.epe-barrido-etiqueta {
   font-size: 11.5px;
-  font-weight: 700;
-  color: var(--text-strong);
-  border: 1px solid var(--tile-border);
-  border-radius: 6px;
-  padding: 2px 6px;
-  background: var(--shell-bg);
-}
-
-.epe-barrido-letra-objetivo {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--tile-border);
-  font-weight: 700;
-  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   color: var(--text-dim);
 }
 
-.epe-barrido-letra-objetivo.is-correcta {
-  border-color: var(--grn);
-  color: var(--grn);
-  background: var(--grn-dim);
-}
-
-.epe-barrido-letra-objetivo.is-incorrecta {
-  border-color: var(--red);
-  color: var(--red);
-  background: var(--red-dim);
-}
-
-[data-theme="dark"] .epe-barrido-letra-objetivo.is-correcta,
-[data-theme="dark"] .epe-barrido-letra-objetivo.is-incorrecta {
-  background: transparent;
-}
-
-.epe-barrido-escrito-row {
+/* Palabra a copiar: cada letra se marca como correcta / incorrecta. */
+.epe-barrido-objetivo {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-height: 1.3em;
+  font-size: clamp(20px, 3.4vw, 32px);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text-faint);
+}
+.epe-barrido-letra-objetivo.is-correcta {
+  color: var(--grn);
+}
+.epe-barrido-letra-objetivo.is-incorrecta {
+  color: var(--red);
+  text-decoration: underline;
 }
 
-.epe-barrido-escrito {
-  font-size: 20px;
+.epe-barrido-texto {
+  font-size: clamp(20px, 3.4vw, 32px);
   font-weight: 700;
   letter-spacing: 0.04em;
   color: var(--text-strong);
   min-height: 1.3em;
+  overflow-wrap: anywhere;
 }
 
-.epe-barrido-escrito-escuchar {
-  flex-shrink: 0;
-  width: 34px;
-  height: 34px;
+/* Leyenda: qué tecla hace qué (para quien guía la práctica). */
+.epe-barrido-leyenda {
   display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.epe-barrido-leyenda-item {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: var(--teal-600);
-  color: #fff;
-  transition: background 0.15s ease, opacity 0.15s ease;
-}
-
-.epe-barrido-escrito-escuchar svg {
-  width: 16px;
-  height: 16px;
-  margin-left: 1px; /* centra ópticamente el triángulo de play */
-}
-
-.epe-barrido-escrito-escuchar:hover {
-  background: var(--teal-700);
-}
-
-.epe-barrido-escrito-escuchar:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-  background: var(--text-faint);
+  gap: 6px;
 }
 
 .epe-barrido-estado {
-  margin-top: 8px;
-  font-size: 13px;
-  min-height: 1.3em;
+  font-size: 12.5px;
+  line-height: 1.3;
   color: var(--text-dim);
 }
-
+.epe-barrido-estado:empty {
+  display: none;
+}
 .epe-barrido-estado.is-exito {
   color: var(--grn);
   font-weight: 700;
 }
+.epe-barrido-estado.is-alerta {
+  color: var(--red);
+  font-weight: 700;
+}
 
-/* ── Grilla de letras ──
-   Todas las celdas tienen que verse enteras sin scroll: en vez de un
-   tamaño fijo por celda (que podía desbordar el alto disponible), la
-   grilla ocupa exactamente el espacio que le queda (flex:1) y cada fila
-   se reparte ese alto en partes iguales (flex:1 también) — el tamaño de
-   cada celda sale de cuánto espacio hay, no al revés. */
 .epe-barrido-grilla {
   flex: 1;
   min-height: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.epe-barrido-fila {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  gap: 6px;
+  display: grid;
+  gap: 8px;
 }
 
 .epe-barrido-celda {
-  /* Ancho fijo a 1/7 de la fila (7 columnas), no flex:1 — si no, la
-     última fila (que tiene una sola celda, "BORRAR") se estiraría a todo
-     el ancho en vez de quedar del mismo tamaño que el resto. La altura sí
-     es flexible (la da .epe-barrido-fila con flex:1). */
-  flex: 0 0 calc((100% - 36px) / 7);
+  position: relative;
+  overflow: hidden;
   min-width: 0;
   min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: clamp(13px, 2.4vw, 22px);
+  font-size: clamp(16px, 3vw, 30px);
   font-weight: 700;
   color: var(--text-strong);
   background: var(--tile-bg);
   border: 2px solid var(--tile-border);
   border-radius: var(--radius-sm);
-  transition: background 0.1s ease, border-color 0.1s ease, transform 0.1s ease;
+  user-select: none;
+  transition:
+    background 0.08s ease,
+    border-color 0.08s ease;
 }
 
-.epe-barrido-celda.is-fila-activa {
-  border-color: color-mix(in srgb, var(--teal-600) 45%, var(--tile-border));
-  background: color-mix(in srgb, var(--teal-600) 8%, var(--tile-bg));
+.epe-barrido-celda[data-tipo='accion'] {
+  font-size: clamp(12px, 2vw, 20px);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
-.epe-barrido-celda.is-resaltada {
+.epe-barrido-celda[data-id='a-hablar'] {
   border-color: var(--teal-600);
-  background: color-mix(in srgb, var(--teal-600) 26%, var(--tile-bg));
-  transform: scale(1.05);
+  color: var(--teal-700);
 }
 
-/* ── Compactación (ver js/core/ajuste-modal.js y juego-base.css) ──
-   En pantallas anchas el modal se ensancha y sus grupos de configuración
-   pasan a una grilla de dos columnas (las dos "filas" dejan de ser filas
-   propias con display: contents), así entra sin scroll ni achicarse. */
-@media (min-width: 720px) {
-  .epe-barrido-modal {
-    width: min(880px, 94vw);
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px 12px;
-    align-content: start;
-  }
+/* Grupo que se está recorriendo: tenue, para ver dentro de qué se barre. */
+.epe-barrido-celda.is-grupo {
+  border-color: var(--teal-600);
+  background: color-mix(in srgb, var(--teal-600) 10%, var(--tile-bg));
+}
 
-  .epe-barrido-modal > h1,
-  .epe-barrido-modal > .epe-barrido-intro,
-  .epe-barrido-modal > .epe-juego-pie {
-    grid-column: 1 / -1;
-  }
+/* Opción resaltada ahora: alto contraste, se nota de un vistazo. */
+.epe-barrido-celda.is-resaltada {
+  border-color: var(--teal-700);
+  background: color-mix(in srgb, var(--teal-600) 42%, var(--tile-bg));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--teal-600) 45%, transparent);
+}
 
-  .epe-barrido-config-fila {
-    display: contents;
-  }
+/* Destello al elegir. */
+.epe-barrido-celda.is-elegida {
+  background: var(--teal-600);
+  border-color: var(--teal-700);
+  color: #fff;
+}
 
-  .epe-barrido-modal > .epe-barrido-acciones {
-    align-self: center;
+.epe-barrido-celda > span {
+  position: relative;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .epe-barrido-celda {
+    transition: none;
   }
 }
 
-/* En oscuro --tile-bg es casi transparente y el juego de atrás se veía a
-   través del modal: mismo fondo sólido que el resto de los modales. */
-[data-theme="dark"] .epe-barrido-modal {
-  background: var(--shell-bg-2);
+/* En modo oscuro el modal va sólido (sin transparencias que dejen ver el tablero). */
+:root[data-theme='dark'] .epe-barrido-modal {
+  background: var(--tile-bg);
 }
