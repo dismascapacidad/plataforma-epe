@@ -66,8 +66,8 @@
                   Teclado
                 </label>
                 <label>
-                  <input type="radio" name="dp-entrada" value="mouse" />
-                  Mouse / pantalla
+                  <input type="radio" name="dp-entrada" value="pantalla" />
+                  Pantalla (toque o mouse)
                 </label>
               </div>
             </div>
@@ -146,11 +146,10 @@
             </div>
           </div>
 
-          <button class="epe-dp-boton-mouse" type="button" data-dp-boton-mouse hidden>
-            Mantené apretado
-          </button>
         </div>
 
+        <!-- Con la pantalla como pulsador: esta capa cubre toda el área de juego y recibe el toque. -->
+        <div class="epe-dp-capa" data-dp-capa aria-hidden="true" hidden></div>
       </main>
 
       <!-- ── Felicitación: modal, mismo tratamiento que el de configuración ── -->

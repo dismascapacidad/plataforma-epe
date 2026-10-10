@@ -44,7 +44,9 @@
  *
  * La entrada es UN solo botón lógico, configurable en el modal previo
  * como tecla de teclado (con captura: "presioná una tecla para
- * asignarla") o como botón grande en pantalla (mouse/touch/switch-mouse).
+ * asignarla") o como la pantalla entera (toque, mouse o switch-mouse): una
+ * capa cubre el área de juego y mide cuánto se mantiene apretada. En
+ * celulares viene elegida la pantalla.
  *
  * Sin librerías: la animación de movimiento es un loop de
  * requestAnimationFrame que escribe `left` directo (sin transición CSS
@@ -94,7 +96,7 @@ var EpeDuracionPulsacion = (function () {
 
   var root, elConfig, elJuego, elFelicitacion;
   var elCarriles = []; // { el, bloqueEl, zonaEl }
-  var elHudSeleccion, elHudLogrados, elBotonMouse;
+  var elHudSeleccion, elHudLogrados, elCapa;
   var elFelicitacionTexto, elFelicitacionNivel;
   var elUmbralInput, elUmbralValor;
   var elVelocidadInput, elVelocidadValor;
@@ -104,7 +106,7 @@ var EpeDuracionPulsacion = (function () {
   var restaurarDispositivo = null; // función pendiente para devolver el dispositivo a como estaba
 
   var config = {
-    tipoEntrada: "teclado",
+    tipoEntrada: "teclado", // "teclado" | "pantalla"
     tecla: " ",
     teclaLabel: "Espacio",
     velocidadPct: 50,
@@ -524,7 +526,7 @@ var EpeDuracionPulsacion = (function () {
 
   function empezar() {
     leerConfigDesdeForm();
-    elBotonMouse.hidden = config.tipoEntrada !== "mouse";
+    elCapa.hidden = config.tipoEntrada !== "pantalla";
     iniciarPartida(1);
   }
 
@@ -607,7 +609,7 @@ var EpeDuracionPulsacion = (function () {
     elFelicitacion = root.querySelector("[data-dp-felicitacion]");
     elHudSeleccion = root.querySelector("[data-dp-hud-seleccion]");
     elHudLogrados = root.querySelector("[data-dp-hud-logrados]");
-    elBotonMouse = root.querySelector("[data-dp-boton-mouse]");
+    elCapa = root.querySelector("[data-dp-capa]");
     elFelicitacionTexto = root.querySelector("[data-dp-felicitacion-texto]");
     elFelicitacionNivel = root.querySelector("[data-dp-felicitacion-nivel]");
     elUmbralInput = root.querySelector("[data-dp-umbral]");
@@ -637,6 +639,10 @@ var EpeDuracionPulsacion = (function () {
       iniciarCapturaTecla(botonCapturar);
     });
 
+    // En un celular lo natural es la pantalla (no hay teclado ni dispositivo a mano).
+    if (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) {
+      root.querySelector('input[name="dp-entrada"][value="pantalla"]').checked = true;
+    }
     root.querySelectorAll('input[name="dp-entrada"]').forEach(function (radio) {
       radio.addEventListener("change", actualizarVisibilidadEntrada);
     });
@@ -683,10 +689,44 @@ var EpeDuracionPulsacion = (function () {
     document.addEventListener("keydown", onKeydown);
     document.addEventListener("keyup", onKeyup);
 
-    elBotonMouse.addEventListener("pointerdown", onPresionar);
-    elBotonMouse.addEventListener("pointerup", onSoltar);
-    elBotonMouse.addEventListener("pointerleave", onSoltar);
-    elBotonMouse.addEventListener("pointercancel", onSoltar);
+    // Pantalla como pulsador. El puntero se captura para recibir siempre el
+    // pointerup (aunque el dedo o el mouse se salgan del área) y se cancela el
+    // gesto propio del navegador (zoom por doble toque, selección de texto y
+    // menú de pulsación larga) que, si no, interrumpiría un "mantener apretado".
+    function soltarCapa() {
+      elCapa.classList.remove("is-apoyada");
+      onSoltar();
+    }
+    elCapa.addEventListener("pointerdown", function (ev) {
+      if (!ev.isPrimary || (ev.pointerType === "mouse" && ev.button !== 0)) return;
+      ev.preventDefault();
+      try {
+        elCapa.setPointerCapture(ev.pointerId);
+      } catch (e) {
+        /* sin captura sigue andando */
+      }
+      elCapa.classList.add("is-apoyada");
+      onPresionar();
+    });
+    elCapa.addEventListener("pointerup", soltarCapa);
+    elCapa.addEventListener("pointercancel", soltarCapa);
+    elCapa.addEventListener("lostpointercapture", soltarCapa);
+    elCapa.addEventListener("contextmenu", function (ev) {
+      ev.preventDefault();
+    });
+    function cortarGesto(ev) {
+      if (ev.cancelable && ev.touches.length <= 1) ev.preventDefault();
+    }
+    elCapa.addEventListener("touchstart", cortarGesto, { passive: false });
+    elCapa.addEventListener(
+      "touchend",
+      function (ev) {
+        cortarGesto(ev);
+        soltarCapa();
+      },
+      { passive: false }
+    );
+    elCapa.addEventListener("touchcancel", soltarCapa);
   }
 
   return { init: init };
