@@ -36,6 +36,12 @@
   padding: 12px clamp(16px, 4vw, 40px);
 }
 
+.epe-barrido-header-acciones {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .epe-barrido-shell .epe-btn-sm {
   padding: 6px 12px;
   font-size: 13px;
@@ -273,8 +279,33 @@
   color: var(--teal-700);
 }
 
+/* ── Pantalla táctil como pulsador ── */
+.epe-barrido-toque-opciones {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Teclas y dispositivo: plegado cuando la pantalla es el pulsador. */
+.epe-barrido-teclas > summary {
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-dim);
+  padding: 4px 0;
+}
+.epe-barrido-teclas[open] > summary {
+  margin-bottom: 6px;
+}
+.epe-barrido-teclas-cuerpo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 /* ── Tablero ── */
 .epe-barrido-body {
+  position: relative;
   flex: 1;
   min-height: 0;
   display: flex;
@@ -435,6 +466,39 @@
 
 @media (prefers-reduced-motion: reduce) {
   .epe-barrido-celda {
+    transition: none;
+  }
+}
+
+/* Capa de toques: cubre todo el área de juego y se reparte en franjas verticales
+   (una por evento). Sin fondo: el tablero se sigue viendo; solo se marcan los
+   límites entre franjas y se destella la que acaba de activarse. */
+.epe-barrido-capa-toque {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.epe-barrido-franja {
+  flex: 1;
+  border-radius: var(--radius-lg);
+  transition: background 0.12s ease;
+}
+.epe-barrido-franja + .epe-barrido-franja {
+  border-left: 2px dashed color-mix(in srgb, var(--teal-600) 55%, transparent);
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+.epe-barrido-franja.is-activa {
+  background: color-mix(in srgb, var(--teal-600) 22%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .epe-barrido-franja {
     transition: none;
   }
 }

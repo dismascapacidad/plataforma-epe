@@ -8,6 +8,12 @@
  */
 import { PATRONES } from './patrones.js';
 import { IDS_EVENTO, METODOS, TECLAS_POR_DEFECTO, validarTecla } from './eventos.js';
+import {
+  ESPERA_OPCIONES_MS,
+  ESPERA_POR_DEFECTO_MS,
+  MANTENER_OPCIONES_MS,
+  MANTENER_POR_DEFECTO_MS,
+} from './toque.js';
 
 const CLAVE = 'epe-barrido';
 
@@ -27,7 +33,8 @@ export const VUELTAS_MAX = 5;
 /**
  * @typedef {{objetivo:string, metodo:string, patron:string, conRetroceso:boolean,
  *   intervaloMs:number, vueltas:number, layout:string, reproduccion:string,
- *   teclas:Record<string,string>, vozNombre:string|null, velocidadVoz:number}} Config
+ *   teclas:Record<string,string>, vozNombre:string|null, velocidadVoz:number,
+ *   toque:boolean|null, toqueMantenerMs:number, toqueEsperaMs:number}} Config
  */
 
 /** @type {Config} */
@@ -43,6 +50,11 @@ export const CONFIG_INICIAL = {
   teclas: { ...TECLAS_POR_DEFECTO },
   vozNombre: null,
   velocidadVoz: 1,
+  // Pantalla táctil como pulsador. null = nunca se eligió: se activa sola en
+  // pantallas táctiles (ver main.js). Los dos tiempos filtran toques accidentales.
+  toque: null,
+  toqueMantenerMs: MANTENER_POR_DEFECTO_MS,
+  toqueEsperaMs: ESPERA_POR_DEFECTO_MS,
 };
 
 /** Teclas guardadas: solo valen si son válidas y no hay dos eventos con la misma. */
@@ -83,6 +95,9 @@ export function validarConfig(c) {
   if (Number.isFinite(c.velocidadVoz) && c.velocidadVoz >= 0.5 && c.velocidadVoz <= 1.6) {
     salida.velocidadVoz = c.velocidadVoz;
   }
+  if (typeof c.toque === 'boolean') salida.toque = c.toque;
+  if (MANTENER_OPCIONES_MS.includes(c.toqueMantenerMs)) salida.toqueMantenerMs = c.toqueMantenerMs;
+  if (ESPERA_OPCIONES_MS.includes(c.toqueEsperaMs)) salida.toqueEsperaMs = c.toqueEsperaMs;
   salida.teclas = teclasValidas(c.teclas);
   return salida;
 }
