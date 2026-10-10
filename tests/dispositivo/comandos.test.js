@@ -1,10 +1,16 @@
 import { describe, it, expect } from 'vitest';
 import {
   armarComandos,
+  candidatasParaLarga,
+  capacidadEventos,
   cursorInicial,
   describir,
+  describirCombinado,
   pideCursor,
+  puedeCombinar,
   requisitosConBoton,
+  umbralEfectivo,
+  TH_DEFAULT_MS,
   VEL_DEFECTO,
 } from '../../js/features/configurar-dispositivo/comandos.js';
 import { validarTeclas } from '../../js/features/configurar-dispositivo/teclas-externas.js';
@@ -118,5 +124,103 @@ describe('describir', () => {
     expect(describir(m)).toBe('doble clic');
     expect(describir(a, 'toque')).toContain('un toque agarra');
     expect(describir(a, 'mantener')).toContain('mantenés presionado');
+  });
+});
+
+describe('un botón, dos eventos (Tap-Hold)', () => {
+  const [k1, k2, m1, m2, dc, ar] = req([
+    { id: 'avanzar', etiqueta: 'Avanzar', tecla: 'k' },
+    { id: 'seleccionar', etiqueta: 'Seleccionar', tecla: 'l' },
+    { id: 'm1', etiqueta: 'Clic', mouse: 'clic' },
+    { id: 'm2', etiqueta: 'Derecho', mouse: 'clic-derecho' },
+    { id: 'dc', etiqueta: 'Doble', mouse: 'doble-clic' },
+    { id: 'ar', etiqueta: 'Arrastrar', arrastrar: true },
+  ]);
+
+  it('dos teclas en un botón: modo T con acción larga y umbral por defecto', () => {
+    const cmds = armarComandos({ asignaciones: [{ requisito: k1, codigo: 'BR', largo: k2 }] });
+    expect(cmds).toEqual(['CFG:BR:K:T:0:k:-:-:l:0:0:1000']);
+  });
+
+  it('umbral elegido, acotado a 100..5000', () => {
+    const a = (umbral) => armarComandos({ asignaciones: [{ requisito: k1, codigo: 'BR', largo: k2, umbral }] })[0];
+    expect(a(750)).toMatch(/:750$/);
+    expect(a(10)).toMatch(/:100$/);
+    expect(a(99999)).toMatch(/:5000$/);
+    expect(a(0)).toMatch(/:1000$/);
+  });
+
+  it('mouse corto y mouse largo', () => {
+    const cmds = armarComandos({ asignaciones: [{ requisito: m1, codigo: 'BA', largo: m2, umbral: 500 }] });
+    expect(cmds).toEqual(['CFG:BA:M:T:0:1:-:-:2:0:0:500']);
+  });
+
+  it('con teclas especiales y modificadores en la larga', () => {
+    const [a, b] = req([
+      { id: 'a', etiqueta: 'A', tecla: ' ' },
+      { id: 'b', etiqueta: 'B', tecla: 'arrowleft', mods: ['ctrl'] },
+    ]);
+    const [c] = armarComandos({ asignaciones: [{ requisito: a, codigo: 'BN', largo: b }] });
+    expect(c).toContain(':211:C:');
+    expect(c.startsWith('CFG:BN:K:T:0: :')).toBe(true);
+  });
+
+  it('tipos distintos no se combinan: la larga se ignora y queda un botón común', () => {
+    expect(puedeCombinar(k1, m1)).toBe(false);
+    const cmds = armarComandos({ asignaciones: [{ requisito: k1, codigo: 'BR', largo: m1 }] });
+    expect(cmds).toEqual(['CFG:BR:K:P:0:k:-:-']);
+  });
+
+  it('puedeCombinar: teclas sí; mouse sí salvo doble clic como larga; arrastrar y cursor nunca', () => {
+    expect(puedeCombinar(k1, k2)).toBe(true);
+    expect(puedeCombinar(m1, m2)).toBe(true);
+    expect(puedeCombinar(m1, dc)).toBe(false);
+    expect(puedeCombinar(dc, m1)).toBe(true);
+    expect(puedeCombinar(ar, m1)).toBe(false);
+    expect(puedeCombinar(m1, ar)).toBe(false);
+    expect(puedeCombinar(null, k1)).toBe(false);
+  });
+
+  it('candidatasParaLarga: solo botones sin larga y del mismo tipo', () => {
+    const asig = [
+      { requisito: k1, codigo: 'BR' },
+      { requisito: m1, codigo: 'BA' },
+      { requisito: k2, codigo: 'BN', largo: k1 },
+    ];
+    const [otra] = req([{ id: 'x', etiqueta: 'X', tecla: 'x' }]);
+    expect(candidatasParaLarga(asig, otra).map((a) => a.codigo)).toEqual(['BR']);
+  });
+
+  it('capacidadEventos: el doble solo con Tap-Hold', () => {
+    expect(capacidadEventos(2, false)).toBe(2);
+    expect(capacidadEventos(2, true)).toBe(4);
+  });
+
+  it('umbralEfectivo y describirCombinado', () => {
+    expect(umbralEfectivo(undefined)).toBe(TH_DEFAULT_MS);
+    expect(umbralEfectivo('')).toBe(TH_DEFAULT_MS);
+    expect(umbralEfectivo(20)).toBe(100);
+    expect(describirCombinado(k1, k2, 800)).toBe(
+      'toque: Avanzar (tecla K) · pulsación larga de 800 ms: Seleccionar (tecla L)',
+    );
+  });
+
+  it('sin larga todo queda igual que antes (compatibilidad)', () => {
+    const a = armarComandos({ asignaciones: [{ requisito: k1, codigo: 'BR' }] });
+    const b = armarComandos({ asignaciones: [{ requisito: k1, codigo: 'BR', largo: null, umbral: 700 }] });
+    expect(b).toEqual(a);
+    expect(a).toEqual(['CFG:BR:K:P:0:k:-:-']);
+  });
+
+  it('lo que se arma pasa la lista blanca del núcleo', () => {
+    const cmds = armarComandos({
+      asignaciones: [
+        { requisito: k1, codigo: 'BR', largo: k2, umbral: 1500 },
+        { requisito: m1, codigo: 'BA', largo: m2 },
+        { requisito: dc, codigo: 'BN', largo: m1, umbral: 300 },
+      ],
+    });
+    expect(cmds.length).toBe(3);
+    for (const c of cmds) expect(esComandoDeConfiguracion(c)).toBe(true);
   });
 });

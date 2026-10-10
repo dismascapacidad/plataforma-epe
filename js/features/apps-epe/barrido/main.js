@@ -666,6 +666,8 @@ function iniciar(raiz) {
     dispositivoWidget()
       .abrir(entradasParaDispositivo(config.teclas, activos()), {
         titulo: 'Configurar dispositivo — Barrido',
+        // Un mismo botón puede dar dos eventos (toque y pulsación larga) si el firmware lo soporta.
+        combinar: true,
       })
       .then((r) => {
         if (r?.restaurar) st.restaurarDispositivo = r.restaurar;
