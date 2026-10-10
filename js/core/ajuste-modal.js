@@ -7,10 +7,15 @@
  * mostrarse/ocultarse y cuando cambia su contenido (por ejemplo al elegir
  * otro modo de acceso y cambiar la lista de teclas).
  *
- * Último recurso: si hiciera falta achicar por debajo de ESCALA_MIN (pantallas
- * diminutas o con zoom del navegador muy alto), el texto dejaría de ser
- * legible y se vuelve al comportamiento del CSS (scroll interno del modal):
- * mejor scroll que texto ilegible, y que no anule el zoom que pidió la persona.
+ * Último recurso: si hiciera falta achicar por debajo de la escala mínima
+ * (pantallas diminutas o con zoom del navegador muy alto), el texto dejaría de
+ * ser legible y se vuelve al comportamiento del CSS (scroll interno del
+ * modal): mejor scroll que texto ilegible, y que no anule el zoom que pidió la
+ * persona. En ese caso el modal recibe la clase CLASE_SCROLL, que el CSS usa
+ * para dejar el pie con la acción principal ("Empezar") siempre a la vista.
+ *
+ * En pantallas táctiles el mínimo es más alto: achicar un 22 % dejaría los
+ * botones de 44 px en unos 34 px reales, así que se pasa antes al scroll.
  *
  * Script clásico (ver theme.js). Sin configuración: detecta solos los
  * elementos cuya clase termina en "-overlay", incluidos los que se agregan
@@ -21,6 +26,8 @@
 
   var MARGEN = 12; // px libres arriba y abajo de la pantalla
   var ESCALA_MIN = 0.78;
+  var ESCALA_MIN_TACTIL = 0.9;
+  var CLASE_SCROLL = "epe-modal-con-scroll";
   var entradas = [];
 
   function esOverlay(el) {
@@ -31,8 +38,21 @@
     return false;
   }
 
+  function escalaMin() {
+    var tactil = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+    return tactil ? ESCALA_MIN_TACTIL : ESCALA_MIN;
+  }
+
+  // Solo toca el DOM si el estado cambia: la clase la observa el propio
+  // MutationObserver de este script y, si no, se re-ajustaría sin fin.
+  function marcarScroll(e, conScroll) {
+    if (e.modal.classList.contains(CLASE_SCROLL) !== conScroll) {
+      e.modal.classList.toggle(CLASE_SCROLL, conScroll);
+    }
+  }
+
   function soltar(e) {
-    // Vuelve al comportamiento del CSS (scroll interno), ver ESCALA_MIN.
+    // Vuelve al comportamiento del CSS (scroll interno), ver escalaMin().
     e.modal.style.maxHeight = "";
     e.modal.style.overflow = "";
     e.modal.style.transform = "";
@@ -40,6 +60,7 @@
       e.cuerpo.style.overflow = "";
       e.cuerpo.style.flex = "";
     }
+    marcarScroll(e, true);
   }
 
   function ajustar(e) {
@@ -57,13 +78,17 @@
 
     var alto = m.offsetHeight;
     var disponible = window.innerHeight - 2 * MARGEN;
-    if (alto <= disponible) return;
+    if (alto <= disponible) {
+      marcarScroll(e, false);
+      return;
+    }
 
     var k = disponible / alto;
-    if (k < ESCALA_MIN) {
+    if (k < escalaMin()) {
       soltar(e);
       return;
     }
+    marcarScroll(e, false);
     m.style.transformOrigin = "center center";
     m.style.transform = "scale(" + k.toFixed(4) + ")";
   }
