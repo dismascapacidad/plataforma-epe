@@ -1,8 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import {
+  admiteCombinar,
   armarComandos,
   candidatasParaLarga,
   capacidadEventos,
+  cuantasEntran,
   cursorInicial,
   describir,
   describirCombinado,
@@ -222,5 +224,65 @@ describe('un botón, dos eventos (Tap-Hold)', () => {
     });
     expect(cmds.length).toBe(3);
     for (const c of cmds) expect(esComandoDeConfiguracion(c)).toBe(true);
+  });
+});
+
+describe('quién admite combinar (app entera o acción por acción)', () => {
+  const [k1, k2, k3, m1, ar, cu] = req([
+    { id: 'k1', etiqueta: 'K1', tecla: 'a', combinable: true },
+    { id: 'k2', etiqueta: 'K2', tecla: 'b', combinable: true },
+    { id: 'k3', etiqueta: 'K3', tecla: 'c' },
+    { id: 'm1', etiqueta: 'M1', mouse: 'clic', combinable: true },
+    { id: 'ar', etiqueta: 'Arrastrar', arrastrar: true },
+    { id: 'cu', etiqueta: 'Cursor', cursor: true },
+  ]);
+
+  it('admiteCombinar: la app lo pide para todas, o la acción lo declara', () => {
+    expect(admiteCombinar(k1)).toBe(true);
+    expect(admiteCombinar(k3)).toBe(false);
+    expect(admiteCombinar(k3, true)).toBe(true);
+    expect(admiteCombinar(m1)).toBe(true);
+  });
+
+  it('arrastrar y cursor nunca se combinan, ni aunque la app lo pida', () => {
+    expect(admiteCombinar(ar, true)).toBe(false);
+    expect(admiteCombinar(cu, true)).toBe(false);
+    expect(admiteCombinar(null, true)).toBe(false);
+  });
+
+  it('cuantasEntran: sin Tap-Hold es uno por botón', () => {
+    expect(cuantasEntran([k1, k2, k3], 2, false, true)).toBe(2);
+    expect(cuantasEntran([k1, k2, k3], 2, false)).toBe(2);
+  });
+
+  it('cuantasEntran: con la app combinando todo, el doble de botones', () => {
+    const cuatro = [k1, k2, k3, m1];
+    expect(cuantasEntran(cuatro, 2, true, true)).toBe(4);
+    expect(cuantasEntran(cuatro, 1, true, true)).toBe(2);
+  });
+
+  it('cuantasEntran: solo comparten las acciones combinables; las demás ocupan botón propio', () => {
+    // k1 y k2 comparten un botón; k3 (no combinable) necesita otro.
+    expect(cuantasEntran([k1, k2, k3], 2, true)).toBe(3);
+    // Con un solo botón entran únicamente las dos combinables.
+    expect(cuantasEntran([k1, k2, k3], 1, true)).toBe(2);
+    // Una sola combinable no tiene con quién compartir.
+    expect(cuantasEntran([k1, k3], 1, true)).toBe(1);
+  });
+
+  it('cuantasEntran: arrastrar ocupa un botón propio aunque la app combine todo', () => {
+    expect(cuantasEntran([ar, k1, k2], 2, true, true)).toBe(3);
+    expect(cuantasEntran([ar, k1, k2], 1, true, true)).toBe(1);
+  });
+
+  it('la regla de a pares: las dos acciones tienen que admitirlo', () => {
+    const asig = [
+      { requisito: k3, codigo: 'BR' },
+      { requisito: k1, codigo: 'BA' },
+    ];
+    const util = (a, entrada) =>
+      candidatasParaLarga(asig, entrada).filter((c) => admiteCombinar(c.requisito) && admiteCombinar(entrada));
+    expect(util(asig, k2).map((a) => a.codigo)).toEqual(['BA']); // k3 no admite
+    expect(util(asig, k3)).toEqual([]); // k3 como larga tampoco
   });
 });

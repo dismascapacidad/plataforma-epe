@@ -26,6 +26,8 @@
  * @property {string} [tecla]    Solo `tecla`. Formato `KeyboardEvent.key` en minúscula.
  * @property {string[]} [mods]   Solo `tecla`: subconjunto de ctrl, shift, alt, gui.
  * @property {string} [mouse]    Solo `mouse`: ver ACCIONES_MOUSE.
+ * @property {true} [combinable] Solo `tecla` y `mouse`: el recurso tolera que esta acción
+ *   comparta botón con otra (toque corto + pulsación larga, Tap-Hold). Ver README del widget.
  */
 
 /** Teclas con nombre que el widget sabe traducir (ver TOKEN_ESPECIAL + las que coinciden tal cual). */
@@ -101,6 +103,13 @@ export function validarTeclas(valor) {
     if (clases.length !== 1) return null;
     const clase = clases[0];
 
+    // `combinable`: solo `true` (o ausente) y solo en tecla/mouse. Cualquier otra cosa
+    // invalida la lista entera, igual que el resto de los campos.
+    if (o.combinable !== undefined && (o.combinable !== true || (clase !== 'tecla' && clase !== 'mouse'))) {
+      return null;
+    }
+    const combinable = o.combinable === true;
+
     if (clase === 'tecla') {
       if (!teclaValida(o.tecla)) return null;
       const mods = modsValidos(o.mods);
@@ -108,12 +117,16 @@ export function validarTeclas(valor) {
       /** @type {Requisito} */
       const r = { id, etiqueta: et, tipo: 'tecla', tecla: o.tecla };
       if (mods.length) r.mods = mods;
+      if (combinable) r.combinable = true;
       salida.push(r);
     } else {
       if (o.mods !== undefined) return null; // los modificadores solo van con una tecla
       if (clase === 'mouse') {
         if (typeof o.mouse !== 'string' || !ACCIONES_MOUSE.includes(o.mouse)) return null;
-        salida.push({ id, etiqueta: et, tipo: 'mouse', mouse: o.mouse });
+        /** @type {Requisito} */
+        const r = { id, etiqueta: et, tipo: 'mouse', mouse: o.mouse };
+        if (combinable) r.combinable = true;
+        salida.push(r);
       } else if (clase === 'cursor') {
         if (o.cursor !== true || ++cursores > 1) return null;
         salida.push({ id, etiqueta: et, tipo: 'cursor' });

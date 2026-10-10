@@ -133,6 +133,50 @@ export function puedeCombinar(corto, largo) {
 }
 
 /**
+ * ¿Este requisito acepta compartir botón (toque + pulsación larga)? Sí si la
+ * app abrió el widget con `combinar: true` (vale para todas sus acciones) o si
+ * la acción misma lo declara con `combinable: true` (recursos de terceros).
+ * Es una decisión de la app o del recurso, no del dispositivo: una acción que
+ * se combina pasa a dispararse recién al soltar el botón (o al cumplirse el
+ * umbral), y no toda app tolera esa espera.
+ * @param {Requisito|null|undefined} r
+ * @param {boolean} [global] La app pidió combinar todas sus acciones.
+ * @returns {boolean}
+ */
+export function admiteCombinar(r, global = false) {
+  if (!r || (r.tipo !== 'tecla' && r.tipo !== 'mouse')) return false;
+  return global === true || r.combinable === true;
+}
+
+/**
+ * Cuántos de los requisitos pedidos (en orden) entran en `botones` botones.
+ * Sin Tap-Hold (`conLarga` falso) es uno por botón. Con Tap-Hold, dos
+ * acciones que `admiteCombinar` pueden compartir botón; las demás ocupan uno
+ * propio. Es un cálculo optimista (no mira la compatibilidad de tipo entre
+ * pares): si después no se puede ubicar alguna, el asistente lo avisa.
+ * @param {Requisito[]} pedidas
+ * @param {number} botones
+ * @param {boolean} conLarga El firmware soporta Tap-Hold.
+ * @param {boolean} [global] La app pidió combinar todas sus acciones.
+ * @returns {number}
+ */
+export function cuantasEntran(pedidas, botones, conLarga, global = false) {
+  let entran = 0;
+  let solas = 0;
+  let combinables = 0;
+  for (const r of pedidas) {
+    const comb = conLarga && admiteCombinar(r, global);
+    const s = solas + (comb ? 0 : 1);
+    const c = combinables + (comb ? 1 : 0);
+    if (s + Math.ceil(c / 2) > botones) break;
+    solas = s;
+    combinables = c;
+    entran++;
+  }
+  return entran;
+}
+
+/**
  * Asignaciones a las que `entrada` podría sumarse como pulsación larga: las que
  * todavía no tienen larga y son compatibles (ver `puedeCombinar`).
  * @template {{ requisito: Requisito, largo?: Requisito|null }} A
