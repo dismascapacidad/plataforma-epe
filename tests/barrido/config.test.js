@@ -61,6 +61,28 @@ describe('validar configuración', () => {
   });
 });
 
+describe('pantalla táctil como pulsador', () => {
+  it('por defecto no está elegida (se decide según el dispositivo) y filtra poco', () => {
+    expect(CONFIG_INICIAL.toque).toBeNull();
+    expect(CONFIG_INICIAL.toqueMantenerMs).toBe(0);
+    expect(CONFIG_INICIAL.toqueEsperaMs).toBe(300);
+  });
+  it('conserva una elección válida, sea sí o no', () => {
+    expect(validarConfig({ toque: true }).toque).toBe(true);
+    expect(validarConfig({ toque: false }).toque).toBe(false);
+  });
+  it('conserva los tiempos que ofrece la interfaz', () => {
+    const c = validarConfig({ toqueMantenerMs: 500, toqueEsperaMs: 1000 });
+    expect(c).toMatchObject({ toqueMantenerMs: 500, toqueEsperaMs: 1000 });
+  });
+  it('descarta lo inválido', () => {
+    const c = validarConfig({ toque: 'si', toqueMantenerMs: 123, toqueEsperaMs: -5 });
+    expect(c.toque).toBeNull();
+    expect(c.toqueMantenerMs).toBe(0);
+    expect(c.toqueEsperaMs).toBe(300);
+  });
+});
+
 describe('teclas guardadas', () => {
   it('acepta una asignación completa y sin repetidas', () => {
     const teclas = { avanzar: 'a', seleccionar: 's', retroceder: 'd', reproducir: 'f' };

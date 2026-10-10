@@ -10,7 +10,10 @@
  *
  * Este archivo solo une piezas (DOM, voz, storage, widget del dispositivo). La
  * lógica está en módulos puros con tests: patrones, motor, eventos, config,
- * tablero y objetivos.
+ * tablero, objetivos y toque.
+ *
+ * Los eventos de entrada llegan por teclas (teclado o dispositivo que emula un
+ * teclado) o, si se elige, por la pantalla táctil (ver toque.js).
  */
 import { medirTablero, celdasTablero } from '../comunicacion-cabeza/grilla.js';
 import { aplicarCelda, textoParaHablar } from '../comunicacion-cabeza/texto.js';
@@ -32,6 +35,14 @@ import {
   validarTecla,
 } from './eventos.js';
 import { crearPractica, evaluarCopia, palabraDesdeTexto } from './objetivos.js';
+import {
+  ESPERA_OPCIONES_MS,
+  MANTENER_OPCIONES_MS,
+  crearFiltroToque,
+  nombresZonas,
+  zonaDeToque,
+  zonasToque,
+} from './toque.js';
 
 const GAP = 8;
 const CELDA_MIN = 60;
@@ -84,6 +95,14 @@ function iniciar(raiz) {
     estado: q('[data-bar-estado]'),
     grilla: q('[data-bar-grilla]'),
     volver: Array.from(raiz.querySelectorAll('[data-volver-apps]')),
+    toque: q('[data-bar-toque]'),
+    notaToque: q('[data-bar-nota-toque]'),
+    toqueOpciones: q('[data-bar-toque-opciones]'),
+    toqueMantener: q('[data-bar-toque-mantener]'),
+    toqueEspera: q('[data-bar-toque-espera]'),
+    teclasDetalle: q('[data-bar-teclas-detalle]'),
+    capaToque: q('[data-bar-capa-toque]'),
+    reabrir: q('[data-bar-reabrir]'),
   };
 
   const config = cargarConfig();
@@ -114,6 +133,10 @@ function iniciar(raiz) {
       conRetroceso: config.conRetroceso,
       reproduccion: copiando() ? config.reproduccion : 'auto',
     });
+
+  // La pantalla es el pulsador si se eligió así; si nunca se eligió, solo en pantallas táctiles.
+  const esTactil = !!window.matchMedia?.('(pointer: coarse)').matches;
+  const toqueActivo = () => config.toque ?? esTactil;
 
   function avisoTemporal(texto, ms = 2500) {
     el.estado.textContent = texto;
@@ -243,6 +266,23 @@ function iniciar(raiz) {
 
   function renderLeyenda() {
     el.leyenda.innerHTML = '';
+    if (toqueActivo()) {
+      // Con la pantalla como pulsador, la leyenda dice qué franja hace cada cosa.
+      const zonas = zonasToque(activos());
+      const nombres = nombresZonas(zonas.length);
+      zonas.forEach((id, i) => {
+        const item = document.createElement('span');
+        item.className = 'epe-barrido-leyenda-item';
+        const k = document.createElement('kbd');
+        k.className = 'epe-barrido-tecla';
+        k.textContent = nombres[i];
+        const t = document.createElement('span');
+        t.textContent = NOMBRES_EVENTO[id];
+        item.append(k, t);
+        el.leyenda.appendChild(item);
+      });
+      return;
+    }
     activos().forEach((id) => {
       const item = document.createElement('span');
       item.className = 'epe-barrido-leyenda-item';
@@ -479,6 +519,10 @@ function iniciar(raiz) {
     el.vueltas.value = String(config.vueltas);
     el.layout.value = config.layout;
     el.vozVel.value = String(config.velocidadVoz);
+    el.toqueMantener.value = String(config.toqueMantenerMs);
+    el.toqueEspera.value = String(config.toqueEsperaMs);
+    // Con la pantalla como pulsador, las teclas pasan a segundo plano (plegadas).
+    el.teclasDetalle.open = !toqueActivo();
     actualizarVisibilidad();
   }
 
@@ -496,9 +540,75 @@ function iniciar(raiz) {
     el.bloqueObjetivo.hidden = !copiando();
     el.etiquetaTexto.textContent = copiando() ? 'Escribiste' : 'Texto';
     el.btnDispositivo.hidden = activos().length === 0;
+    el.toque.checked = toqueActivo();
+    el.toqueOpciones.hidden = !toqueActivo();
+    el.notaToque.textContent = notaToque();
     renderEventos();
     renderLeyenda();
+    renderCapaToque();
   }
+
+  // ── Pantalla táctil como pulsador ────────────────────────────────────────
+  function notaToque() {
+    if (!toqueActivo()) return '';
+    const zonas = zonasToque(activos());
+    if (zonas.length === 1) {
+      return `Un toque en cualquier parte de la pantalla es «${NOMBRES_EVENTO[zonas[0]]}».`;
+    }
+    const detalle = zonas.map((id) => NOMBRES_EVENTO[id]).join(', ');
+    return `La pantalla se divide en franjas. De izquierda a derecha: ${detalle}.`;
+  }
+
+  function renderCapaToque() {
+    el.capaToque.innerHTML = '';
+    zonasToque(activos()).forEach((id) => {
+      const f = document.createElement('div');
+      f.className = 'epe-barrido-franja';
+      f.dataset.zona = id;
+      el.capaToque.appendChild(f);
+    });
+    actualizarCapaToque();
+  }
+
+  /** La capa solo existe mientras se juega con la pantalla como pulsador. */
+  function actualizarCapaToque() {
+    const visible = st.jugando && toqueActivo();
+    el.capaToque.hidden = !visible;
+    el.reabrir.hidden = !visible;
+  }
+
+  function destellarFranja(id) {
+    const f = el.capaToque.querySelector(`[data-zona="${id}"]`);
+    if (!f) return;
+    f.classList.add('is-activa');
+    setTimeout(() => f.classList.remove('is-activa'), 160);
+  }
+
+  const filtroToque = crearFiltroToque({
+    leer: () => ({ mantenerMs: config.toqueMantenerMs, esperaMs: config.toqueEsperaMs }),
+    alActivar: (id) => {
+      destellarFranja(id);
+      alEvento(id);
+    },
+  });
+
+  el.capaToque.addEventListener('pointerdown', (ev) => {
+    if (!ev.isPrimary || (ev.pointerType === 'mouse' && ev.button !== 0)) return;
+    ev.preventDefault();
+    // Captura el puntero para recibir siempre el pointerup, aunque se salga del área.
+    try {
+      el.capaToque.setPointerCapture(ev.pointerId);
+    } catch {
+      /* sin captura sigue andando */
+    }
+    const r = el.capaToque.getBoundingClientRect();
+    filtroToque.apoyar(zonaDeToque(ev.clientX - r.left, r.width, zonasToque(activos())));
+  });
+  el.capaToque.addEventListener('pointerup', () => filtroToque.soltar());
+  el.capaToque.addEventListener('pointercancel', () => filtroToque.cancelar());
+  el.capaToque.addEventListener('lostpointercapture', () => filtroToque.cancelar());
+  // Que una pulsación larga no abra el menú contextual del navegador.
+  el.capaToque.addEventListener('contextmenu', (ev) => ev.preventDefault());
 
   function guardarYActualizar() {
     guardarConfig(config);
@@ -510,6 +620,33 @@ function iniciar(raiz) {
     o.value = p;
     o.textContent = NOMBRES_PATRON[p];
     el.patron.appendChild(o);
+  });
+
+  const etiquetaTiempo = (ms, cero) => (ms === 0 ? cero : `${coma(ms / 1000)} s`);
+  MANTENER_OPCIONES_MS.forEach((ms) => {
+    const o = document.createElement('option');
+    o.value = String(ms);
+    o.textContent = etiquetaTiempo(ms, 'Sin mínimo');
+    el.toqueMantener.appendChild(o);
+  });
+  ESPERA_OPCIONES_MS.forEach((ms) => {
+    const o = document.createElement('option');
+    o.value = String(ms);
+    o.textContent = etiquetaTiempo(ms, 'Sin espera');
+    el.toqueEspera.appendChild(o);
+  });
+  el.toque.addEventListener('change', () => {
+    config.toque = el.toque.checked;
+    el.teclasDetalle.open = !toqueActivo();
+    guardarYActualizar();
+  });
+  el.toqueMantener.addEventListener('change', () => {
+    config.toqueMantenerMs = Number(el.toqueMantener.value);
+    guardarConfig(config);
+  });
+  el.toqueEspera.addEventListener('change', () => {
+    config.toqueEsperaMs = Number(el.toqueEspera.value);
+    guardarConfig(config);
   });
 
   el.objetivoRadios.forEach((r) =>
@@ -637,6 +774,7 @@ function iniciar(raiz) {
     st.motor?.reiniciar();
     renderTexto();
     renderLeyenda();
+    actualizarCapaToque();
     acomodarTablero();
     resaltar();
     reiniciarTimer();
@@ -647,6 +785,7 @@ function iniciar(raiz) {
     st.jugando = false;
     pararTimer();
     resaltar();
+    actualizarCapaToque();
     el.config.hidden = false;
   }
 
@@ -655,6 +794,7 @@ function iniciar(raiz) {
   }
 
   el.empezar.addEventListener('click', empezar);
+  el.reabrir.addEventListener('click', reabrirConfig);
 
   // ── Dispositivo físico ───────────────────────────────────────────────────
   function actualizarBotonRestaurar() {

@@ -31,21 +31,25 @@
           <a class="epe-app-back" href="index.html" data-volver-apps>← Apps EpE</a>
           <a href="../index.html"><img class="epe-logo-chip" src="../assets/img/logo-epe.png" alt="Equipar para Equipar" height="26" /></a>
         </div>
-        <button
-          class="epe-theme-toggle"
-          type="button"
-          id="theme-toggle"
-          aria-pressed="false"
-          aria-label="Cambiar a modo oscuro"
-        >
-          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="4" />
-            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
-          </svg>
-          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" />
-          </svg>
-        </button>
+        <div class="epe-barrido-header-acciones">
+          <!-- Esc no existe en el celular: con la pantalla táctil como pulsador, este botón reabre la preparación. -->
+          <button class="epe-btn-ghost epe-btn-sm" type="button" data-bar-reabrir hidden>Configuración</button>
+          <button
+            class="epe-theme-toggle"
+            type="button"
+            id="theme-toggle"
+            aria-pressed="false"
+            aria-label="Cambiar a modo oscuro"
+          >
+            <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="4" />
+              <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+            </svg>
+            <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" />
+            </svg>
+          </button>
+        </div>
       </header>
 
       <!-- ── Preparación (para el profesional): modal principal, sin scroll.
@@ -55,7 +59,7 @@
           <h1 id="bar-titulo">Barrido</h1>
           <p class="epe-barrido-intro">
             Practicá cómo se elige en un tablero cuando no se puede señalar directamente: el foco recorre las
-            opciones y la persona confirma con un evento de entrada. Esc reabre esta pantalla.
+            opciones y la persona confirma con un evento de entrada. Esc (o el botón Configuración) reabre esta pantalla.
           </p>
 
           <div class="epe-barrido-config-fila">
@@ -132,20 +136,40 @@
           <div class="epe-barrido-config-fila">
             <div class="epe-barrido-grupo">
               <h2>3. Eventos de entrada</h2>
-              <div class="epe-barrido-eventos" data-bar-eventos></div>
-              <p class="epe-barrido-nota">
-                Un evento es lo que hace la persona. Un mismo pulsador puede producir dos eventos distintos
-                (toque corto y pulsación larga): eso se asigna en «Configurar dispositivo».
-              </p>
-              <p class="epe-barrido-aviso" data-bar-aviso-teclas></p>
-              <div class="epe-barrido-fila-botones">
-                <button class="epe-btn-ghost epe-btn-sm" type="button" data-configurar-dispositivo>
-                  Configurar dispositivo…
-                </button>
-                <button class="epe-btn-ghost epe-btn-sm" type="button" data-restaurar-dispositivo hidden>
-                  Restaurar dispositivo
-                </button>
+              <label class="epe-barrido-check">
+                <input type="checkbox" data-bar-toque />
+                Usar la pantalla táctil como pulsador
+              </label>
+              <p class="epe-barrido-nota" data-bar-nota-toque></p>
+              <div class="epe-barrido-toque-opciones" data-bar-toque-opciones>
+                <div class="epe-barrido-inline">
+                  <label for="bar-toque-mantener">Mantener al menos</label>
+                  <select id="bar-toque-mantener" data-bar-toque-mantener></select>
+                </div>
+                <div class="epe-barrido-inline">
+                  <label for="bar-toque-espera">Esperar entre toques</label>
+                  <select id="bar-toque-espera" data-bar-toque-espera></select>
+                </div>
               </div>
+              <details class="epe-barrido-teclas" data-bar-teclas-detalle>
+                <summary>Teclas y dispositivo</summary>
+                <div class="epe-barrido-teclas-cuerpo">
+                  <div class="epe-barrido-eventos" data-bar-eventos></div>
+                  <p class="epe-barrido-nota">
+                    Un evento es lo que hace la persona. Un mismo pulsador puede producir dos eventos distintos
+                    (toque corto y pulsación larga): eso se asigna en «Configurar dispositivo».
+                  </p>
+                  <p class="epe-barrido-aviso" data-bar-aviso-teclas></p>
+                  <div class="epe-barrido-fila-botones">
+                    <button class="epe-btn-ghost epe-btn-sm" type="button" data-configurar-dispositivo>
+                      Configurar dispositivo…
+                    </button>
+                    <button class="epe-btn-ghost epe-btn-sm" type="button" data-restaurar-dispositivo hidden>
+                      Restaurar dispositivo
+                    </button>
+                  </div>
+                </div>
+              </details>
             </div>
 
             <div class="epe-barrido-grupo">
@@ -202,6 +226,8 @@
       </div>
 
       <div class="epe-barrido-body">
+        <!-- Capa que recibe los toques cuando la pantalla es el pulsador (ver barrido/toque.js). -->
+        <div class="epe-barrido-capa-toque" data-bar-capa-toque aria-hidden="true" hidden></div>
         <div class="epe-barrido-juego">
           <div class="epe-barrido-panel-texto">
             <div data-bar-bloque-objetivo>

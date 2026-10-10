@@ -18,6 +18,7 @@ export default [
       'js/features/apps-epe/barrido/eventos.js',
       'js/features/apps-epe/barrido/config.js',
       'js/features/apps-epe/barrido/tablero.js',
+      'js/features/apps-epe/barrido/toque.js',
       'js/features/apps-epe/barrido/objetivos.js',
       'js/features/apps-epe/barrido/main.js',
       'js/features/apps-epe/vincular-imagen/arasaac.js',
