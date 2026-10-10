@@ -21,9 +21,11 @@
  * es del configurador, no de este asistente.
  *
  * Un botón, dos eventos (Tap-Hold): si la app lo pide (`abrir(entradas,
- * { combinar: true })`) y el firmware lo soporta, un evento puede asignarse
- * como pulsación larga de un botón ya elegido para otro (toque corto). Es
- * opt-in: sin `combinar` el flujo es exactamente el de siempre.
+ * { combinar: true })`) o la acción lo declara (`combinable: true`, recursos de
+ * terceros) y el firmware lo soporta, un evento puede asignarse como pulsación
+ * larga de un botón ya elegido para otro (toque corto). Para combinar dos
+ * acciones, las dos tienen que admitirlo. Es opt-in: sin eso el flujo es
+ * exactamente el de siempre. Guía completa: README.md de esta carpeta.
  *
  * Fuera de alcance (a propósito): guardar el perfil (paso 4 del roadmap, con
  * la tabla en Supabase).
@@ -43,9 +45,10 @@ import {
   olvidarRespaldoOriginal,
 } from './conexion-activa.js';
 import {
+  admiteCombinar,
   armarComandos,
   candidatasParaLarga,
-  capacidadEventos,
+  cuantasEntran,
   cursorInicial,
   describir,
   describirCombinado,
@@ -94,7 +97,7 @@ function textosExterno(nombre) {
 
 /** Textos del widget abierto ahora (hay un solo widget a la vez: comparte el modal). */
 let T = TEXTOS_JUEGO;
-/** ¿La app que abrió el widget permite un botón con dos eventos? (ver `abrir`). */
+/** ¿La app que abrió el widget permite combinar TODAS sus acciones? (ver `abrir`; cada acción puede además declarar `combinable`). */
 let combinar = false;
 /** Respaldo guardado de una sesión anterior (ver `abrir`). @type {any} */
 let originalPrevio = null;
@@ -135,13 +138,15 @@ function mostrarCabecera(cabecera, info) {
  *
  * @param {Requisito[]} entradas Lo que la app necesita ahora mismo (ver teclas-externas.js).
  * @param {{ titulo?: string, externo?: { nombre: string }, originalPrevio?: any, combinar?: boolean }} [opciones]
- *   `combinar`: la app acepta que un botón dé dos eventos (toque y pulsación larga).
- *   Solo se ofrece si además el firmware conectado soporta Tap-Hold. Opt-in.
+ *   `combinar`: la app acepta que un botón dé dos eventos (toque y pulsación larga)
+ *   en todas sus acciones. Una acción también puede declararlo ella sola con
+ *   `combinable: true`. Solo se ofrece si además el firmware conectado soporta
+ *   Tap-Hold. Opt-in.
  *   `originalPrevio`: respaldo del estado original guardado en una sesión anterior
  *   (se usa como destino de "restaurar" si es del mismo modelo).
  *   `externo`: se abre para un recurso de terceros (cambia los textos y suma
  *   el aviso de cómo restaurar; ver `textosExterno`).
- * @returns {Promise<{ ok: boolean, motivo?: string, snapshot?: object, restaurar?: () => Promise<{ok: boolean, diferencias: any[]}>, continuar?: boolean }>}
+ * @returns {Promise<{ ok: boolean, motivo?: string, snapshot?: object, restaurar?: () => Promise<{ok: boolean, diferencias: any[]}>, continuar?: boolean, combinados?: { corto: string, largo: string, umbral: number }[] }>}
  *   `ok:true` cuando se aplicó una configuración nueva y el usuario cerró el
  *   widget conforme. Si aplicó y no deshizo dentro del propio widget, viene
  *   también `restaurar`: una función ya lista (atada a esa conexión y a ese
@@ -149,7 +154,10 @@ function mostrarCabecera(cabecera, info) {
  *   app la llame más tarde (por ejemplo al salir del juego). `continuar:true`
  *   cuando el usuario ya eligió "Empezar" desde el propio modal de éxito: la
  *   app puede arrancar el juego directo, sin pedirle un segundo click. `ok:false`
- *   si se canceló antes de aplicar nada.
+ *   si se canceló antes de aplicar nada. `combinados` (solo si se aplicó) lista
+ *   los botones que quedaron con dos eventos: `corto` y `largo` son los `id` de
+ *   las acciones y `umbral` los ms desde los que cuenta como pulsación larga.
+ *   Vacío o ausente = ningún botón combinado (la app no necesita hacer nada).
  */
 export function abrir(entradasPedidas, opciones = {}) {
   originalPrevio = opciones.originalPrevio || null;
@@ -353,9 +361,11 @@ function pasoAsignar(raiz, entradas, cerrar, conexion, producto, snapshot, dispo
   // Un botón puede dar dos eventos (toque + pulsación larga) solo si la app lo
   // permite Y el firmware lo soporta (ver `abrir`).
   const firmwareConTapHold = !!(conexion.info && conexion.info.soportaTapHold);
-  const conLarga = combinar && firmwareConTapHold;
-  const capacidad = capacidadEventos(disponibles.length, conLarga);
-  const aUsar = pedidas.slice(0, capacidad);
+  const combinables = pedidas.filter((r) => admiteCombinar(r, combinar));
+  // Para compartir botón hacen falta al menos dos acciones que lo admitan.
+  const conLarga = firmwareConTapHold && combinables.length >= 2;
+  let aUsar = pedidas.slice(0, cuantasEntran(pedidas, disponibles.length, conLarga, combinar));
+  const capacidad = aUsar.length;
   /** @type {{ requisito: Requisito, codigo: string, largo?: Requisito|null, umbral?: number }[]} */
   const asignaciones = [];
   /** Historial para "Atrás": cada paso fue un botón nuevo o una larga sumada a uno. */
@@ -431,6 +441,19 @@ function pasoAsignar(raiz, entradas, cerrar, conexion, producto, snapshot, dispo
       return;
     }
     const entrada = aUsar[idx];
+    // Compartir botón: solo si las dos acciones lo admiten y son compatibles.
+    const candidatas =
+      conLarga && admiteCombinar(entrada, combinar)
+        ? candidatasParaLarga(asignaciones, entrada).filter((c) => admiteCombinar(c.requisito, combinar))
+        : [];
+    // Sin botón libre ni botón con el que combinar: no hay dónde ubicar este
+    // evento (ni los que siguen). Se pasa al resumen y quedan como sin configurar.
+    const hayLibre = disponibles.some((d) => !asignaciones.find((a) => a.codigo === d.codigo));
+    if (!hayLibre && !candidatas.length) {
+      aUsar = aUsar.slice(0, idx);
+      pasoResumen(raiz, entradas, aUsar, asignaciones, arrastre, cerrar, conexion, producto, snapshot);
+      return;
+    }
     if (entrada.tipo === 'arrastrar' && !arrastre) {
       preguntarArrastre(idx);
       return;
@@ -452,11 +475,20 @@ function pasoAsignar(raiz, entradas, cerrar, conexion, producto, snapshot, dispo
         el(
           'p',
           'epe-cd-intro',
-          'Este dispositivo permite dos eventos por botón (toque y pulsación larga): después del primero, ' +
-            'vas a poder asignar otro evento como pulsación larga de un botón ya elegido.',
+          combinar
+            ? 'Este dispositivo permite dos eventos por botón (toque y pulsación larga): después del primero, ' +
+                'vas a poder asignar otro evento como pulsación larga de un botón ya elegido.'
+            : `Este dispositivo permite dos eventos por botón (toque y pulsación larga) y ${T.sujeto} admite ` +
+                'que algunas de sus acciones lo usen: después de elegir una de ellas, vas a poder asignar otra ' +
+                'como pulsación larga del mismo botón.',
         ),
       );
-    } else if (idx === 0 && combinar && !firmwareConTapHold && pedidas.length > disponibles.length) {
+    } else if (
+      idx === 0 &&
+      combinables.length >= 2 &&
+      !firmwareConTapHold &&
+      pedidas.length > disponibles.length
+    ) {
       raiz.appendChild(
         el(
           'p',
@@ -504,7 +536,6 @@ function pasoAsignar(raiz, entradas, cerrar, conexion, producto, snapshot, dispo
     raiz.appendChild(lista);
 
     // Un botón, dos eventos: este evento como pulsación larga de un botón ya asignado.
-    const candidatas = conLarga ? candidatasParaLarga(asignaciones, entrada) : [];
     if (candidatas.length) {
       raiz.appendChild(el('p', 'epe-cd-intro', 'O como pulsación larga de un botón que ya elegiste:'));
       const listaLarga = el('div', 'epe-cd-lista-entradas');
@@ -688,6 +719,11 @@ function pasoResumen(raiz, entradas, aUsar, asignaciones, arrastre, cerrar, cone
         modoIndividual: necesitaModoIndividual,
       }),
       snapshot,
+      // Se calcula al apretar «Aplicar»: los umbrales pudieron cambiar en el resumen.
+      () =>
+        asignaciones
+          .filter((a) => a.largo)
+          .map((a) => ({ corto: a.requisito.id, largo: /** @type {Requisito} */ (a.largo).id, umbral: umbralEfectivo(a.umbral) })),
     ),
   );
   filaBotones.appendChild(btnAplicar);
@@ -698,7 +734,7 @@ function pasoResumen(raiz, entradas, aUsar, asignaciones, arrastre, cerrar, cone
   raiz.appendChild(filaBotones);
 }
 
-async function aplicar(raiz, cerrar, conexion, comandos, snapshot) {
+async function aplicar(raiz, cerrar, conexion, comandos, snapshot, leerCombinados) {
   raiz.innerHTML = '';
   raiz.appendChild(el('p', 'epe-cd-intro', 'Aplicando…'));
 
@@ -731,6 +767,7 @@ async function aplicar(raiz, cerrar, conexion, comandos, snapshot) {
         snapshot: destino || snapshot,
         restaurar: () => restaurarOriginal(conexion, snapshot),
         continuar: exito,
+        combinados: leerCombinados(),
       }),
     );
     filaBotones.appendChild(btnContinuar);

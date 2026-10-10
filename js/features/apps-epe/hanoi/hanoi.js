@@ -339,7 +339,7 @@ var EpeHanoi = (function () {
       var cfgActual = panel.leer();
       var entradas = EpeAcceso.entradasNecesarias(cfgActual, ACCIONES);
       window.EpeConfigurarDispositivo
-        .abrir(entradas, { titulo: "Configurar dispositivo — Torre de Hanói" })
+        .abrir(entradas, { titulo: "Configurar dispositivo — Torre de Hanói", combinar: true })
         .then(function (resultado) {
           if (resultado && resultado.restaurar) restaurarDispositivo = resultado.restaurar;
           actualizarBotonRestaurar();

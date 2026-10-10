@@ -108,6 +108,45 @@ describe('validarTeclas: mouse, cursor y arrastrar', () => {
   });
 });
 
+describe('validarTeclas: combinable (un botón, dos eventos)', () => {
+  it('acepta combinable:true en teclas y mouse y lo conserva', () => {
+    const r = validarTeclas([
+      { id: 'a', etiqueta: 'A', tecla: 'a', combinable: true },
+      { id: 'b', etiqueta: 'B', mouse: 'clic', combinable: true },
+      { id: 'c', etiqueta: 'C', tecla: 'c' },
+    ]);
+    expect(r[0].combinable).toBe(true);
+    expect(r[1].combinable).toBe(true);
+    expect('combinable' in r[2]).toBe(false);
+  });
+
+  it('sin combinable el resultado es el de siempre (compatibilidad)', () => {
+    expect(validarTeclas([{ id: 'a', etiqueta: 'A', tecla: 'a' }])).toEqual([
+      { id: 'a', etiqueta: 'A', tipo: 'tecla', tecla: 'a' },
+    ]);
+  });
+
+  it('rechaza la lista entera si combinable no es exactamente true', () => {
+    for (const v of [false, 'true', 1, 0, null, {}, []]) {
+      expect(validarTeclas([{ id: 'a', etiqueta: 'A', tecla: 'a', combinable: v }])).toBeNull();
+    }
+  });
+
+  it('rechaza combinable en cursor y arrastrar (no se pueden combinar)', () => {
+    expect(validarTeclas([{ id: 'c', etiqueta: 'C', cursor: true, combinable: true }])).toBeNull();
+    expect(validarTeclas([{ id: 'r', etiqueta: 'R', arrastrar: true, combinable: true }])).toBeNull();
+  });
+
+  it('un combinable inválido invalida toda la lista aunque lo demás esté bien', () => {
+    expect(
+      validarTeclas([
+        { id: 'a', etiqueta: 'A', tecla: 'a', combinable: true },
+        { id: 'b', etiqueta: 'B', tecla: 'b', combinable: 'si' },
+      ]),
+    ).toBeNull();
+  });
+});
+
 describe('urlSegura', () => {
   it('acepta https y devuelve la URL normalizada', () => {
     expect(urlSegura('https://apps.makeymakey.com/play/#counter')).toBe(

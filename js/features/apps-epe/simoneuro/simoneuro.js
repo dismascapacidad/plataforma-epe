@@ -310,6 +310,8 @@ function init(root) {
   let timers = [];
   let generacionRonda = 0; // invalida una reproducción en curso si se sale/reinicia
   let restaurarDispositivo = null;
+  // ¿El dispositivo quedó con un botón de dos eventos (toque + pulsación larga)?
+  let usoBotonCombinado = false;
   let audioCtx = null;
 
   // ── Beep (modo "visual", sin voz) ───────────────────────────────────
@@ -804,6 +806,14 @@ function init(root) {
           max.rt + ' ms (posición ' + (max.posicion + 1) + ' de una secuencia de ' + max.longitud + ')'
         )
       );
+      if (usoBotonCombinado) {
+        const nota = document.createElement('p');
+        nota.className = 'epe-juego-stat-nota';
+        nota.textContent =
+          'Jugaste con un botón que da dos eventos (toque y pulsación larga): el tiempo de respuesta puede ' +
+          'incluir la espera del dispositivo para distinguir un toque de una pulsación larga.';
+        elStats.appendChild(nota);
+      }
     }
 
     elResumen.hidden = false;
@@ -904,9 +914,12 @@ function init(root) {
     if (!window.EpeConfigurarDispositivo) return;
     const cfgActual = panel.leer();
     const entradas = window.EpeAcceso.entradasNecesarias(cfgActual, ACCIONES);
-    window.EpeConfigurarDispositivo.abrir(entradas, { titulo: 'Configurar dispositivo — SimoNeuro' }).then(
+    window.EpeConfigurarDispositivo.abrir(entradas, { titulo: 'Configurar dispositivo — SimoNeuro', combinar: true }).then(
       (resultado) => {
-        if (resultado && resultado.restaurar) restaurarDispositivo = resultado.restaurar;
+        if (resultado && resultado.restaurar) {
+          restaurarDispositivo = resultado.restaurar;
+          usoBotonCombinado = !!(resultado.combinados && resultado.combinados.length);
+        }
         actualizarBotonRestaurar();
         if (resultado && resultado.continuar) empezar();
       }
@@ -921,6 +934,7 @@ function init(root) {
     if (!restaurarDispositivo) return;
     const fn = restaurarDispositivo;
     restaurarDispositivo = null;
+    usoBotonCombinado = false;
     btnRestaurarDispositivo.disabled = true;
     btnRestaurarDispositivo.textContent = 'Restaurando…';
     fn()
@@ -949,6 +963,7 @@ function init(root) {
       if (!r.salir) return;
       if (r.restaurado) {
         restaurarDispositivo = null;
+        usoBotonCombinado = false;
         actualizarBotonRestaurar();
       }
       luegoSalir();
