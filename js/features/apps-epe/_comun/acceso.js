@@ -20,6 +20,10 @@
  * Todo se guarda en localStorage por juego (si hay storage), para que
  * quien arma el equipo de un paciente lo configure una sola vez.
  *
+ * En los barridos también se puede elegir la pantalla táctil como pulsador
+ * (con sus filtros de "mantener al menos" y "esperar entre toques"): viene
+ * tildada por defecto en dispositivos táctiles. Lo ejecuta entrada.js.
+ *
  * Script clásico. Namespace: EpeAcceso. Depende de teclas.js.
  */
 
@@ -38,6 +42,28 @@ var EpeAcceso = (function () {
 
   function intervaloASlider(ms) {
     return INTERVALO_MIN_MS + INTERVALO_MAX_MS - ms;
+  }
+
+  // Los mismos valores que Barrido (_comun/toque.js): se cargan de ahí para no
+  // repetirlos; hasta que llegan, estos son los de respaldo.
+  var TOQUE_DEFAULT = { mantenerMs: 0, esperaMs: 300 };
+
+  function esTactil() {
+    return !!(window.matchMedia && window.matchMedia("(pointer: coarse)").matches);
+  }
+
+  // Lo guardado puede venir de antes de que existiera esta opción.
+  function toqueValido(t) {
+    var base = { activo: esTactil(), mantenerMs: TOQUE_DEFAULT.mantenerMs, esperaMs: TOQUE_DEFAULT.esperaMs };
+    if (!t || typeof t !== "object") return base;
+    if (typeof t.activo === "boolean") base.activo = t.activo;
+    if (typeof t.mantenerMs === "number" && t.mantenerMs >= 0) base.mantenerMs = t.mantenerMs;
+    if (typeof t.esperaMs === "number" && t.esperaMs >= 0) base.esperaMs = t.esperaMs;
+    return base;
+  }
+
+  function textoMs(ms) {
+    return ms === 0 ? "No" : (ms / 1000).toFixed(1).replace(".", ",") + " s";
   }
 
   var MODOS = [
@@ -85,6 +111,7 @@ var EpeAcceso = (function () {
         avanzar: SCAN_DEFAULT.avanzar,
         seleccionar: SCAN_DEFAULT.seleccionar,
         intervaloMs: SCAN_DEFAULT.intervaloMs,
+        toque: toqueValido(null),
       };
     }
 
@@ -103,6 +130,8 @@ var EpeAcceso = (function () {
       if (typeof guardado.intervaloMs !== "number") return base;
       if (guardado.modo !== "directo" && guardado.modo !== "manual" && guardado.modo !== "auto") return base;
       if (!permitirBarrido) guardado.modo = "directo";
+      guardado.toque = toqueValido(guardado.toque);
+      if (!permitirBarrido) guardado.toque.activo = false;
       return guardado;
     }
 
@@ -134,6 +163,9 @@ var EpeAcceso = (function () {
 
     var elModos = null;
     var elVelocidad = null;
+    var elToque = null;
+    var elToqueDetalle = null;
+    var elToqueFiltros = null;
     var elTeclas = el("div", "epe-acceso-teclas");
 
     if (permitirBarrido) {
@@ -151,6 +183,7 @@ var EpeAcceso = (function () {
           guardar();
           dibujarTeclas();
           actualizarVelocidad();
+          actualizarToque();
         });
         var texto = el("span", "epe-acceso-modo-texto");
         texto.appendChild(el("strong", null, m.titulo));
@@ -185,6 +218,28 @@ var EpeAcceso = (function () {
       elVelocidad.appendChild(slider);
       elVelocidad.appendChild(valorVel);
       contenedor.appendChild(elVelocidad);
+
+      // Pantalla táctil como pulsador.
+      elToque = el("div", "epe-acceso-toque");
+      var etiquetaToque = el("label", "epe-acceso-toque-check");
+      var chkToque = el("input");
+      chkToque.type = "checkbox";
+      chkToque.checked = estado.toque.activo;
+      chkToque.addEventListener("change", function () {
+        estado.toque.activo = chkToque.checked;
+        guardar();
+        actualizarToque();
+      });
+      etiquetaToque.appendChild(chkToque);
+      etiquetaToque.appendChild(el("span", null, "Usar la pantalla táctil como pulsador"));
+      elToque.appendChild(etiquetaToque);
+      elToqueDetalle = el("small", "epe-acceso-toque-detalle");
+      elToque.appendChild(elToqueDetalle);
+      // Los filtros se arman cuando llega toque.js (ver cargarToque).
+      elToqueFiltros = el("div", "epe-acceso-toque-filtros");
+      elToqueFiltros.hidden = true;
+      elToque.appendChild(elToqueFiltros);
+      contenedor.appendChild(elToque);
     }
 
     contenedor.appendChild(el("h2", "epe-juego-h2", "Teclas"));
@@ -199,6 +254,84 @@ var EpeAcceso = (function () {
 
     function actualizarVelocidad() {
       if (elVelocidad) elVelocidad.hidden = estado.modo !== "auto";
+    }
+
+    var filtrosListos = false;
+
+    function actualizarToque() {
+      if (!elToque) return;
+      elToque.hidden = estado.modo === "directo";
+      elToqueDetalle.textContent =
+        estado.modo === "manual"
+          ? "La mitad izquierda de la pantalla avanza y la derecha selecciona."
+          : "Tocá en cualquier parte de la pantalla para seleccionar.";
+      elToqueFiltros.hidden = !(estado.toque.activo && filtrosListos);
+    }
+
+    function filtroSelect(id, titulo, ayuda, opciones, valor, alCambiar) {
+      var etiqueta = el("label", null, titulo);
+      etiqueta.setAttribute("for", id);
+      var select = el("select");
+      select.id = id;
+      var hay = false;
+      opciones.forEach(function (ms) {
+        var o = el("option", null, textoMs(ms));
+        o.value = String(ms);
+        if (ms === valor) hay = true;
+        select.appendChild(o);
+      });
+      if (!hay) {
+        var extra = el("option", null, textoMs(valor));
+        extra.value = String(valor);
+        select.appendChild(extra);
+      }
+      select.value = String(valor);
+      select.addEventListener("change", function () {
+        alCambiar(Number(select.value));
+        guardar();
+      });
+      var caja = el("div", "epe-acceso-toque-filtro");
+      caja.appendChild(etiqueta);
+      caja.appendChild(select);
+      caja.appendChild(el("small", "epe-acceso-toque-detalle", ayuda));
+      return caja;
+    }
+
+    if (permitirBarrido) {
+      EpeTeclas.cargarToque().then(
+        function (m) {
+          elToqueFiltros.appendChild(
+            filtroSelect(
+              "acceso-mantener-" + opciones.id,
+              "Mantener al menos",
+              "El toque solo cuenta si se sostiene ese tiempo (evita toques sin querer).",
+              m.MANTENER_OPCIONES_MS,
+              estado.toque.mantenerMs,
+              function (ms) {
+                estado.toque.mantenerMs = ms;
+              }
+            )
+          );
+          elToqueFiltros.appendChild(
+            filtroSelect(
+              "acceso-espera-" + opciones.id,
+              "Esperar entre toques",
+              "Después de un toque, se ignoran los siguientes durante ese tiempo.",
+              m.ESPERA_OPCIONES_MS,
+              estado.toque.esperaMs,
+              function (ms) {
+                estado.toque.esperaMs = ms;
+              }
+            )
+          );
+          filtrosListos = true;
+          actualizarToque();
+        },
+        function () {
+          // Sin toque.js no hay filtros que mostrar; la opción sigue andando
+          // con los valores guardados (o los de respaldo).
+        }
+      );
     }
 
     function filaTecla(clave, nombre, tecla) {
@@ -267,6 +400,7 @@ var EpeAcceso = (function () {
 
     dibujarTeclas();
     actualizarVelocidad();
+    actualizarToque();
 
     return {
       // Configuración elegida, lista para EpeEntrada.crear().
@@ -278,6 +412,11 @@ var EpeAcceso = (function () {
           avanzar: estado.avanzar,
           seleccionar: estado.seleccionar,
           intervaloMs: estado.intervaloMs,
+          toque: {
+            activo: permitirBarrido && estado.toque.activo,
+            mantenerMs: estado.toque.mantenerMs,
+            esperaMs: estado.toque.esperaMs,
+          },
         };
       },
     };
@@ -291,18 +430,25 @@ var EpeAcceso = (function () {
         return { tecla: EpeTeclas.etiqueta(cfg.teclas[a.id]), texto: a.etiqueta };
       });
     }
+    var conToque = !!(cfg.toque && cfg.toque.activo);
     if (cfg.modo === "manual") {
-      return [
+      var lista = [
         { tecla: EpeTeclas.etiqueta(cfg.avanzar), texto: "avanza el resaltado" },
         { tecla: EpeTeclas.etiqueta(cfg.seleccionar), texto: "selecciona" },
       ];
+      if (conToque) {
+        lista.push({ tecla: "Pantalla", texto: "izquierda avanza, derecha selecciona" });
+      }
+      return lista;
     }
-    return [
+    var unico = [
       {
         tecla: EpeTeclas.etiqueta(cfg.seleccionar) + " / " + EpeTeclas.etiqueta(cfg.avanzar),
         texto: "selecciona la opción resaltada",
       },
     ];
+    if (conToque) unico.push({ tecla: "Pantalla", texto: "toda la pantalla selecciona" });
+    return unico;
   }
 
   // Para el widget "Configurar dispositivo": qué teclas están activas AHORA
