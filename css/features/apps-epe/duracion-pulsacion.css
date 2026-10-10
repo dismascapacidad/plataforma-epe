@@ -55,7 +55,13 @@
   padding: 16px clamp(16px, 4vw, 40px);
 }
 
+/* Mantener apretado no tiene que seleccionar texto ni abrir el menú de
+   pulsación larga del navegador (iPhone necesita la versión con -webkit-). */
 .epe-dp-main {
+  position: relative;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
   flex: 1;
   min-height: 0;
   display: flex;
@@ -343,27 +349,21 @@
   margin-left: 6px;
 }
 
-.epe-dp-boton-mouse {
-  align-self: center;
-  width: 100%;
-  max-width: 280px;
-  padding: 20px;
-  font-size: 15px;
-  font-weight: 700;
-  color: #fff;
-  background: var(--teal-600);
-  border-radius: var(--radius-lg);
-  transition: background 0.12s ease, transform 0.08s ease;
-  touch-action: none;
-  user-select: none;
+/* Pantalla como pulsador: la capa cubre toda el área de juego (sin botón al
+   que apuntar) y se tiñe levemente mientras se mantiene apretada.
+   manipulation: sin zoom por doble toque, con zoom de dos dedos disponible. */
+.epe-dp-capa {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.08s ease;
 }
 
-.epe-dp-boton-mouse:hover {
-  background: var(--teal-700);
-}
-
-.epe-dp-boton-mouse:active {
-  transform: scale(0.98);
+.epe-dp-capa.is-apoyada {
+  background: color-mix(in srgb, var(--teal-600) 12%, transparent);
 }
 
 /* ── Felicitación: modal, mismo tratamiento que el de configuración ──
