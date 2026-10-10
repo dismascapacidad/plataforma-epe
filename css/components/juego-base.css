@@ -221,6 +221,20 @@
   font-size: 14px;
 }
 
+/* Si el modal no entra ni achicado (pantallas bajas, ver ajuste-modal.js) y
+   pasa a tener scroll, el pie queda pegado abajo: "Empezar" siempre a la vista.
+   Con fondo sólido para que no se lea el contenido que pasa por detrás. */
+.epe-modal-con-scroll .epe-juego-pie {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  padding: 10px 0 2px;
+  background: var(--shell-bg-2);
+  border-top: 1px solid var(--tile-border);
+  /* Tapa el relleno del modal que queda debajo del pie al scrollear. */
+  box-shadow: 0 16px 0 0 var(--shell-bg-2);
+}
+
 /* ── HUD y ayuda de teclas ── */
 .epe-juego-hud {
   flex: 0 0 auto;
