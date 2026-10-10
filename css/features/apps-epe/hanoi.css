@@ -168,3 +168,29 @@
     animation: none;
   }
 }
+
+
+/* ── Celular en horizontal (pantalla baja) ──
+   Pantallas táctiles de 480 px de alto o menos: se compacta el marco para
+   que el juego entre sin recortes. La leyenda de teclas se oculta porque
+   cada botón ya muestra su tecla. En compu con mouse no cambia nada. */
+@media (max-height: 480px) and (pointer: coarse) {
+  .epe-hanoi-juego {
+    gap: 6px;
+  }
+
+  .epe-hanoi-mensaje {
+    min-height: 18px;
+    font-size: 12.5px;
+  }
+
+  .epe-hanoi-varilla {
+    padding-top: 6px;
+  }
+
+  /* El alto de cada disco se reparte según el alto de pantalla y la cantidad
+     de discos (con 6 discos en una pantalla muy baja llega al piso de 12 px). */
+  .epe-hanoi-escenario {
+    --alto-disco: clamp(12px, calc((100dvh - 262px) / (var(--discos) + 1)), 24px);
+  }
+}

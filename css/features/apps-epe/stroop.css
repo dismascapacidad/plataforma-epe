@@ -173,3 +173,31 @@
     animation: none;
   }
 }
+
+
+/* ── Celular en horizontal (pantalla baja) ──
+   Pantallas táctiles de 480 px de alto o menos: se compacta el marco para
+   que el juego entre sin recortes. La leyenda de teclas se oculta porque
+   cada botón ya muestra su tecla. En compu con mouse no cambia nada. */
+@media (max-height: 480px) and (pointer: coarse) {
+  .epe-stroop-juego {
+    gap: 6px;
+  }
+
+  .epe-stroop-estimulo {
+    min-height: 24vh;
+  }
+
+  .epe-stroop-consigna {
+    font-size: 12px;
+  }
+
+  .epe-stroop-resp {
+    padding: 8px 6px;
+    gap: 4px;
+  }
+
+  .epe-stroop-resp-nombre {
+    font-size: 17px;
+  }
+}

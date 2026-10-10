@@ -174,3 +174,41 @@
     grid-template-columns: 1fr;
   }
 }
+
+
+/* ── Celular en horizontal (pantalla baja) ──
+   Pantallas táctiles de 480 px de alto o menos: se compacta el marco para
+   que el juego entre sin recortes. La leyenda de teclas se oculta porque
+   cada botón ya muestra su tecla. En compu con mouse no cambia nada. */
+@media (max-height: 480px) and (pointer: coarse) {
+  /* Grilla a la izquierda y botones de respuesta a la derecha, en vez de
+     apilados: así entran los dos sin quitar tamaño a la grilla. */
+  .epe-nback-juego {
+    max-width: 760px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 6px 12px;
+  }
+
+  .epe-nback-juego > .epe-juego-hud,
+  .epe-nback-juego > .epe-nback-consigna,
+  .epe-nback-juego > .epe-juego-acciones {
+    grid-column: 1 / -1;
+  }
+
+  .epe-nback-grilla {
+    --celda: clamp(40px, 14vh, 90px);
+    gap: 6px;
+    padding: 8px;
+  }
+
+  .epe-nback-respuestas {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .epe-nback-resp {
+    padding: 10px 8px;
+  }
+}
