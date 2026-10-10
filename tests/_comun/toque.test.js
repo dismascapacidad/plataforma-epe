@@ -6,7 +6,7 @@ import {
   MANTENER_OPCIONES_MS,
   ESPERA_OPCIONES_MS,
   ESPERA_POR_DEFECTO_MS,
-} from '../../js/features/apps-epe/barrido/toque.js';
+} from '../../js/features/apps-epe/_comun/toque.js';
 
 describe('zonas de la pantalla', () => {
   it('automático: un solo evento ocupa toda la pantalla', () => {

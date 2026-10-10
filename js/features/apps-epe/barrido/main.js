@@ -13,7 +13,7 @@
  * tablero, objetivos y toque.
  *
  * Los eventos de entrada llegan por teclas (teclado o dispositivo que emula un
- * teclado) o, si se elige, por la pantalla táctil (ver toque.js).
+ * teclado) o, si se elige, por la pantalla táctil (ver _comun/toque.js).
  */
 import { medirTablero, celdasTablero } from '../comunicacion-cabeza/grilla.js';
 import { aplicarCelda, textoParaHablar } from '../comunicacion-cabeza/texto.js';
@@ -42,7 +42,7 @@ import {
   nombresZonas,
   zonaDeToque,
   zonasToque,
-} from './toque.js';
+} from '../_comun/toque.js';
 
 const GAP = 8;
 const CELDA_MIN = 60;
