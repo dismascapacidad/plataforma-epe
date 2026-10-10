@@ -528,3 +528,79 @@
     display: none;
   }
 }
+
+/* ── Pantalla táctil como pulsador (ver _comun/entrada.js y acceso.js) ── */
+.epe-acceso-toque {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.epe-acceso-toque-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-strong);
+}
+.epe-acceso-toque-check input {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+.epe-acceso-toque-detalle {
+  color: var(--text-faint);
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+.epe-acceso-toque-filtros {
+  display: grid;
+  gap: 10px;
+}
+.epe-acceso-toque-filtro {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.epe-acceso-toque-filtro > label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-strong);
+}
+
+/* La capa cubre toda la pantalla, sin fondo: el juego se sigue viendo. Solo se
+   marcan los límites entre franjas y se destella la que acaba de activarse. */
+.epe-capa-toque {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  touch-action: manipulation; /* sin zoom por doble toque; el de dos dedos sigue */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.epe-capa-toque-franja {
+  flex: 1;
+  transition: background 0.12s ease;
+}
+.epe-capa-toque-franja + .epe-capa-toque-franja {
+  border-left: 2px dashed color-mix(in srgb, var(--teal-600) 55%, transparent);
+}
+.epe-capa-toque-franja.is-activa {
+  background: color-mix(in srgb, var(--teal-600) 22%, transparent);
+}
+/* Con la capa puesta, la cabecera y Salir siguen tocándose (en el celular
+   reemplazan a Esc). */
+body.epe-con-capa-toque .epe-juego-header,
+body.epe-con-capa-toque .epe-juego-acciones {
+  position: relative;
+  z-index: 6;
+}
+@media (prefers-reduced-motion: reduce) {
+  .epe-capa-toque-franja {
+    transition: none;
+  }
+}

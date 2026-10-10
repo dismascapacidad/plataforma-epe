@@ -23,6 +23,26 @@
  */
 
 var EpeTeclas = (function () {
+  // Carpeta de este script: de ahí se carga toque.js (módulo ES) desde los
+  // scripts clásicos, con import() dinámico. Se calcula ahora porque
+  // document.currentScript solo existe mientras el script se ejecuta.
+  var CARPETA = document.currentScript && document.currentScript.src
+    ? document.currentScript.src.replace(/[^/]*$/, "")
+    : "";
+  var promesaToque = null;
+
+  // Devuelve una promesa del módulo _comun/toque.js (zonas y filtros del
+  // toque). Se carga una sola vez; si falla, el próximo intento reintenta.
+  function cargarToque() {
+    if (!promesaToque) {
+      promesaToque = import(CARPETA + "toque.js");
+      promesaToque.catch(function () {
+        promesaToque = null;
+      });
+    }
+    return promesaToque;
+  }
+
   var NOMBRES = {
     " ": "Espacio",
     enter: "Enter",
@@ -172,6 +192,7 @@ var EpeTeclas = (function () {
     capturar: capturar,
     cancelarCaptura: cancelarCaptura,
     escuchar: escuchar,
+    cargarToque: cargarToque,
     leerJSON: leerJSON,
     guardarJSON: guardarJSON,
   };
