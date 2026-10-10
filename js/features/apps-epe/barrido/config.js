@@ -13,7 +13,7 @@ import {
   ESPERA_POR_DEFECTO_MS,
   MANTENER_OPCIONES_MS,
   MANTENER_POR_DEFECTO_MS,
-} from './toque.js';
+} from '../_comun/toque.js';
 
 const CLAVE = 'epe-barrido';
 
