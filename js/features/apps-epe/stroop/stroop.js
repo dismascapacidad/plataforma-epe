@@ -125,6 +125,7 @@ var EpeStroop = (function () {
     var timerReloj = null;
     var timers = [];
     var restaurarDispositivo = null; // función lista para volver el dispositivo a como estaba, o null
+    var usoBotonCombinado = false; // ¿el dispositivo quedó con un botón de dos eventos (toque + pulsación larga)?
 
     // ── Configuración guardada (solo los selectores del ejercicio) ────
     function cargarConfig() {
@@ -386,6 +387,14 @@ var EpeStroop = (function () {
           elStats.appendChild(titulo("Efecto de interferencia"));
           elStats.appendChild(fila("Incongruentes − congruentes", ms(mInc - mCong)));
         }
+        if (usoBotonCombinado) {
+          var notaCombinado = document.createElement("p");
+          notaCombinado.className = "epe-juego-stat-nota";
+          notaCombinado.textContent =
+            "Jugaste con un botón que da dos eventos (toque y pulsación larga): el tiempo de respuesta puede " +
+            "incluir la espera del dispositivo para distinguir un toque de una pulsación larga.";
+          elStats.appendChild(notaCombinado);
+        }
       } else {
         var nota = document.createElement("p");
         nota.className = "epe-juego-stat-nota";
@@ -491,9 +500,12 @@ var EpeStroop = (function () {
       var cfgActual = panel.leer();
       var entradas = EpeAcceso.entradasNecesarias(cfgActual, ACCIONES);
       window.EpeConfigurarDispositivo
-        .abrir(entradas, { titulo: "Configurar dispositivo — Stroop" })
+        .abrir(entradas, { titulo: "Configurar dispositivo — Stroop", combinar: true })
         .then(function (resultado) {
-          if (resultado && resultado.restaurar) restaurarDispositivo = resultado.restaurar;
+          if (resultado && resultado.restaurar) {
+            restaurarDispositivo = resultado.restaurar;
+            usoBotonCombinado = !!(resultado.combinados && resultado.combinados.length);
+          }
           actualizarBotonRestaurar();
           // El usuario ya apretó "Empezar" dentro del propio modal: arrancamos
           // directo, sin pedirle un segundo click acá.
@@ -512,6 +524,7 @@ var EpeStroop = (function () {
       if (!restaurarDispositivo) return;
       var fn = restaurarDispositivo;
       restaurarDispositivo = null;
+      usoBotonCombinado = false;
       btnRestaurarDispositivo.disabled = true;
       btnRestaurarDispositivo.textContent = "Restaurando…";
       fn()
@@ -542,6 +555,7 @@ var EpeStroop = (function () {
         if (!r.salir) return;
         if (r.restaurado) {
           restaurarDispositivo = null;
+          usoBotonCombinado = false;
           actualizarBotonRestaurar();
         }
         luegoSalir();

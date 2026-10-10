@@ -455,7 +455,7 @@ var EpeNback = (function () {
       var cfgActual = panel.leer();
       var entradas = EpeAcceso.entradasNecesarias(cfgActual, ACCIONES);
       window.EpeConfigurarDispositivo
-        .abrir(entradas, { titulo: "Configurar dispositivo — N-back" })
+        .abrir(entradas, { titulo: "Configurar dispositivo — N-back", combinar: true })
         .then(function (resultado) {
           if (resultado && resultado.restaurar) restaurarDispositivo = resultado.restaurar;
           actualizarBotonRestaurar();
