@@ -1,0 +1,118 @@
+/*
+  tactil.css
+  Ajustes para pantallas táctiles (celular y tablet). Se carga ÚLTIMO en cada
+  página, después de los css de componentes y de cada app, para ganarles a
+  igual especificidad sin recurrir a selectores largos.
+
+  Regla: todo lo que cambia el tamaño o la tipografía va dentro de
+  `@media (pointer: coarse)`, así en una compu con mouse la interfaz queda
+  exactamente como estaba. Lo único global son cosas que no se ven:
+  comportamiento del toque y márgenes de seguridad (notch).
+*/
+
+/* ── Comportamiento del toque (no cambia nada visible) ──
+   `touch-action: manipulation` desactiva el zoom por doble toque: sin esto, en
+   iOS tocar rápido un botón de juego (Stroop, N-back, Lado Correcto) hace zoom.
+   Los pocos elementos que ya usan `touch-action: none` (piano, duración de
+   pulsación) tienen una clase, que gana a estos selectores de etiqueta. */
+a,
+button,
+input,
+select,
+textarea,
+label,
+[role="button"] {
+  touch-action: manipulation;
+}
+
+/* En los juegos, una pulsación larga no tiene que seleccionar texto ni abrir
+   el menú del sistema (iOS) sobre los botones de respuesta. */
+.epe-juego-shell button,
+.epe-juego-shell kbd {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── Márgenes de seguridad (notch, barra de gestos) ──
+   Solo tienen efecto con `viewport-fit=cover` en el <meta viewport>; sin
+   notch valen 0. Los shells ocupan toda la pantalla, así que son ellos los
+   que se corren (border-box, no cambian el alto total). */
+.epe-shell,
+.epe-juego-shell {
+  padding-top: env(safe-area-inset-top);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+}
+
+.epe-modal-overlay {
+  padding-left: max(20px, env(safe-area-inset-left));
+  padding-right: max(20px, env(safe-area-inset-right));
+}
+
+.epe-juego-overlay {
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+}
+
+@media (pointer: coarse) {
+  /* ── Tipografía de campos: 16 px ──
+     iOS Safari hace zoom automático al enfocar un campo de menos de 16 px.
+     !important porque los campos tienen su tamaño definido en varios css de
+     componente con distinta especificidad (.epe-field input, .epe-juego-grupo
+     select, etc.) y esto tiene que ganar siempre. */
+  select,
+  textarea,
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]) {
+    font-size: 16px !important;
+    min-height: 44px !important;
+  }
+
+  /* ── Objetivos táctiles de al menos 44 px ── */
+  .epe-btn-ghost,
+  .epe-btn-acc,
+  .epe-btn-peligro,
+  .epe-btn-sm,
+  .epe-acceso-tecla {
+    min-height: 44px;
+  }
+
+  .epe-theme-toggle,
+  .epe-modal-cerrar {
+    width: 44px;
+    height: 44px;
+  }
+
+  .epe-app-back {
+    min-height: 44px;
+  }
+
+  /* Enlaces del pie ("Un desarrollo de…", "Acerca de"): solo el pie; la
+     variante "by" de los modales no tiene links a propósito. */
+  .epe-atribucion-pie a {
+    min-height: 44px;
+  }
+
+  /* Radios, casillas y sliders: el control es chico, así que el área tocable
+     es la fila entera (la etiqueta) o el alto del slider. */
+  input[type="radio"],
+  input[type="checkbox"] {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+  }
+
+  label:has(> input[type="radio"]),
+  label:has(> input[type="checkbox"]) {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  input[type="range"] {
+    min-height: 44px;
+  }
+}

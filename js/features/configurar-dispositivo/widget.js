@@ -241,7 +241,7 @@ function pasoConectar(raiz, entradas, cerrar, cabecera) {
       el(
         'p',
         'epe-cd-error',
-        'Este navegador no puede conectarse a dispositivos USB ni Bluetooth. Probá con Chrome o Edge en una compu.',
+        'Este navegador no puede conectarse a dispositivos USB ni Bluetooth. Para configurarlo usá Chrome o Edge en una compu, o Chrome en Android. Si el dispositivo ya está configurado, podés usar esta actividad igual.',
       ),
     );
   }
