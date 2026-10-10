@@ -607,6 +607,24 @@ function iniciar(raiz) {
   el.capaToque.addEventListener('pointerup', () => filtroToque.soltar());
   el.capaToque.addEventListener('pointercancel', () => filtroToque.cancelar());
   el.capaToque.addEventListener('lostpointercapture', () => filtroToque.cancelar());
+  // Safari de iPhone hace zoom con dos toques rápidos aunque haya touch-action.
+  // Los toques se leen con pointer events, así que acá se cancela el gesto propio
+  // del navegador (zoom por doble toque y clic sintético). Solo con un dedo: el
+  // zoom con dos dedos queda disponible. touchend/touchcancel también sueltan el
+  // toque, por si el navegador no avisara con pointerup.
+  const cortarGesto = (ev) => {
+    if (ev.cancelable && ev.touches.length <= 1) ev.preventDefault();
+  };
+  el.capaToque.addEventListener('touchstart', cortarGesto, { passive: false });
+  el.capaToque.addEventListener(
+    'touchend',
+    (ev) => {
+      cortarGesto(ev);
+      filtroToque.soltar();
+    },
+    { passive: false },
+  );
+  el.capaToque.addEventListener('touchcancel', () => filtroToque.cancelar());
   // Que una pulsación larga no abra el menú contextual del navegador.
   el.capaToque.addEventListener('contextmenu', (ev) => ev.preventDefault());
 
