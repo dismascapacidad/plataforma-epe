@@ -150,6 +150,7 @@ var EpeNback = (function () {
     var secLet = [];
     var indice = -1; // -1 = fase de preparación
     var respondio = { pos: false, let: false };
+    var origenes = {}; // con qué se respondió: teclado, toque, mouse, lapiz (ver _comun/pulsar.js)
     var conteo = null;
     var timers = [];
     var corriendo = false;
@@ -280,10 +281,11 @@ var EpeNback = (function () {
       programar(siguiente, soaMs);
     }
 
-    function responder(canal) {
+    function responder(canal, origen) {
       if (!corriendo || indice < 0) return;
       if (canales.indexOf(canal) === -1 || respondio[canal]) return;
       respondio[canal] = true;
+      origenes[origen || "teclado"] = true;
       var boton = botones[canal];
       if (usarFeedback) {
         boton.classList.add(esCoincidencia(canal, indice) ? "is-acierto" : "is-error");
@@ -321,6 +323,7 @@ var EpeNback = (function () {
       indice = -1;
       corriendo = true;
       respondio = { pos: false, let: false };
+      origenes = {};
       limpiarBotones();
       apagarEstimulo();
       elActual.textContent = "0";
@@ -358,6 +361,7 @@ var EpeNback = (function () {
       elStats.innerHTML = "";
       elStats.appendChild(fila("Ejercicio", etiquetaModo()));
       elStats.appendChild(fila("Estímulos", String(total)));
+      elStats.appendChild(fila("Entrada usada", EpePulsar.resumen(origenes)));
 
       canales.forEach(function (canal) {
         var k = conteo[canal];
@@ -539,8 +543,8 @@ var EpeNback = (function () {
       actualizarBotonRestaurar();
     }
     Object.keys(botones).forEach(function (canal) {
-      botones[canal].addEventListener("click", function () {
-        responder(canal);
+      EpePulsar.vincular(botones[canal], function (origen) {
+        responder(canal, origen);
       });
     });
 

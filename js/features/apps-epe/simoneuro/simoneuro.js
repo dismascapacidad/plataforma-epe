@@ -303,6 +303,7 @@ function init(root) {
   let tInicioPosicion = 0;
   let errores = 0;
   let respuestasRT = []; // { longitud, posicion, correcto, rt }
+  let origenes = {}; // con qué se respondió: teclado, toque, mouse, lapiz (ver _comun/pulsar.js)
   let corriendo = false;
   let aceptando = false; // true solo durante la espera de respuesta
   let finTiempo = 0;
@@ -642,9 +643,10 @@ function init(root) {
   }
 
   // ── Respuesta ────────────────────────────────────────────────────
-  function responder(idColor) {
+  function responder(idColor, origen) {
     if (!corriendo || !aceptando) return;
     aceptando = false;
+    origenes[origen || 'teclado'] = true;
 
     const esperado = secuenciaObjetivo[posicionActual].id;
     const rt = Math.round(window.performance.now() - tInicioPosicion);
@@ -713,6 +715,7 @@ function init(root) {
     limpiarMarcas();
     errores = 0;
     respuestasRT = [];
+    origenes = {};
     corriendo = true;
     aceptando = false;
     generacionRonda++;
@@ -782,6 +785,7 @@ function init(root) {
     elStats.appendChild(fila('Modo de finalización', FINALIZACION_TEXTO[finalizacion.tipo]));
     elStats.appendChild(fila('Longitud de secuencia alcanzada', String(longitudAlcanzada)));
     elStats.appendChild(fila('Errores totales', String(errores)));
+    elStats.appendChild(fila('Entrada usada', window.EpePulsar.resumen(origenes)));
 
     if (total) {
       const tiempos = respuestasRT.map((r) => r.rt);
@@ -806,6 +810,13 @@ function init(root) {
           max.rt + ' ms (posición ' + (max.posicion + 1) + ' de una secuencia de ' + max.longitud + ')'
         )
       );
+      if (origenes.toque) {
+        const notaTactil = document.createElement('p');
+        notaTactil.className = 'epe-juego-stat-nota';
+        notaTactil.textContent =
+          'Jugaste tocando la pantalla: el tiempo de respuesta incluye la demora propia de la pantalla táctil, que es distinta a la del teclado. No lo compares con partidas jugadas con teclado.';
+        elStats.appendChild(notaTactil);
+      }
       if (usoBotonCombinado) {
         const nota = document.createElement('p');
         nota.className = 'epe-juego-stat-nota';
@@ -995,7 +1006,7 @@ function init(root) {
     actualizarBotonRestaurar();
   }
   COLORES.forEach((c) => {
-    botones[c.id].addEventListener('click', () => responder(c.id));
+    window.EpePulsar.vincular(botones[c.id], (origen) => responder(c.id, origen));
   });
   window.addEventListener('resize', actualizarAspecto);
 
