@@ -45,6 +45,7 @@
     <link rel="stylesheet" href="css/base/plataforma.css" />
     <link rel="stylesheet" href="css/base/typography.css" />
     <link rel="stylesheet" href="css/components/buttons.css" />
+    <link rel="stylesheet" href="css/components/sesion.css" />
     <link rel="stylesheet" href="css/components/atribucion.css" />
     <link rel="stylesheet" href="css/components/app-card.css" />
     <link rel="stylesheet" href="css/layout/shell.css" />
@@ -72,8 +73,10 @@
               <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" />
             </svg>
           </button>
-          <a class="epe-btn-ghost" href="espacio-personal/login.html">Ingresar</a>
-          <a class="epe-btn-acc" href="espacio-personal/login.html?modo=signup">Crear cuenta</a>
+          <a class="epe-btn-ghost" data-sesion="anon" href="espacio-personal/login.html" hidden>Ingresar</a>
+          <a class="epe-btn-acc" data-sesion="anon" href="espacio-personal/login.html?modo=signup" hidden>Crear cuenta</a>
+          <a class="epe-btn-acc" data-sesion="logueada" href="espacio-personal/dashboard.html" hidden>Mi espacio</a>
+          <button class="epe-btn-ghost" type="button" data-sesion="logueada" data-sesion-salir hidden>Salir</button>
         </div>
       </header>
 
@@ -144,16 +147,15 @@
           </span>
         </a>
 
-        <a class="epe-app-card" href="#" data-section="material" aria-disabled="true">
+        <a class="epe-app-card" href="materiales/index.html" data-section="material">
           <span class="epe-app-card-media epe-app-card-media-vacia">
             <span class="epe-app-card-placeholder" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></svg>
             </span>
-            <span class="epe-app-card-pill epe-app-card-pill-soon">Próximamente</span>
           </span>
           <span class="epe-app-card-body">
             <span class="epe-app-card-title">Material de consulta</span>
-            <span class="epe-app-card-desc">Manuales, bibliografía y tutoriales en video.</span>
+            <span class="epe-app-card-desc">Manuales y guías en PDF, y tutoriales en video.</span>
           </span>
         </a>
 
@@ -187,8 +189,12 @@
       <div data-atribucion="pie"></div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="js/core/supabase-client.js"></script>
+    <script src="js/features/perfil/auth.js"></script>
     <script src="js/core/theme.js"></script>
     <script src="js/core/atribucion.js"></script>
+    <script src="js/core/sesion-ui.js"></script>
     <script src="js/core/main.js"></script>
   </body>
 </html>
