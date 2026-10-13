@@ -57,3 +57,67 @@
   gap: 8px;
   justify-content: flex-end;
 }
+
+/* ── Selección múltiple: cards tildables y barra "Agregar (N)" ── */
+/* La card es un div con un <label> que la cubre entera (el toque en cualquier
+   parte tilda); la casilla nativa va arriba a la derecha. */
+.epe-catalogo-item-sel {
+  position: relative;
+  padding: 0;
+  align-items: stretch;
+  gap: 0;
+}
+
+/* El selector doble gana a label:has(> input[type="checkbox"]) de tactil.css,
+   que en pantallas táctiles lo pondría en fila. */
+.epe-catalogo-item-sel .epe-catalogo-item-label {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  padding: 14px;
+  padding-right: 44px; /* lugar para la casilla */
+  cursor: pointer;
+  flex: 1;
+}
+
+.epe-catalogo-item-check {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  accent-color: var(--teal-600);
+  cursor: pointer;
+}
+
+.epe-catalogo-item-sel.is-selected {
+  border-color: var(--teal-600);
+  background: color-mix(in srgb, var(--teal-600) 10%, var(--tile-bg));
+}
+
+.epe-catalogo-item-sel:focus-within {
+  border-color: var(--tile-border-hover);
+}
+
+.epe-catalogo-item-indicaciones {
+  margin: 0 14px 14px;
+  align-self: flex-start;
+}
+
+.epe-picker-barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--tile-border);
+}
+
+.epe-picker-barra-ayuda {
+  font-size: 12px;
+  color: var(--text-faint);
+}

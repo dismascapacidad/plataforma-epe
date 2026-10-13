@@ -9,26 +9,19 @@
  *   incentivo, no seguridad (ver el catálogo).
  * - PDF con acceso: la card es un link directo al archivo de Drive, en
  *   pestaña nueva (un solo toque; con switch de acceso importa).
- * - Video con acceso: la card abre un modal con el reproductor de YouTube
- *   (youtube-nocookie.com). El reproductor se carga recién al abrir el modal
- *   y se quita al cerrarlo, así el audio no sigue sonando.
- * - Sin archivo asignado (material de ejemplo): el modal lo avisa.
+ * - Video con acceso, o material sin archivo (ejemplo): la card abre el modal
+ *   correspondiente (ver js/core/material-visor.js, que comparte con las
+ *   colecciones del espacio personal).
  *
- * Todo texto del catálogo se inserta con textContent. Los únicos innerHTML son
- * los íconos SVG de abajo, que son constantes de este archivo.
+ * Todo texto del catálogo se inserta con textContent. El único innerHTML son
+ * los íconos SVG de EpeMaterialVisor.ICONOS, que son constantes.
  *
- * Depende de: EpeCatalogoMateriales, EpeSesionUi, EpeModal. Script clásico
- * (ver theme.js). Namespace: EpeMaterialesPagina.
+ * Depende de: EpeCatalogoMateriales, EpeSesionUi, EpeModal, EpeMaterialVisor.
+ * Script clásico (ver theme.js). Namespace: EpeMaterialesPagina.
  */
 
 var EpeMaterialesPagina = (function () {
-  var ICONOS = {
-    pdf: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /><path d="M8 13h8M8 17h5" /></svg>',
-    video:
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3" /><path d="M10 9.5v5l4.5-2.5z" /></svg>',
-    candado:
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>',
-  };
+  var ICONOS = EpeMaterialVisor.ICONOS;
 
   var RUTA_LOGIN = "../espacio-personal/login.html";
 
@@ -140,8 +133,7 @@ var EpeMaterialesPagina = (function () {
     if (!directo) {
       item.addEventListener("click", function () {
         if (bloqueado) abrirAvisoAcceso(m);
-        else if (!urls) abrirSinArchivo(m);
-        else abrirVideo(m, urls);
+        else EpeMaterialVisor.abrir(m);
       });
     }
 
@@ -176,58 +168,6 @@ var EpeMaterialesPagina = (function () {
     acciones.appendChild(enlace("epe-btn-ghost epe-btn-sm", "Crear cuenta", RUTA_LOGIN + "?modo=signup&volver=materiales"));
     contenido.appendChild(acciones);
     EpeModal.open({ titulo: "Este material es para usuarios con cuenta", contenido: contenido });
-  }
-
-  function abrirSinArchivo(m) {
-    var contenido = el("div", "epe-material-modal");
-    contenido.appendChild(
-      parrafo(
-        "epe-material-modal-texto",
-        m.ejemplo
-          ? "Este es un material de ejemplo: todavía no tiene " + (m.tipo === "video" ? "un video" : "un archivo") + " asignado."
-          : "Este material todavía no está disponible."
-      )
-    );
-    EpeModal.open({ titulo: m.titulo, contenido: contenido });
-  }
-
-  function abrirVideo(m, urls) {
-    var contenido = el("div", "epe-material-modal");
-
-    var marco = el("div", "epe-material-video");
-    var iframe = document.createElement("iframe");
-    iframe.src = urls.embed;
-    iframe.title = m.titulo;
-    iframe.allow = "encrypted-media; picture-in-picture; fullscreen";
-    iframe.referrerPolicy = "strict-origin-when-cross-origin";
-    iframe.allowFullscreen = true;
-    marco.appendChild(iframe);
-    contenido.appendChild(marco);
-
-    contenido.appendChild(parrafo("epe-material-modal-texto", m.descripcion));
-    contenido.appendChild(
-      parrafo(
-        "epe-material-modal-aviso",
-        "El video se reproduce desde YouTube (Google), que puede registrar tu dirección IP."
-      )
-    );
-
-    var acciones = el("div", "epe-material-modal-acciones");
-    var ver = enlace("epe-btn-ghost epe-btn-sm", "Ver en YouTube", urls.ver);
-    ver.target = "_blank";
-    ver.rel = "noopener noreferrer";
-    acciones.appendChild(ver);
-    contenido.appendChild(acciones);
-
-    EpeModal.open({
-      titulo: m.titulo,
-      contenido: contenido,
-      // EpeModal solo oculta el modal al cerrarlo: sin esto el video seguiría sonando.
-      onClose: function () {
-        iframe.src = "about:blank";
-        if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
-      },
-    });
   }
 
   return { init: init };

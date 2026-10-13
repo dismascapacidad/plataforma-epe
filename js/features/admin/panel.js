@@ -201,15 +201,29 @@ var EpeAdminPanel = (function () {
     var ul = root.querySelector("[data-admin-actividades-lista]");
     ul.innerHTML = '<li class="epe-vacio">Cargando…</li>';
 
-    Promise.all([EpeStore.listActividades(casoId), EpeStore.listAppsTerceros(casoId)])
+    Promise.all([
+      EpeStore.listActividades(casoId),
+      EpeStore.listAppsTerceros(casoId),
+      EpeStore.listMateriales(casoId),
+      EpeStore.listMaterialesPropios(casoId),
+    ])
       .then(function (resultados) {
         if (casoId !== casoSeleccionado) return;
         var deCatalogo = resultados[0];
         var propias = resultados[1];
+        var materiales = resultados[2];
+        var materialesPropios = resultados[3];
 
-        var nombresPropios = propias.map(function (t) {
-          return t.nombre + " (de terceros, propia de esta colección)";
-        });
+        var nombresPropios = propias
+          .map(function (t) {
+            return t.nombre + " (de terceros, propia de esta colección)";
+          })
+          .concat(
+            materialesPropios.map(function (p) {
+              // Solo el nombre: el staff no necesita el link del Drive de la persona.
+              return p.nombre + " (material propio de esta colección)";
+            })
+          );
 
         return Promise.all(
           deCatalogo.map(function (a) {
@@ -219,16 +233,15 @@ var EpeAdminPanel = (function () {
           })
         ).then(function (nombresCatalogo) {
           if (casoId !== casoSeleccionado) return;
-          var todos = nombresCatalogo.concat(nombresPropios);
-          ul.innerHTML = "";
-          if (todos.length === 0) {
-            ul.innerHTML = '<li class="epe-vacio">Sin recursos vinculados todavía.</li>';
-            return;
-          }
-          todos.forEach(function (texto) {
-            var li = document.createElement("li");
-            li.textContent = texto;
-            ul.appendChild(li);
+          return Promise.all(
+            materiales.map(function (v) {
+              return EpeCatalogoMateriales.getById(v.material_id).then(function (m) {
+                return m ? m.titulo + " (material de consulta)" : "Material no disponible";
+              });
+            })
+          ).then(function (nombresMateriales) {
+            if (casoId !== casoSeleccionado) return;
+            mostrarRecursos(nombresCatalogo.concat(nombresMateriales, nombresPropios));
           });
         });
       })
@@ -236,6 +249,19 @@ var EpeAdminPanel = (function () {
         if (casoId !== casoSeleccionado) return;
         ul.innerHTML = '<li class="epe-vacio">No se pudieron cargar los recursos.</li>';
       });
+
+    function mostrarRecursos(todos) {
+      ul.innerHTML = "";
+      if (todos.length === 0) {
+        ul.innerHTML = '<li class="epe-vacio">Sin recursos vinculados todavía.</li>';
+        return;
+      }
+      todos.forEach(function (texto) {
+        var li = document.createElement("li");
+        li.textContent = texto;
+        ul.appendChild(li);
+      });
+    }
   }
 
   function renderComentarios(casoId) {

@@ -2,8 +2,9 @@
   materiales.css
   Lo propio de la página "Material de consulta". La grilla y las cards son las
   de Apps EpE (css/components/app-card.css: epe-grid / epe-grid-apps /
-  epe-app-card); acá solo van el estado bloqueado, la acción al pie de la card,
-  el modal del video y el mensaje de "no hay material".
+  epe-app-card); acá solo van el estado bloqueado, la acción al pie de la card
+  y el mensaje de "no hay material". Los modales (aviso de ingreso, video)
+  están en css/components/material-visor.css.
 */
 
 [data-materiales-vacio] {
@@ -44,48 +45,4 @@
 
 [data-theme="dark"] .epe-material-accion {
   color: var(--teal-500);
-}
-
-/* ── Modal ── */
-.epe-material-modal-texto {
-  font-size: 13px;
-  color: var(--text-dim);
-  line-height: 1.5;
-  margin-top: 14px;
-}
-
-.epe-material-modal > .epe-material-modal-texto:first-child {
-  margin-top: 0;
-}
-
-.epe-material-modal-aviso {
-  margin-top: 10px;
-  font-size: 12px;
-  color: var(--text-faint);
-  line-height: 1.5;
-}
-
-.epe-material-modal-acciones {
-  margin-top: 18px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-/* Reproductor 16:9 que ocupa todo el ancho del modal, también en celular. */
-.epe-material-video {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-  background: #000;
-}
-
-.epe-material-video iframe {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  border: 0;
 }

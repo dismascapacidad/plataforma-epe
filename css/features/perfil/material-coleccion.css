@@ -1,0 +1,30 @@
+/*
+  material-coleccion.css
+  La sub-pestaña "Material" de una colección del espacio personal. Las cards
+  son las de las actividades (caso-card.css: epe-actividades-grid /
+  epe-actividad-card); acá solo van los botones de agregar, el nombre largo
+  del material propio y el mensaje de error del formulario.
+*/
+
+.epe-material-agregar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* El nombre de un material propio puede tener hasta 120 caracteres: se
+   recorta a 3 líneas (el nombre completo queda en el atributo title). */
+.epe-actividad-card .epe-material-nombre {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.epe-material-form-error {
+  min-height: 1.4em;
+  font-size: 12.5px;
+  color: var(--red);
+}
