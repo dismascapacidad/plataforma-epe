@@ -21,11 +21,13 @@
     <link rel="stylesheet" href="../css/components/modal.css" />
     <link rel="stylesheet" href="../css/components/catalogo-tienda.css" />
     <link rel="stylesheet" href="../css/components/tercero-detalle.css" />
+    <link rel="stylesheet" href="../css/components/material-visor.css" />
     <link rel="stylesheet" href="../css/features/configurar-dispositivo/widget.css" />
     <link rel="stylesheet" href="../css/layout/shell.css" />
     <link rel="stylesheet" href="../css/features/perfil/dashboard.css" />
     <link rel="stylesheet" href="../css/features/perfil/caso-card.css" />
     <link rel="stylesheet" href="../css/features/perfil/catalogo-picker.css" />
+    <link rel="stylesheet" href="../css/features/perfil/material-coleccion.css" />
     <link rel="stylesheet" href="../css/base/tactil.css" />
   </head>
   <body>
@@ -194,6 +196,7 @@
 
                 <nav class="epe-subtabs" role="tablist" aria-label="Secciones de la colección">
                   <button class="epe-subtab is-active" type="button" data-subtab="actividades" role="tab" aria-selected="true">Recursos</button>
+                  <button class="epe-subtab" type="button" data-subtab="material" role="tab" aria-selected="false">Material</button>
                   <button class="epe-subtab" type="button" data-subtab="entradas" role="tab" aria-selected="false" data-solo-dueno>Notas personales</button>
                   <button class="epe-subtab" type="button" data-subtab="compartido" role="tab" aria-selected="false">Espacio compartido</button>
                   <button class="epe-subtab" type="button" data-subtab="acceso" role="tab" aria-selected="false" data-solo-dueno>Acceso</button>
@@ -204,6 +207,26 @@
                   <button class="epe-btn-acc epe-btn-sm" type="button" data-actividad-agregar>
                     + Agregar actividad
                   </button>
+                </div>
+
+                <div class="epe-subpanel" data-subpanel="material" hidden>
+                  <p class="epe-panel-sub">
+                    Material de consulta de esta colección: el del catálogo de
+                    dis+capacidad y el tuyo (links a tu Drive), que solo se ve
+                    desde acá. Se abre en una pestaña nueva, fuera de la
+                    plataforma.
+                  </p>
+                  <div class="epe-actividades-grid" data-material-lista></div>
+                  <div data-solo-dueno>
+                    <div class="epe-material-agregar">
+                      <button class="epe-btn-acc epe-btn-sm" type="button" data-material-agregar>
+                        + Agregar del catálogo
+                      </button>
+                      <button class="epe-btn-ghost epe-btn-sm" type="button" data-material-propio-agregar>
+                        + Agregar material propio
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
                 <div class="epe-subpanel" data-subpanel="entradas" hidden>
@@ -236,7 +259,7 @@
                 <div class="epe-subpanel" data-subpanel="acceso" hidden>
                   <h4 class="epe-compartir-titulo">Personas con acceso</h4>
                   <p class="epe-panel-sub">
-                    Pueden ver Recursos y participar del Espacio compartido,
+                    Pueden ver Recursos y Material, y participar del Espacio compartido,
                     pero nunca tus notas personales ni editar o borrar la
                     colección — eso queda siempre para vos.
                   </p>
@@ -294,6 +317,8 @@
     <script src="../js/core/modal.js"></script>
     <script src="../js/core/tercero-detalle.js"></script>
     <script src="../js/data/catalogo-actividades.js"></script>
+    <script src="../js/data/catalogo-materiales.js"></script>
+    <script src="../js/core/material-visor.js"></script>
     <script src="../js/features/perfil/auth.js"></script>
     <script src="../js/features/perfil/data/schema.js"></script>
     <script src="../js/features/perfil/data/store.js"></script>

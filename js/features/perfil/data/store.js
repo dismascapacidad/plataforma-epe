@@ -352,6 +352,32 @@ var EpeStore = (function () {
     });
   }
 
+  // Vincula varias actividades de una vez (una sola llamada: o entran todas o
+  // ninguna). Las que ya estaban vinculadas se saltean, no dan error.
+  function addActividades(casoId, catalogoIds) {
+    return listActividades(casoId).then(function (existentes) {
+      var ya = existentes.map(function (a) {
+        return a.catalogo_id;
+      });
+      var filas = [];
+      (catalogoIds || []).forEach(function (id) {
+        if (ya.indexOf(id) === -1 && filas.indexOf(id) === -1) filas.push(id);
+      });
+      if (filas.length === 0) return [];
+      return EpeSupabase.from("caso_actividades")
+        .insert(
+          filas.map(function (id) {
+            return { caso_id: casoId, catalogo_id: id };
+          })
+        )
+        .select("*")
+        .then(function (res) {
+          lanzarSiError(res);
+          return res.data || [];
+        });
+    });
+  }
+
   function removeActividad(actividadId) {
     return EpeSupabase.from("caso_actividades")
       .delete()
@@ -396,6 +422,120 @@ var EpeStore = (function () {
     return EpeSupabase.from("caso_apps_terceros")
       .delete()
       .eq("id", appId)
+      .then(function (res) {
+        lanzarSiError(res);
+      });
+  }
+
+  // ── Material de consulta vinculado a un caso (ver supabase/024) ─────
+  // Dos fuentes, igual que las actividades: una referencia al catálogo de
+  // material de dis+capacidad (caso_materiales, material_id de texto —
+  // EpeCatalogoMateriales vive en el código) o material propio de ESTE caso
+  // (caso_materiales_propios: nombre + link a Drive/Docs, nunca público).
+  // Sin "update": para corregir algo se borra y se vuelve a crear.
+
+  function listMateriales(casoId) {
+    return EpeSupabase.from("caso_materiales")
+      .select("*")
+      .eq("caso_id", casoId)
+      .order("agregado_en", { ascending: true })
+      .then(function (res) {
+        lanzarSiError(res);
+        return res.data || [];
+      });
+  }
+
+  function hasMaterial(casoId, materialId) {
+    return EpeSupabase.from("caso_materiales")
+      .select("id", { count: "exact", head: true })
+      .eq("caso_id", casoId)
+      .eq("material_id", materialId)
+      .then(function (res) {
+        lanzarSiError(res);
+        return (res.count || 0) > 0;
+      });
+  }
+
+  function addMaterial(casoId, materialId) {
+    return hasMaterial(casoId, materialId).then(function (yaExiste) {
+      if (yaExiste) return null; // no duplicar (también lo garantiza la base)
+      return EpeSupabase.from("caso_materiales")
+        .insert({ caso_id: casoId, material_id: materialId })
+        .select("*")
+        .single()
+        .then(function (res) {
+          lanzarSiError(res);
+          return res.data;
+        });
+    });
+  }
+
+  // Igual que addActividades: una sola llamada, saltea lo ya vinculado.
+  function addMateriales(casoId, materialIds) {
+    return listMateriales(casoId).then(function (existentes) {
+      var ya = existentes.map(function (v) {
+        return v.material_id;
+      });
+      var filas = [];
+      (materialIds || []).forEach(function (id) {
+        if (ya.indexOf(id) === -1 && filas.indexOf(id) === -1) filas.push(id);
+      });
+      if (filas.length === 0) return [];
+      return EpeSupabase.from("caso_materiales")
+        .insert(
+          filas.map(function (id) {
+            return { caso_id: casoId, material_id: id };
+          })
+        )
+        .select("*")
+        .then(function (res) {
+          lanzarSiError(res);
+          return res.data || [];
+        });
+    });
+  }
+
+  function removeMaterial(id) {
+    return EpeSupabase.from("caso_materiales")
+      .delete()
+      .eq("id", id)
+      .then(function (res) {
+        lanzarSiError(res);
+      });
+  }
+
+  function listMaterialesPropios(casoId) {
+    return EpeSupabase.from("caso_materiales_propios")
+      .select("*")
+      .eq("caso_id", casoId)
+      .order("creado_en", { ascending: true })
+      .then(function (res) {
+        lanzarSiError(res);
+        return res.data || [];
+      });
+  }
+
+  // La base vuelve a validar el link (solo https hacia Drive/Docs): ver el CHECK
+  // de caso_materiales_propios. Quien llama valida antes para dar un mensaje claro.
+  function addMaterialPropio(casoId, datos) {
+    return EpeSupabase.from("caso_materiales_propios")
+      .insert({
+        caso_id: casoId,
+        nombre: ((datos && datos.nombre) || "").trim(),
+        url: ((datos && datos.url) || "").trim(),
+      })
+      .select("*")
+      .single()
+      .then(function (res) {
+        lanzarSiError(res);
+        return res.data;
+      });
+  }
+
+  function removeMaterialPropio(id) {
+    return EpeSupabase.from("caso_materiales_propios")
+      .delete()
+      .eq("id", id)
       .then(function (res) {
         lanzarSiError(res);
       });
@@ -635,7 +775,15 @@ var EpeStore = (function () {
     listActividades: listActividades,
     hasActividad: hasActividad,
     addActividad: addActividad,
+    addActividades: addActividades,
     removeActividad: removeActividad,
+    listMateriales: listMateriales,
+    addMaterial: addMaterial,
+    addMateriales: addMateriales,
+    removeMaterial: removeMaterial,
+    listMaterialesPropios: listMaterialesPropios,
+    addMaterialPropio: addMaterialPropio,
+    removeMaterialPropio: removeMaterialPropio,
     listAppsTerceros: listAppsTerceros,
     addAppTercero: addAppTercero,
     removeAppTercero: removeAppTercero,

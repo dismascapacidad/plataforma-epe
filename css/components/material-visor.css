@@ -1,0 +1,50 @@
+/*
+  material-visor.css
+  Los modales de material de consulta (js/core/material-visor.js): el aviso
+  de "ingresá para verlo", el material sin archivo y el reproductor de video.
+  Componente compartido: lo usan la página materiales/ y las colecciones del
+  espacio personal.
+*/
+
+.epe-material-modal-texto {
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.5;
+  margin-top: 14px;
+}
+
+.epe-material-modal > .epe-material-modal-texto:first-child {
+  margin-top: 0;
+}
+
+.epe-material-modal-aviso {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--text-faint);
+  line-height: 1.5;
+}
+
+.epe-material-modal-acciones {
+  margin-top: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Reproductor 16:9 que ocupa todo el ancho del modal, también en celular. */
+.epe-material-video {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: #000;
+}
+
+.epe-material-video iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}

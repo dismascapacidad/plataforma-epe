@@ -1,8 +1,10 @@
 /**
  * casos.js
  * Sección "Gestión de casos": listar/crear/borrar casos, y ver el detalle
- * de uno en 4 pestañas:
+ * de uno en 5 pestañas:
  *   - Recursos: actividades/apps vinculadas (EpeCatalogo).
+ *   - Material: material de consulta vinculado (EpeCatalogoMateriales) y
+ *     material propio de la colección (link a Drive/Docs del dueño).
  *   - Notas personales: documentación privada, SOLO el dueño la ve o
  *     escribe (ni siquiera un colega compartido — ver
  *     supabase/005_notas_privadas.sql). Pestaña oculta para no-dueños.
@@ -53,6 +55,8 @@ var EpeCasos = (function () {
 
     root.querySelector("[data-caso-nuevo]").addEventListener("click", onCrearCaso);
     root.querySelector("[data-actividad-agregar]").addEventListener("click", abrirCatalogo);
+    root.querySelector("[data-material-agregar]").addEventListener("click", abrirSelectorMaterial);
+    root.querySelector("[data-material-propio-agregar]").addEventListener("click", renderFormMaterialPropio);
     root.querySelector("[data-entrada-form]").addEventListener("submit", onAgregarEntrada);
     root.querySelector("[data-colega-agregar]").addEventListener("click", abrirFormCompartirColega);
     root.querySelector("[data-comentario-form]").addEventListener("submit", onAgregarComentario);
@@ -308,10 +312,10 @@ var EpeCasos = (function () {
     EpeStore.getColegaLabel(duenoId)
       .then(function (label) {
         banner.textContent =
-          "Colección compartida por " + label + " — podés ver Recursos y participar del Espacio compartido, pero no editarla ni ver sus notas personales.";
+          "Colección compartida por " + label + " — podés ver Recursos y Material, y participar del Espacio compartido, pero no editarla ni ver sus notas personales.";
       })
       .catch(function () {
-        banner.textContent = "Colección compartida con vos — podés ver Recursos y participar del Espacio compartido, pero no editarla.";
+        banner.textContent = "Colección compartida con vos — podés ver Recursos y Material, y participar del Espacio compartido, pero no editarla.";
       });
   }
 
@@ -358,6 +362,7 @@ var EpeCasos = (function () {
         }
 
         renderActividades(caso.id);
+        renderMateriales(caso.id, esDueno);
         renderComentarios(caso.id);
         if (esDueno) {
           renderEntradas(caso.id);
@@ -523,9 +528,108 @@ var EpeCasos = (function () {
 
   // ── Agregar actividad: elegir de la "tienda" del catálogo EpE ──────
 
+  // Ids tildados en el selector abierto. Viven fuera de renderPicker para que
+  // sobrevivan al cambio de pestaña (Apps EpE / De terceros) y a ver las
+  // indicaciones de una app, que re-dibujan el modal.
+  var seleccionActividades = [];
+  var seleccionMaterial = [];
+
   function abrirCatalogo() {
     if (!casoSeleccionadoId) return;
+    seleccionActividades = [];
     renderPicker("app-epe");
+  }
+
+  function alternarSeleccion(lista, id, marcado) {
+    var i = lista.indexOf(id);
+    if (marcado && i === -1) lista.push(id);
+    if (!marcado && i !== -1) lista.splice(i, 1);
+  }
+
+  // Card tildable de un selector. Es un div con un <label> que ocupa toda la
+  // card (el toque en cualquier parte tilda) y una casilla nativa: así el
+  // teclado y los lectores de pantalla andan sin código extra. Cualquier
+  // botón extra va FUERA del label (un botón dentro de un label tildaría la casilla).
+  function construirItemSeleccionable(datos, lista, alCambiar) {
+    var item = document.createElement("div");
+    item.className = "epe-catalogo-item epe-catalogo-item-sel";
+
+    var label = document.createElement("label");
+    label.className = "epe-catalogo-item-label";
+
+    var casilla = document.createElement("input");
+    casilla.type = "checkbox";
+    casilla.className = "epe-catalogo-item-check";
+    casilla.checked = lista.indexOf(datos.id) !== -1;
+    casilla.setAttribute("aria-label", "Elegir " + datos.titulo);
+    item.classList.toggle("is-selected", casilla.checked);
+    casilla.addEventListener("change", function () {
+      alternarSeleccion(lista, datos.id, casilla.checked);
+      item.classList.toggle("is-selected", casilla.checked);
+      alCambiar();
+    });
+
+    var icono = document.createElement("span");
+    icono.className = "epe-catalogo-item-icono";
+    icono.innerHTML = datos.icono; // SVG constante del catálogo, nunca texto de la persona
+    icono.setAttribute("aria-hidden", "true");
+
+    var titulo = document.createElement("strong");
+    titulo.textContent = datos.titulo;
+
+    var categoria = document.createElement("span");
+    categoria.className = "epe-catalogo-item-categoria";
+    categoria.textContent = datos.categoria;
+
+    var desc = document.createElement("p");
+    desc.textContent = datos.descripcion;
+
+    label.appendChild(casilla);
+    label.appendChild(icono);
+    label.appendChild(titulo);
+    label.appendChild(categoria);
+    label.appendChild(desc);
+    if (datos.autor) {
+      var autor = document.createElement("span");
+      autor.className = "epe-catalogo-item-autor";
+      autor.textContent = datos.autor;
+      label.appendChild(autor);
+    }
+    item.appendChild(label);
+    return item;
+  }
+
+  // Barra "Agregar (N)" al pie de un selector. alAgregar() devuelve una Promise
+  // que vincula todo lo tildado; si falla, la selección queda para reintentar.
+  function construirBarraAgregar(lista, alAgregar, mensajeError) {
+    var nodo = document.createElement("div");
+    nodo.className = "epe-picker-barra";
+
+    var boton = document.createElement("button");
+    boton.type = "button";
+    boton.className = "epe-btn-acc epe-btn-sm";
+
+    function actualizar() {
+      boton.disabled = lista.length === 0;
+      boton.textContent = lista.length === 0 ? "Agregar" : "Agregar (" + lista.length + ")";
+    }
+
+    boton.addEventListener("click", function () {
+      boton.disabled = true;
+      alAgregar().catch(function (err) {
+        window.alert(mensajeError + detalleError(err));
+        actualizar();
+      });
+    });
+
+    var ayuda = document.createElement("span");
+    ayuda.className = "epe-picker-barra-ayuda";
+    ayuda.textContent = "Tildá los que quieras y agregalos juntos.";
+
+    nodo.appendChild(ayuda);
+    nodo.appendChild(boton);
+    actualizar();
+    return { nodo: nodo, actualizar: actualizar };
   }
 
   function renderPicker(tabActiva) {
@@ -541,6 +645,18 @@ var EpeCasos = (function () {
         var catalogo = resultados[1];
 
         var contenido = document.createElement("div");
+
+        var barra = construirBarraAgregar(
+          seleccionActividades,
+          function () {
+            return EpeStore.addActividades(casoId, seleccionActividades.slice()).then(function () {
+              seleccionActividades = [];
+              renderActividades(casoId);
+              EpeModal.close();
+            });
+          },
+          "No se pudieron vincular las actividades."
+        );
 
         var tabs = document.createElement("div");
         tabs.className = "epe-subtabs epe-picker-tabs";
@@ -576,7 +692,7 @@ var EpeCasos = (function () {
           grid.className = "epe-catalogo-grid";
 
           disponibles.forEach(function (app) {
-            grid.appendChild(construirCatalogoItem(app, casoId));
+            grid.appendChild(construirCatalogoItem(app, barra.actualizar));
           });
 
           seccion.appendChild(grid);
@@ -594,6 +710,7 @@ var EpeCasos = (function () {
         }
 
         contenido.appendChild(seccion);
+        contenido.appendChild(barra.nodo);
 
         EpeModal.open({
           titulo: "Agregar actividad desde el catálogo",
@@ -605,66 +722,39 @@ var EpeCasos = (function () {
       });
   }
 
-  function construirCatalogoItem(app, casoId) {
-    var item = document.createElement("button");
-    item.type = "button";
-    item.className = "epe-catalogo-item";
+  function construirCatalogoItem(app, alCambiar) {
+    var item = construirItemSeleccionable(
+      {
+        id: app.id,
+        icono: app.icono,
+        titulo: app.nombre,
+        categoria: app.categoria,
+        descripcion: app.descripcion,
+        autor: app.tipo === "app-epe" ? "App EpE" : "De terceros: " + app.autor,
+      },
+      seleccionActividades,
+      alCambiar
+    );
 
-    var icono = document.createElement("span");
-    icono.className = "epe-catalogo-item-icono";
-    icono.innerHTML = app.icono;
-    icono.setAttribute("aria-hidden", "true");
-
-    var nombre = document.createElement("strong");
-    nombre.textContent = app.nombre;
-
-    var categoria = document.createElement("span");
-    categoria.className = "epe-catalogo-item-categoria";
-    categoria.textContent = app.categoria;
-
-    var desc = document.createElement("p");
-    desc.textContent = app.descripcion;
-
-    var autor = document.createElement("span");
-    autor.className = "epe-catalogo-item-autor";
-    autor.textContent = app.tipo === "app-epe" ? "App EpE" : "De terceros: " + app.autor;
-
-    item.appendChild(icono);
-    item.appendChild(nombre);
-    item.appendChild(categoria);
-    item.appendChild(desc);
-    item.appendChild(autor);
-
-    function vincular() {
-      return EpeStore.addActividad(casoId, app.id).then(function () {
-        renderActividades(casoId);
-        EpeModal.close();
-      });
-    }
-
-    if (app.tipo === "app-epe") {
-      item.addEventListener("click", function () {
-        item.disabled = true;
-        vincular().catch(function (err) {
-          window.alert("No se pudo vincular la actividad." + detalleError(err));
-          item.disabled = false;
-        });
-      });
-    } else {
-      // Las de terceros pasan primero por el modal de indicaciones; recién
-      // ahí se confirma vincularlas (ver js/core/tercero-detalle.js).
-      item.addEventListener("click", function () {
+    if (app.tipo === "tercero") {
+      // Las indicaciones (sitio externo, requisitos de dispositivo) siguen a un
+      // toque de distancia; al volver, la app queda tildada (ver tercero-detalle.js).
+      var indicaciones = document.createElement("button");
+      indicaciones.type = "button";
+      indicaciones.className = "epe-btn-ghost epe-btn-sm epe-catalogo-item-indicaciones";
+      indicaciones.textContent = "Ver indicaciones";
+      indicaciones.addEventListener("click", function () {
         EpeTerceroDetalle.abrir(app, {
           accionExtra: {
-            etiqueta: "Vincular a esta colección",
+            etiqueta: "Tildar y volver al listado",
             onClick: function () {
-              vincular().catch(function (err) {
-                window.alert("No se pudo vincular la actividad." + detalleError(err));
-              });
+              alternarSeleccion(seleccionActividades, app.id, true);
+              renderPicker("tercero");
             },
           },
         });
       });
+      item.appendChild(indicaciones);
     }
 
     return item;
@@ -754,6 +844,320 @@ var EpeCasos = (function () {
 
     EpeModal.open({
       titulo: "Crear app de terceros para esta colección",
+      contenido: contenido,
+    });
+  }
+
+  // ── Material de consulta de la colección ───────────────────────────
+  // Dos fuentes, como en las actividades: una referencia al catálogo de
+  // dis+capacidad (EpeCatalogoMateriales, por id) o material propio de ESTA
+  // colección (nombre + link a Drive/Docs, nunca público). Quien ve la
+  // colección ve las dos; solo el dueño agrega y quita (la base también lo
+  // exige: supabase/024_material_de_consulta.sql).
+
+  function materialesUnificados(casoId) {
+    var deCatalogo = EpeStore.listMateriales(casoId).then(function (lista) {
+      return Promise.all(
+        lista.map(function (v) {
+          return EpeCatalogoMateriales.getById(v.material_id).then(function (m) {
+            return {
+              propio: false,
+              material: m,
+              orden: v.agregado_en,
+              quitar: function () {
+                return EpeStore.removeMaterial(v.id);
+              },
+            };
+          });
+        })
+      );
+    });
+
+    var propios = EpeStore.listMaterialesPropios(casoId).then(function (lista) {
+      return lista.map(function (p) {
+        return {
+          propio: true,
+          nombre: p.nombre,
+          url: p.url,
+          orden: p.creado_en,
+          quitar: function () {
+            return EpeStore.removeMaterialPropio(p.id);
+          },
+        };
+      });
+    });
+
+    return Promise.all([deCatalogo, propios]).then(function (resultados) {
+      return resultados[0].concat(resultados[1]).sort(function (a, b) {
+        return (a.orden || "").localeCompare(b.orden || "");
+      });
+    });
+  }
+
+  function renderMateriales(casoId, esDueno) {
+    var grid = root.querySelector("[data-material-lista]");
+    mensajeVacio(grid, "Cargando…");
+
+    materialesUnificados(casoId)
+      .then(function (lista) {
+        if (casoId !== casoSeleccionadoId) return;
+        grid.innerHTML = "";
+
+        if (lista.length === 0) {
+          mensajeVacio(
+            grid,
+            esDueno ? "Todavía no vinculaste material a esta colección." : "Esta colección no tiene material vinculado."
+          );
+          return;
+        }
+
+        lista.forEach(function (item) {
+          grid.appendChild(construirCardMaterial(item, casoId, esDueno));
+        });
+      })
+      .catch(function () {
+        if (casoId !== casoSeleccionadoId) return;
+        mensajeVacio(grid, "No se pudo cargar el material. Revisá tu conexión.");
+      });
+  }
+
+  function construirCardMaterial(item, casoId, esDueno) {
+    var m = item.material;
+    var card = document.createElement("div");
+    card.className = "epe-actividad-card";
+
+    var tipoIcono = item.propio ? "enlace" : m && m.tipo === "video" ? "video" : "pdf";
+    var icono = document.createElement("span");
+    icono.className = "epe-actividad-card-icono";
+    // ICONOS es un mapa fijo de SVG escritos a mano en material-visor.js.
+    icono.innerHTML = EpeMaterialVisor.ICONOS[tipoIcono];
+    icono.setAttribute("aria-hidden", "true");
+    card.appendChild(icono);
+
+    var textoNombre = item.propio ? item.nombre : m ? m.titulo : "Material no disponible";
+    var nombre = document.createElement("strong");
+    nombre.className = "epe-material-nombre";
+    nombre.textContent = textoNombre;
+    nombre.title = textoNombre;
+    card.appendChild(nombre);
+
+    var sub = document.createElement("span");
+    sub.className = "epe-actividad-card-autor";
+    if (item.propio) {
+      sub.classList.add("epe-actividad-card-autor-privada");
+      sub.textContent = "Propio de esta colección";
+    } else if (m) {
+      sub.textContent = (m.tipo === "video" ? "Video" : "PDF") + (m.categoria ? " · " + m.categoria : "");
+    }
+    card.appendChild(sub);
+
+    var acciones = document.createElement("div");
+    acciones.className = "epe-actividad-card-acciones";
+
+    var abrir = document.createElement("button");
+    abrir.type = "button";
+    abrir.className = "epe-btn-acc epe-btn-sm";
+    abrir.textContent = !item.propio && m && m.tipo === "video" ? "Ver" : "Abrir";
+    if (item.propio) {
+      abrir.addEventListener("click", function () {
+        if (!EpeMaterialVisor.abrirPropio(item.url)) {
+          window.alert("Este link no es un link válido de Google Drive o Google Docs, así que no se abre.");
+        }
+      });
+    } else if (m) {
+      abrir.addEventListener("click", function () {
+        EpeMaterialVisor.abrir(m);
+      });
+    } else {
+      abrir.disabled = true;
+    }
+    acciones.appendChild(abrir);
+
+    if (esDueno) {
+      var quitar = document.createElement("button");
+      quitar.type = "button";
+      quitar.className = "epe-btn-ghost epe-btn-sm";
+      quitar.textContent = "Quitar";
+      quitar.addEventListener("click", function () {
+        quitar.disabled = true;
+        item
+          .quitar()
+          .then(function () {
+            renderMateriales(casoId, true);
+          })
+          .catch(function (err) {
+            window.alert("No se pudo quitar el material." + detalleError(err));
+            quitar.disabled = false;
+          });
+      });
+      acciones.appendChild(quitar);
+    }
+
+    card.appendChild(acciones);
+    return card;
+  }
+
+  // ── Agregar material del catálogo de dis+capacidad ─────────────────
+
+  function abrirSelectorMaterial() {
+    if (!casoSeleccionadoId) return;
+    var casoId = casoSeleccionadoId;
+    seleccionMaterial = [];
+
+    Promise.all([EpeStore.listMateriales(casoId), EpeCatalogoMateriales.getAll()])
+      .then(function (resultados) {
+        if (casoId !== casoSeleccionadoId) return;
+
+        var yaVinculados = resultados[0].map(function (v) {
+          return v.material_id;
+        });
+        var disponibles = resultados[1].filter(function (m) {
+          return yaVinculados.indexOf(m.id) === -1;
+        });
+
+        var contenido = document.createElement("div");
+
+        if (disponibles.length === 0) {
+          var vacio = document.createElement("p");
+          vacio.className = "epe-vacio";
+          vacio.textContent = "Ya vinculaste todo el material del catálogo a esta colección.";
+          contenido.appendChild(vacio);
+        } else {
+          var barra = construirBarraAgregar(
+            seleccionMaterial,
+            function () {
+              return EpeStore.addMateriales(casoId, seleccionMaterial.slice()).then(function () {
+                seleccionMaterial = [];
+                renderMateriales(casoId, true);
+                EpeModal.close();
+              });
+            },
+            "No se pudo vincular el material."
+          );
+
+          var grid = document.createElement("div");
+          grid.className = "epe-catalogo-grid";
+          disponibles.forEach(function (m) {
+            grid.appendChild(
+              construirItemSeleccionable(
+                {
+                  id: m.id,
+                  icono: EpeMaterialVisor.ICONOS[m.tipo === "video" ? "video" : "pdf"],
+                  titulo: m.titulo,
+                  categoria: (m.tipo === "video" ? "Video" : "PDF") + (m.categoria ? " · " + m.categoria : ""),
+                  descripcion: m.descripcion,
+                },
+                seleccionMaterial,
+                barra.actualizar
+              )
+            );
+          });
+          contenido.appendChild(grid);
+          contenido.appendChild(barra.nodo);
+        }
+
+        EpeModal.open({ titulo: "Agregar material del catálogo", contenido: contenido });
+      })
+      .catch(function (err) {
+        window.alert("No se pudo cargar el material." + detalleError(err));
+      });
+  }
+
+  // ── Agregar material propio: nombre + link a Drive/Docs ────────────
+
+  function renderFormMaterialPropio() {
+    if (!casoSeleccionadoId) return;
+    var casoId = casoSeleccionadoId;
+    var contenido = document.createElement("div");
+
+    var intro = document.createElement("p");
+    intro.className = "epe-panel-sub";
+    intro.textContent =
+      "Pegá el link de un archivo de tu Google Drive o Google Docs. Quien ve esta colección ve el nombre y el link; Drive decide quién puede abrir el archivo.";
+    contenido.appendChild(intro);
+
+    // Un solo aviso para los dos campos de texto libre (y para el archivo
+    // en sí), para no estirar el modal: no admite scroll.
+    var avisoPrivacidad = document.createElement("p");
+    avisoPrivacidad.className = "epe-field-hint-privacidad";
+    avisoPrivacidad.textContent =
+      "Esto no es un caso clínico: no identifiques a la persona ni incluyas datos sensibles en el nombre ni en el archivo.";
+    contenido.appendChild(avisoPrivacidad);
+
+    var form = document.createElement("form");
+    form.className = "epe-form-grid epe-picker-form";
+
+    function campo(nombre, label, tipoInput) {
+      var wrap = document.createElement("div");
+      wrap.className = "epe-field";
+      var lbl = document.createElement("label");
+      lbl.textContent = label;
+      var input = document.createElement("input");
+      input.type = tipoInput;
+      input.name = nombre;
+      input.required = true;
+      wrap.appendChild(lbl);
+      wrap.appendChild(input);
+      form.appendChild(wrap);
+      return input;
+    }
+
+    var inputNombre = campo("nombre", "Nombre del material", "text");
+    inputNombre.maxLength = 120;
+    var inputUrl = campo("url", "Link de Google Drive o Google Docs", "url");
+    inputUrl.maxLength = 500;
+    inputUrl.placeholder = "https://drive.google.com/…";
+
+    var error = document.createElement("p");
+    error.className = "epe-material-form-error";
+    error.setAttribute("role", "alert");
+    form.appendChild(error);
+
+    var acciones = document.createElement("div");
+    var cancelar = document.createElement("button");
+    cancelar.type = "button";
+    cancelar.className = "epe-btn-ghost epe-btn-sm";
+    cancelar.textContent = "Cancelar";
+    cancelar.addEventListener("click", function () {
+      EpeModal.close();
+    });
+    var guardar = document.createElement("button");
+    guardar.type = "submit";
+    guardar.className = "epe-btn-acc epe-btn-sm";
+    guardar.textContent = "Agregar";
+    acciones.appendChild(cancelar);
+    acciones.appendChild(guardar);
+    form.appendChild(acciones);
+
+    form.addEventListener("submit", function (ev) {
+      ev.preventDefault();
+      error.textContent = "";
+      var nombre = inputNombre.value.trim();
+      var url = EpeMaterialVisor.urlDriveValida(inputUrl.value);
+      if (!nombre) {
+        error.textContent = "Escribí un nombre para el material.";
+        return;
+      }
+      if (!url) {
+        error.textContent = "El link tiene que ser de Google Drive o Google Docs (drive.google.com o docs.google.com).";
+        return;
+      }
+      guardar.disabled = true;
+      EpeStore.addMaterialPropio(casoId, { nombre: nombre, url: url })
+        .then(function () {
+          renderMateriales(casoId, true);
+          EpeModal.close();
+        })
+        .catch(function (err) {
+          error.textContent = "No se pudo agregar el material." + detalleError(err);
+          guardar.disabled = false;
+        });
+    });
+
+    contenido.appendChild(form);
+
+    EpeModal.open({
+      titulo: "Agregar material propio",
       contenido: contenido,
     });
   }
