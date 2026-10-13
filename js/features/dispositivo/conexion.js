@@ -167,6 +167,10 @@ export class Conexion {
   get tipoDeTransporte() {
     return this.#t.tipo;
   }
+  /** Nombre con el que el dispositivo se anuncia (solo Bluetooth; vacío si no hay). */
+  get nombreDispositivo() {
+    return String(/** @type {any} */ (this.#t).nombre || '');
+  }
   /** @returns {InfoDispositivo | null} */
   get info() {
     return this.#info;

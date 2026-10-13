@@ -37,6 +37,7 @@ import {
   productoPorModelo,
   todasLasEntradas,
 } from '../dispositivo/index.js';
+import { sistemaDe, pasosParaJugar, pasosParaRestaurar, CODIGO_SOLTADO_PARA_JUGAR } from '../dispositivo/aviso-ble.js';
 import {
   conectarCompartida,
   obtenerActiva,
@@ -104,11 +105,114 @@ let originalPrevio = null;
 /** Estado ORIGINAL del dispositivo: adonde vuelve "restaurar" (ver conexion-activa.js). @type {any} */
 let destino = null;
 
+/**
+ * El widget se abrió para un recurso externo: ahí externo.js tiene su propia
+ * pantalla para reconectar y restaurar, así que `restaurar` no abre la suya.
+ */
+let reconectarSinPantalla = false;
+/**
+ * Con Bluetooth, al terminar de configurar la página suelta el dispositivo para
+ * que el sistema pueda usarlo (ver `pasoSoltarBle`). Si la persona cierra el
+ * modal en ese paso, la app igual tiene que enterarse de que quedó configurado.
+ * @type {(() => object) | null}
+ */
+let cierreSiSeCierra = null;
+
+/** Nombre Bluetooth de cada conexión que se soltó (después de soltarla ya no se puede leer). @type {WeakMap<object, string>} */
+const nombresSoltados = new WeakMap();
+
 /** Restaura al estado original y, si quedó idéntico, lo da por resuelto. */
 async function restaurarOriginal(conexion, snapshot) {
-  const r = await conexion.restaurar(destino || snapshot);
-  if (r.ok) olvidarRespaldoOriginal(conexion);
-  return r;
+  let activa = conexion;
+  /** @type {(() => void) | null} */
+  let cerrarPantalla = null;
+  if (conexion.tipoDeTransporte === 'ble' && conexion.estado !== 'conectado') {
+    // La página soltó el dispositivo para jugar: hay que volver a abrirlo.
+    if (reconectarSinPantalla) {
+      throw Object.assign(
+        new Error('El dispositivo está desconectado de la página: hay que reconectarlo para restaurarlo.'),
+        { codigo: CODIGO_SOLTADO_PARA_JUGAR },
+      );
+    }
+    const nueva = await pantallaReconexion(nombresSoltados.get(conexion) || '');
+    activa = nueva.conexion;
+    cerrarPantalla = nueva.cerrar;
+  }
+  try {
+    const r = await activa.restaurar(destino || snapshot);
+    if (r.ok) {
+      olvidarRespaldoOriginal(conexion);
+      olvidarRespaldoOriginal(activa);
+    }
+    return r;
+  } finally {
+    if (cerrarPantalla) cerrarPantalla();
+  }
+}
+
+/**
+ * Pantalla para volver a conectar por Bluetooth antes de restaurar: explica cómo
+ * soltar el dispositivo del sistema y abre el selector. Devuelve la conexión
+ * nueva y una función para cerrar la pantalla cuando termine la restauración.
+ * Rechaza con `codigo: 'cancelado'` si la persona la cierra sin conectar.
+ * @param {string} nombre
+ * @returns {Promise<{ conexion: any, cerrar: () => void }>}
+ */
+function pantallaReconexion(nombre) {
+  return new Promise((resolve, reject) => {
+    if (!window.EpeModal) {
+      reject(Object.assign(new Error('Falta cargar js/core/modal.js.'), { codigo: 'sin-modal' }));
+      return;
+    }
+    const contenido = el('div', 'epe-cd');
+    contenido.appendChild(
+      el('p', 'epe-cd-intro', 'Para restaurar el dispositivo hay que volver a conectarlo a esta página.'),
+    );
+    for (const paso of pasosParaRestaurar(sistemaDe(navigator.userAgent), nombre)) {
+      contenido.appendChild(el('p', 'epe-cd-aviso', paso));
+    }
+    const estado = el('div', 'epe-cd-estado');
+    contenido.appendChild(estado);
+    const fila = el('div', 'epe-cd-botones');
+    const btnElegir = el('button', 'epe-btn-acc', 'Elegir dispositivo');
+    btnElegir.type = 'button';
+    const btnCancelar = el('button', 'epe-btn-ghost', 'Cancelar');
+    btnCancelar.type = 'button';
+    fila.appendChild(btnElegir);
+    fila.appendChild(btnCancelar);
+    contenido.appendChild(fila);
+
+    let terminado = false;
+    function decir(clase, texto) {
+      estado.innerHTML = '';
+      estado.appendChild(el('p', clase, texto));
+    }
+    function cancelar() {
+      if (terminado) return;
+      terminado = true;
+      window.EpeModal.close();
+      reject(Object.assign(new Error('Se canceló la reconexión.'), { codigo: 'cancelado' }));
+    }
+    btnCancelar.addEventListener('click', cancelar);
+    btnElegir.addEventListener('click', async () => {
+      btnElegir.disabled = true;
+      btnCancelar.disabled = true;
+      decir('epe-cd-intro', 'Conectando…');
+      try {
+        const { conexion } = await conectarCompartida('ble');
+        terminado = true; // desde acá el modal lo cierra quien restaura
+        decir('epe-cd-intro', 'Restaurando…');
+        resolve({ conexion, cerrar: () => window.EpeModal.close() });
+      } catch (e) {
+        btnElegir.disabled = false;
+        btnCancelar.disabled = false;
+        if (e && e.codigo !== 'cancelado') decir('epe-cd-error', `No se pudo conectar: ${(e && e.message) || e}`);
+        else decir('epe-cd-intro', '');
+      }
+    });
+
+    window.EpeModal.open({ titulo: 'Restaurar el dispositivo', contenido, onClose: cancelar });
+  });
 }
 
 function el(tag, clase, texto) {
@@ -146,7 +250,7 @@ function mostrarCabecera(cabecera, info) {
  *   (se usa como destino de "restaurar" si es del mismo modelo).
  *   `externo`: se abre para un recurso de terceros (cambia los textos y suma
  *   el aviso de cómo restaurar; ver `textosExterno`).
- * @returns {Promise<{ ok: boolean, motivo?: string, snapshot?: object, restaurar?: () => Promise<{ok: boolean, diferencias: any[]}>, continuar?: boolean, combinados?: { corto: string, largo: string, umbral: number }[] }>}
+ * @returns {Promise<{ ok: boolean, motivo?: string, snapshot?: object, restaurar?: () => Promise<{ok: boolean, diferencias: any[]}>, continuar?: boolean, soltado?: boolean, combinados?: { corto: string, largo: string, umbral: number }[] }>}
  *   `ok:true` cuando se aplicó una configuración nueva y el usuario cerró el
  *   widget conforme. Si aplicó y no deshizo dentro del propio widget, viene
  *   también `restaurar`: una función ya lista (atada a esa conexión y a ese
@@ -158,11 +262,17 @@ function mostrarCabecera(cabecera, info) {
  *   los botones que quedaron con dos eventos: `corto` y `largo` son los `id` de
  *   las acciones y `umbral` los ms desde los que cuenta como pulsación larga.
  *   Vacío o ausente = ningún botón combinado (la app no necesita hacer nada).
+ *   Por Bluetooth, al terminar el widget SUELTA el dispositivo para que el sistema
+ *   lo pueda usar como teclado o mouse (ver aviso-ble.js); `restaurar` pide
+ *   entonces volver a conectarlo. `soltado:true` + `continuar:false` = quedó
+ *   configurado y desconectado, pero la persona cerró el modal antes de arrancar.
  */
 export function abrir(entradasPedidas, opciones = {}) {
   originalPrevio = opciones.originalPrevio || null;
   combinar = opciones.combinar === true;
   destino = null;
+  reconectarSinPantalla = !!opciones.externo;
+  cierreSiSeCierra = null;
   // Las Apps EpE siguen pasando `{ id, etiqueta, tecla }` sin `tipo`: son teclas.
   const entradas = (entradasPedidas || []).map((e) => (e && e.tipo ? e : { ...e, tipo: 'tecla' }));
   T = opciones.externo ? textosExterno(opciones.externo.nombre) : TEXTOS_JUEGO;
@@ -196,7 +306,7 @@ export function abrir(entradasPedidas, opciones = {}) {
     window.EpeModal.open({
       titulo: opciones.titulo || 'Configurar dispositivo',
       contenido,
-      onClose: () => cerrar({ ok: false, motivo: 'cerrado' }),
+      onClose: () => cerrar(cierreSiSeCierra ? cierreSiSeCierra() : { ok: false, motivo: 'cerrado' }),
     });
 
     // Si el dispositivo ya está conectado en esta página (por un juego o recurso
@@ -761,15 +871,19 @@ async function aplicar(raiz, cerrar, conexion, comandos, snapshot, leerCombinado
     // arrancar como si el dispositivo ya estuviera listo.
     const btnContinuar = el('button', 'epe-btn-acc', exito ? T.continuar : 'Cerrar');
     btnContinuar.type = 'button';
-    btnContinuar.addEventListener('click', () =>
-      cerrar({
+    btnContinuar.addEventListener('click', () => {
+      const resultado = {
         ok: true,
         snapshot: destino || snapshot,
         restaurar: () => restaurarOriginal(conexion, snapshot),
         continuar: exito,
         combinados: leerCombinados(),
-      }),
-    );
+      };
+      // Por Bluetooth, la página tiene que soltar el dispositivo para que el
+      // sistema lo pueda usar como teclado o mouse (ver aviso-ble.js).
+      if (exito && conexion.tipoDeTransporte === 'ble') pasoSoltarBle(raiz, cerrar, conexion, resultado);
+      else cerrar(resultado);
+    });
     filaBotones.appendChild(btnContinuar);
     raiz.appendChild(filaBotones);
   } catch (e) {
@@ -784,6 +898,45 @@ async function aplicar(raiz, cerrar, conexion, comandos, snapshot, leerCombinado
     filaBotones.appendChild(btnCancelar);
     raiz.appendChild(filaBotones);
   }
+}
+
+/**
+ * Último paso por Bluetooth: suelta el dispositivo y explica cómo conectarlo
+ * desde el sistema. El juego (o el recurso) arranca recién cuando la persona
+ * confirma que ya lo conectó.
+ */
+async function pasoSoltarBle(raiz, cerrar, conexion, resultado) {
+  raiz.innerHTML = '';
+  raiz.appendChild(el('p', 'epe-cd-intro', 'Desconectando…'));
+  const nombre = conexion.nombreDispositivo;
+  nombresSoltados.set(conexion, nombre);
+  try {
+    await conexion.desconectar();
+  } catch {
+    /* ya estaba cerrada */
+  }
+  // Si cierra el modal acá, la app igual se entera de que quedó configurado
+  // (y recibe `restaurar`), solo que no arranca.
+  cierreSiSeCierra = () => ({ ...resultado, continuar: false, soltado: true });
+
+  raiz.innerHTML = '';
+  raiz.appendChild(el('p', 'epe-cd-ok', 'El dispositivo quedó configurado y se desconectó de esta página.'));
+  raiz.appendChild(
+    el(
+      'p',
+      'epe-cd-intro',
+      'Para usarlo, conectalo desde el Bluetooth de tu sistema: mientras esta página lo tenga abierto, el sistema no puede usarlo como teclado o mouse.',
+    ),
+  );
+  for (const paso of pasosParaJugar(sistemaDe(navigator.userAgent), nombre)) {
+    raiz.appendChild(el('p', 'epe-cd-aviso', paso));
+  }
+  const fila = el('div', 'epe-cd-botones');
+  const btn = el('button', 'epe-btn-acc', `Ya lo conecté, ${T.continuar.toLowerCase()}`);
+  btn.type = 'button';
+  btn.addEventListener('click', () => cerrar(resultado));
+  fila.appendChild(btn);
+  raiz.appendChild(fila);
 }
 
 async function deshacer(raiz, cerrar, conexion, snapshot) {
@@ -870,9 +1023,17 @@ export function confirmarSalida(restaurar) {
     btnRestaurar.addEventListener('click', () => {
       btnRestaurar.disabled = true;
       btnRestaurar.textContent = 'Restaurando…';
-      Promise.resolve(restaurar())
-        .catch(() => {})
-        .then(() => cerrar({ salir: true, restaurado: true }));
+      Promise.resolve()
+        .then(() => restaurar())
+        .then(
+          () => cerrar({ salir: true, restaurado: true }),
+          (e) => {
+            // Si canceló la reconexión (Bluetooth), se queda: todavía puede
+            // restaurar o elegir «Salir sin restaurar».
+            if (e && e.codigo === 'cancelado') cerrar({ salir: false, restaurado: false });
+            else cerrar({ salir: true, restaurado: false });
+          },
+        );
     });
     filaBotones.appendChild(btnRestaurar);
 

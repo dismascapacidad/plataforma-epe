@@ -101,6 +101,34 @@ quedaron con dos eventos: `[{ corto, largo, umbral }]`, donde `corto` y
 `largo` son los `id` de las acciones y `umbral` está en ms. Vacío o ausente =
 ninguno combinado. Una app que mide tiempos lo usa para avisar (ver arriba).
 
+## Bluetooth: configurar y usar son dos conexiones distintas
+
+Por Bluetooth el dispositivo se usa de dos maneras que **no pueden convivir**:
+para configurarlo, la página lo abre como puerto serie (UART por Bluetooth LE);
+para jugar, el sistema lo conecta como teclado o mouse (HID). Mientras la página
+lo tiene abierto, el sistema no puede usarlo.
+
+Por eso, después de aplicar una configuración por Bluetooth, el widget:
+
+1. cierra la conexión de la página (`desconectar()`),
+2. explica cómo conectarlo desde el sistema (`dispositivo/aviso-ble.js`): en
+   Windows alcanza con conectarlo desde la configuración de Bluetooth; en Android
+   hay que ir a Ajustes › Bluetooth, olvidarlo y volver a conectarlo,
+3. recién arranca la app (o abre el recurso) cuando la persona toca
+   «Ya lo conecté, empezar».
+
+Con USB no cambia nada. Consecuencias para quien integra una app:
+
+- `resultado.restaurar()` con el dispositivo ya soltado abre una pantalla que
+  explica cómo soltarlo del sistema y pide elegirlo de nuevo. Si la persona
+  cancela, la promesa se rechaza con `codigo: 'cancelado'`.
+- En recursos de terceros, `restaurar()` no abre pantalla: rechaza con
+  `codigo: 'soltado-para-jugar'` y `externo.js` muestra su propia pantalla de
+  reconexión con las instrucciones.
+- `confirmarSalida` se queda (`salir: false`) si se cancela la reconexión.
+- Si la persona cierra el modal en el paso de desconexión, `abrir` devuelve
+  igual `restaurar`, con `continuar: false` y `soltado: true`.
+
 ## Requisitos de firmware
 
 - Tap-Hold: firmware con sufijo `-TH<n>` (el núcleo lo detecta con
@@ -144,6 +172,7 @@ tener la vuelta atrás (`set teclas = null` o el valor anterior).
 - `teclas-externas.js` — validación estricta de lo que viene de la base.
 - `externo.js` — flujo para recursos de terceros (configurar, abrir, restaurar).
 - `conexion-activa.js`, `pendiente.js` — conexión compartida y respaldo del estado original.
+- `../dispositivo/aviso-ble.js` — textos de Bluetooth según el sistema (Windows/Android).
 
 ## Apps que lo usan hoy
 
