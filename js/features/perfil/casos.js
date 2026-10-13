@@ -1035,24 +1035,40 @@ var EpeCasos = (function () {
             "No se pudo vincular el material."
           );
 
-          var grid = document.createElement("div");
-          grid.className = "epe-catalogo-grid";
-          disponibles.forEach(function (m) {
-            grid.appendChild(
-              construirItemSeleccionable(
-                {
-                  id: m.id,
-                  icono: EpeMaterialVisor.ICONOS[m.tipo === "video" ? "video" : "pdf"],
-                  titulo: m.titulo,
-                  categoria: (m.tipo === "video" ? "Video" : "PDF") + (m.categoria ? " · " + m.categoria : ""),
-                  descripcion: m.descripcion,
-                },
-                seleccionMaterial,
-                barra.actualizar
-              )
-            );
+          // Agrupado por módulo (Bloque 1, Bloque 2…), como en la página pública.
+          var grupos = EpeCatalogoMateriales.agruparPorModulo(disponibles);
+          grupos.forEach(function (g) {
+            var curso = g.modulo ? EpeCatalogoMateriales.cursoDeModulo(g.modulo.id) : null;
+            var titulo = g.modulo
+              ? (curso ? curso.titulo + " · " : "") + g.modulo.titulo
+              : grupos.length > 1
+                ? "Otros materiales"
+                : "";
+            if (titulo) {
+              var h4 = document.createElement("h4");
+              h4.className = "epe-picker-modulo";
+              h4.textContent = titulo;
+              contenido.appendChild(h4);
+            }
+            var grid = document.createElement("div");
+            grid.className = "epe-catalogo-grid";
+            g.materiales.forEach(function (m) {
+              grid.appendChild(
+                construirItemSeleccionable(
+                  {
+                    id: m.id,
+                    icono: EpeMaterialVisor.ICONOS[m.tipo === "video" ? "video" : "pdf"],
+                    titulo: m.titulo,
+                    categoria: (m.tipo === "video" ? "Video" : "PDF") + (m.categoria ? " · " + m.categoria : ""),
+                    descripcion: m.descripcion,
+                  },
+                  seleccionMaterial,
+                  barra.actualizar
+                )
+              );
+            });
+            contenido.appendChild(grid);
           });
-          contenido.appendChild(grid);
           contenido.appendChild(barra.nodo);
         }
 
