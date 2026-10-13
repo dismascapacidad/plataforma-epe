@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Material de consulta — Equipar para Equipar</title>
+    <meta
+      name="description"
+      content="Manuales y guías en PDF y tutoriales en video sobre tecnología asistiva, de dis+capacidad."
+    />
+    <link rel="icon" href="../assets/img/logo-epe.png" />
+
+    <script src="../js/core/theme-boot.js"></script>
+
+    <link rel="stylesheet" href="../css/base/reset.css" />
+    <link rel="stylesheet" href="../css/diseno/fonts.css" />
+    <link rel="stylesheet" href="../css/diseno/tokens.css" />
+    <link rel="stylesheet" href="../css/diseno/theme.css" />
+    <link rel="stylesheet" href="../css/base/plataforma.css" />
+    <link rel="stylesheet" href="../css/base/typography.css" />
+    <link rel="stylesheet" href="../css/components/buttons.css" />
+    <link rel="stylesheet" href="../css/components/sesion.css" />
+    <link rel="stylesheet" href="../css/components/atribucion.css" />
+    <link rel="stylesheet" href="../css/components/modal.css" />
+    <link rel="stylesheet" href="../css/components/app-card.css" />
+    <link rel="stylesheet" href="../css/components/app-nav.css" />
+    <link rel="stylesheet" href="../css/layout/shell.css" />
+    <link rel="stylesheet" href="../css/features/materiales/materiales.css" />
+    <link rel="stylesheet" href="../css/base/tactil.css" />
+  </head>
+  <body>
+    <div class="epe-shell">
+      <header class="epe-header">
+        <div class="epe-app-header-left">
+          <a class="epe-app-back" href="../index.html">← Inicio</a>
+          <a href="../index.html"><img class="epe-logo-chip" src="../assets/img/logo-epe.png" alt="Equipar para Equipar" height="28" /></a>
+        </div>
+        <div class="epe-header-actions">
+          <a class="epe-btn-ghost" data-sesion="anon" href="../espacio-personal/login.html?volver=materiales" hidden>Ingresar</a>
+          <a class="epe-btn-acc" data-sesion="logueada" href="../espacio-personal/dashboard.html" hidden>Mi espacio</a>
+          <button
+            class="epe-theme-toggle"
+            type="button"
+            id="theme-toggle"
+            aria-pressed="false"
+            aria-label="Cambiar a modo oscuro"
+          >
+            <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="4" />
+              <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+            </svg>
+            <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" />
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="epe-intro">
+        <p class="eyebrow">Equipar para Equipar</p>
+        <h1>Material de consulta</h1>
+        <p>
+          Manuales y guías en PDF, y tutoriales en video. Parte del material
+          es solo para quienes tienen cuenta: ingresá para verlo.
+        </p>
+      </div>
+
+      <div class="epe-grid epe-grid-apps" data-materiales-grid></div>
+      <p class="epe-vacio" data-materiales-vacio hidden>Todavía no hay material cargado en esta sección.</p>
+
+      <div data-atribucion="pie"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="../js/core/supabase-client.js"></script>
+    <script src="../js/features/perfil/auth.js"></script>
+    <script src="../js/core/theme.js"></script>
+    <script src="../js/core/atribucion.js"></script>
+    <script src="../js/core/ajuste-modal.js"></script>
+    <script src="../js/core/modal.js"></script>
+    <script src="../js/core/sesion-ui.js"></script>
+    <script src="../js/data/catalogo-materiales.js"></script>
+    <script src="../js/features/materiales/materiales.js"></script>
+    <script>
+      EpeTheme.initThemeToggle(document.getElementById("theme-toggle"));
+      EpeMaterialesPagina.init();
+    </script>
+  </body>
+</html>

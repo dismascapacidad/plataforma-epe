@@ -11,5 +11,6 @@
  */
 
 EpeTheme.initThemeToggle(document.getElementById("theme-toggle"));
+EpeSesionUi.init();
 
 console.info("[EpE] Plataforma Equipar para Equipar — shell inicial cargado");

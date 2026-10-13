@@ -1,0 +1,11 @@
+/*
+  sesion.css
+  Los botones del header que dependen de la sesión (ver js/core/sesion-ui.js)
+  llevan el atributo `hidden`, pero .epe-btn-ghost / .epe-btn-acc definen
+  display propio y le ganarían al `hidden` del navegador. Esta regla lo
+  refuerza solo para esos elementos.
+*/
+
+[data-sesion][hidden] {
+  display: none;
+}

@@ -24,6 +24,16 @@
 (function () {
   var CLAVE_PERFIL_PENDIENTE = "epePerfilPendiente";
 
+  // Páginas a las que se puede volver después de ingresar (?volver=clave).
+  // Lista cerrada a propósito: nunca se redirige a una URL que venga de afuera.
+  var DESTINOS_VOLVER = { materiales: "../materiales/index.html" };
+
+  function destinoPostLogin() {
+    var clave = new URLSearchParams(window.location.search).get("volver");
+    if (clave && Object.prototype.hasOwnProperty.call(DESTINOS_VOLVER, clave)) return DESTINOS_VOLVER[clave];
+    return "dashboard.html";
+  }
+
   function guardarPerfilPendiente(email, datosPerfil) {
     try {
       window.localStorage.setItem(CLAVE_PERFIL_PENDIENTE, JSON.stringify({ email: email.toLowerCase(), datos: datosPerfil }));
@@ -44,7 +54,7 @@
     var modo = "login";
 
     EpeAuth.getSession().then(function (session) {
-      if (session) window.location.href = "dashboard.html";
+      if (session) window.location.href = destinoPostLogin();
     });
 
     function setModo(nuevo) {
@@ -97,7 +107,7 @@
         status.textContent = "Ingresando…";
         EpeAuth.signIn(email, password)
           .then(function () {
-            window.location.href = "dashboard.html";
+            window.location.href = destinoPostLogin();
           })
           .catch(function (err) {
             status.textContent = traducirError(err);
@@ -123,7 +133,7 @@
             // "Confirm email" desactivado: ya hay sesión, guardamos el
             // perfil directo y entramos al espacio personal.
             return EpeStore.saveProfile(datosPerfil).then(function () {
-              window.location.href = "dashboard.html";
+              window.location.href = destinoPostLogin();
             });
           }
           // Sin sesión todavía: guardamos el perfil para que dashboard.js lo

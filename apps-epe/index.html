@@ -23,6 +23,7 @@
     <link rel="stylesheet" href="../css/base/plataforma.css" />
     <link rel="stylesheet" href="../css/base/typography.css" />
     <link rel="stylesheet" href="../css/components/buttons.css" />
+    <link rel="stylesheet" href="../css/components/sesion.css" />
     <link rel="stylesheet" href="../css/components/atribucion.css" />
     <link rel="stylesheet" href="../css/components/app-card.css" />
     <link rel="stylesheet" href="../css/components/app-nav.css" />
@@ -37,6 +38,8 @@
           <a href="../index.html"><img class="epe-logo-chip" src="../assets/img/logo-epe.png" alt="Equipar para Equipar" height="28" /></a>
         </div>
         <div class="epe-header-actions">
+          <a class="epe-btn-ghost" data-sesion="anon" href="../espacio-personal/login.html" hidden>Ingresar</a>
+          <a class="epe-btn-acc" data-sesion="logueada" href="../espacio-personal/dashboard.html" hidden>Mi espacio</a>
           <button
             class="epe-theme-toggle"
             type="button"
@@ -206,10 +209,15 @@
       <div data-atribucion="pie"></div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="../js/core/supabase-client.js"></script>
+    <script src="../js/features/perfil/auth.js"></script>
     <script src="../js/core/theme.js"></script>
     <script src="../js/core/atribucion.js"></script>
+    <script src="../js/core/sesion-ui.js"></script>
     <script>
       EpeTheme.initThemeToggle(document.getElementById("theme-toggle"));
+      EpeSesionUi.init();
     </script>
   </body>
 </html>
