@@ -22,6 +22,7 @@
  */
 
 import { abrir } from './widget.js';
+import { sistemaDe, pasosParaRestaurar, CODIGO_SOLTADO_PARA_JUGAR } from '../dispositivo/aviso-ble.js';
 import {
   snapshotATexto,
   snapshotDeTexto,
@@ -136,7 +137,7 @@ export async function configurarYAbrir(app) {
     url,
     snapshotTexto,
     enMemoria: r.restaurar,
-    origen: r.continuar ? 'activo' : 'error-al-aplicar',
+    origen: r.continuar || r.soltado ? 'activo' : 'error-al-aplicar',
   });
   return r;
 }
@@ -266,10 +267,19 @@ function mostrarRestauracion(ctx) {
     try {
       const enMemoria = /** @type {NonNullable<ContextoRestauracion['enMemoria']>} */ (ctx.enMemoria);
       resultado(await enMemoria());
-    } catch {
+    } catch (e) {
       // La conexión que seguía abierta ya no responde (se desenchufó, la
       // pestaña estuvo suspendida…): se vuelve a conectar con el respaldo guardado.
-      decir('aviso', 'Se perdió la conexión con el dispositivo. Reconectalo para restaurarlo.');
+      if (e && /** @type {any} */ (e).codigo === CODIGO_SOLTADO_PARA_JUGAR) {
+        // Por Bluetooth, el widget soltó el dispositivo para que el sistema lo usara.
+        const pasos = pasosParaRestaurar(sistemaDe(navigator.userAgent), '').slice(0, -1);
+        decir(
+          'aviso',
+          `El dispositivo se soltó de esta página para poder usarlo desde el sistema. ${pasos.join(' ')} Después tocá «Restaurar por Bluetooth».`,
+        );
+      } else {
+        decir('aviso', 'Se perdió la conexión con el dispositivo. Reconectalo para restaurarlo.');
+      }
       mostrarAcciones(true);
     }
   }
