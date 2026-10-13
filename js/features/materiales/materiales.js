@@ -1,7 +1,11 @@
 /**
  * materiales.js
  * Página "Material de consulta": una card por material de
- * EpeCatalogoMateriales (js/data/catalogo-materiales.js).
+ * EpeCatalogoMateriales (js/data/catalogo-materiales.js). Los materiales que
+ * pertenecen a un curso no tienen card propia: el curso es UNA card y, al
+ * abrirla, un panel lista sus PDF organizados por módulo (bloque). El material
+ * suelto (sin curso) sigue siendo una card cada uno. Las cards muestran la
+ * captura si tienen `imagen`; si no, un ícono.
  *
  * - Material "publico": se abre siempre.
  * - Material "logueado": la card se ve siempre (con candado) para que se sepa
@@ -28,6 +32,7 @@ var EpeMaterialesPagina = (function () {
   var grid = null;
   var vacio = null;
   var materiales = [];
+  var cursos = [];
   var sesionActiva = null; // null hasta saber el estado; después true/false.
 
   function init() {
@@ -35,9 +40,10 @@ var EpeMaterialesPagina = (function () {
     vacio = document.querySelector("[data-materiales-vacio]");
     if (!grid || !vacio) return;
 
-    EpeCatalogoMateriales.getAll()
-      .then(function (lista) {
-        materiales = lista;
+    Promise.all([EpeCatalogoMateriales.getAll(), EpeCatalogoMateriales.getCursos()])
+      .then(function (resultados) {
+        materiales = resultados[0];
+        cursos = resultados[1];
         return EpeSesionUi.init({ onCambio: alCambiarSesion });
       })
       .then(alCambiarSesion)
@@ -61,7 +67,13 @@ var EpeMaterialesPagina = (function () {
     grid.innerHTML = "";
     vacio.hidden = materiales.length > 0;
     vacio.textContent = "Todavía no hay material cargado en esta sección.";
-    materiales.forEach(function (m) {
+
+    // Una card por curso (con sus PDF adentro) y, después, el material suelto.
+    cursos.forEach(function (curso) {
+      var delCurso = EpeCatalogoMateriales.materialesDeCurso(curso.id, materiales);
+      if (delCurso.length > 0) grid.appendChild(construirCardCurso(curso, delCurso));
+    });
+    EpeCatalogoMateriales.sinCurso(materiales).forEach(function (m) {
       grid.appendChild(construirCard(m));
     });
   }
@@ -72,6 +84,154 @@ var EpeMaterialesPagina = (function () {
     return nodo;
   }
 
+  // Zona de imagen de una card: la captura (`ruta`, si hay) o el ícono sobre
+  // un tinte — también si la captura no carga. `icono` es una clave de ICONOS.
+  function construirMedia(ruta, alt, icono, bloqueado) {
+    var media = el("span", "epe-app-card-media" + (bloqueado ? " epe-material-bloqueado" : ""));
+
+    function ponerPlaceholder() {
+      // Saca la imagen (y un placeholder previo) pero deja la pill, si ya está.
+      Array.prototype.slice.call(media.children).forEach(function (hijo) {
+        if (!hijo.classList.contains("epe-app-card-pill")) media.removeChild(hijo);
+      });
+      media.classList.add("epe-app-card-media-vacia");
+      var ph = el("span", "epe-app-card-placeholder");
+      ph.setAttribute("aria-hidden", "true");
+      ph.innerHTML = ICONOS[icono]; // SVG constante de material-visor.js
+      media.appendChild(ph);
+    }
+
+    if (ruta) {
+      var img = el("img");
+      img.src = "../" + ruta;
+      img.alt = alt;
+      img.width = 640;
+      img.height = 480;
+      img.loading = "lazy";
+      img.decoding = "async";
+      img.addEventListener("error", ponerPlaceholder);
+      media.appendChild(img);
+    } else {
+      ponerPlaceholder();
+    }
+    return media;
+  }
+
+  // ── Card de un curso: al abrirla se ve el contenido, organizado por módulo ──
+  function construirCardCurso(curso, delCurso) {
+    var item = el("button", "epe-app-card");
+    item.type = "button";
+
+    item.appendChild(
+      construirMedia(
+        EpeCatalogoMateriales.rutaImagen(curso),
+        "Portada de «" + curso.titulo + "»",
+        "curso",
+        false
+      )
+    );
+
+    var body = el("span", "epe-app-card-body");
+    var categoria = el("span", "epe-app-card-categoria");
+    categoria.textContent = "Curso · " + delCurso.length + (delCurso.length === 1 ? " documento" : " documentos");
+    body.appendChild(categoria);
+
+    var titulo = el("span", "epe-app-card-title");
+    titulo.textContent = curso.titulo;
+    body.appendChild(titulo);
+
+    if (curso.descripcion) {
+      var desc = el("span", "epe-app-card-desc");
+      desc.textContent = curso.descripcion;
+      body.appendChild(desc);
+    }
+
+    var accion = el("span", "epe-material-accion");
+    accion.textContent = "Ver contenido";
+    body.appendChild(accion);
+    item.appendChild(body);
+
+    item.addEventListener("click", function () {
+      abrirCurso(curso, delCurso);
+    });
+    return item;
+  }
+
+  // Panel del curso: un encabezado por módulo y una fila por material.
+  function abrirCurso(curso, delCurso) {
+    var contenido = el("div", "epe-material-modal");
+    EpeCatalogoMateriales.agruparPorModulo(delCurso).forEach(function (g) {
+      var grupo = el("div", "epe-curso-grupo");
+      if (g.modulo) {
+        var h4 = el("h4", "epe-curso-grupo-titulo");
+        h4.textContent = g.modulo.titulo;
+        grupo.appendChild(h4);
+      }
+      g.materiales.forEach(function (m) {
+        grupo.appendChild(construirFila(m));
+      });
+      contenido.appendChild(grupo);
+    });
+    EpeModal.open({ titulo: curso.titulo, contenido: contenido });
+  }
+
+  // Una fila del panel: PDF con acceso → link directo a Drive (pestaña nueva);
+  // video, sin archivo o bloqueado → botón que abre el modal que corresponda.
+  function construirFila(m) {
+    var bloqueado = m.acceso === "logueado" && !sesionActiva;
+    var urls = EpeCatalogoMateriales.urlsDe(m);
+    var directo = m.tipo === "pdf" && !bloqueado && !!urls;
+
+    var fila = el(directo ? "a" : "button", "epe-material-fila");
+    if (directo) {
+      fila.href = urls.ver;
+      fila.target = "_blank";
+      fila.rel = "noopener noreferrer";
+    } else {
+      fila.type = "button";
+    }
+
+    var icono = el("span", "epe-material-fila-icono");
+    icono.setAttribute("aria-hidden", "true");
+    icono.innerHTML = ICONOS[m.tipo === "video" ? "video" : "pdf"];
+    fila.appendChild(icono);
+
+    var texto = el("span", "epe-material-fila-texto");
+    var nombre = el("strong");
+    nombre.textContent = m.titulo;
+    texto.appendChild(nombre);
+    var sub = el("span", "epe-material-fila-sub");
+    sub.textContent = (m.tipo === "video" ? "Video" : "PDF") + (m.categoria ? " · " + m.categoria : "");
+    texto.appendChild(sub);
+    fila.appendChild(texto);
+
+    var fin = el("span", "epe-material-fila-fin");
+    if (bloqueado) {
+      var candado = el("span", "epe-material-fila-candado");
+      candado.setAttribute("aria-hidden", "true");
+      candado.innerHTML = ICONOS.candado;
+      fin.appendChild(candado);
+      fin.appendChild(document.createTextNode("Requiere cuenta"));
+    } else {
+      fin.textContent = m.tipo === "video" ? "Ver video" : "Abrir PDF";
+      if (directo) {
+        var aviso = el("span", "epe-sr-only");
+        aviso.textContent = " (se abre en una pestaña nueva)";
+        fin.appendChild(aviso);
+      }
+    }
+    fila.appendChild(fin);
+
+    if (!directo) {
+      fila.addEventListener("click", function () {
+        if (bloqueado) abrirAvisoAcceso(m);
+        else EpeMaterialVisor.abrir(m);
+      });
+    }
+    return fila;
+  }
+
+  // ── Card de un material suelto (sin curso) ──
   function construirCard(m) {
     var bloqueado = m.acceso === "logueado" && !sesionActiva;
     var urls = EpeCatalogoMateriales.urlsDe(m);
@@ -86,12 +246,12 @@ var EpeMaterialesPagina = (function () {
       item.type = "button";
     }
 
-    // ── Imagen: ícono del tipo sobre un tinte, con candado si está bloqueado ──
-    var media = el("span", "epe-app-card-media epe-app-card-media-vacia" + (bloqueado ? " epe-material-bloqueado" : ""));
-    var ph = el("span", "epe-app-card-placeholder");
-    ph.setAttribute("aria-hidden", "true");
-    ph.innerHTML = ICONOS[m.tipo === "video" ? "video" : "pdf"];
-    media.appendChild(ph);
+    var media = construirMedia(
+      EpeCatalogoMateriales.rutaImagen(m),
+      "Primera página de «" + m.titulo + "»",
+      m.tipo === "video" ? "video" : "pdf",
+      bloqueado
+    );
 
     if (bloqueado) {
       var pill = el("span", "epe-app-card-pill epe-material-pill-candado");
