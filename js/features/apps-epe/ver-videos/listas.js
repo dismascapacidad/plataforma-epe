@@ -21,6 +21,7 @@ export const CLAVE_STORAGE = 'epe-ver-videos-listas';
 export const CANTIDAD_LISTAS = 2;
 export const LARGO_MAX_NOMBRE = 40;
 export const LARGO_MAX_BUSQUEDA = 80;
+export const CLAVE_OPCIONES = 'epe-ver-videos-opciones';
 
 const HOSTS_LARGOS = new Set([
   'youtube.com',
@@ -35,8 +36,8 @@ const HOSTS_CORTOS = new Set(['youtu.be', 'www.youtu.be']);
 const RE_VIDEO = /^[A-Za-z0-9_-]{11}$/;
 const RE_LISTA = /^[A-Za-z0-9_-]{10,64}$/;
 
-// Listas que no se pueden embeber: los "Mix" que arma YouTube solos (RD…) y las
-// listas propias de la cuenta (Ver más tarde, Me gusta).
+// Listas propias de la cuenta (Ver más tarde, Me gusta…): piden iniciar sesión y
+// no se pueden reproducir desde acá. Los "Mix" (RD…) sí se intentan como lista.
 const LISTAS_DE_CUENTA = new Set(['WL', 'LL', 'LM']);
 
 export const MOTIVOS = {
@@ -44,18 +45,26 @@ export const MOTIVOS = {
   'no-youtube': 'Ese enlace no es de YouTube. Copiá el enlace desde youtube.com o youtu.be.',
   'sin-id': 'No encontramos un video ni una lista en ese enlace.',
   'no-compatible':
-    'Esa lista no se puede usar (es un Mix o una lista de la cuenta). Probá con una lista pública o no listada.',
+    'Esa lista es de tu cuenta (Ver más tarde, Me gusta…) y no se puede usar. Probá con una lista pública o no listada.',
 };
 
-function noCompatible(idLista) {
-  return LISTAS_DE_CUENTA.has(idLista) || idLista.startsWith('RD');
+function esDeCuenta(idLista) {
+  return LISTAS_DE_CUENTA.has(idLista);
+}
+
+/** Un Mix es la lista que YouTube arma solo a partir de un video (empieza con RD). */
+export function esMix(idLista) {
+  return typeof idLista === 'string' && idLista.startsWith('RD');
 }
 
 /**
  * Interpreta lo que la persona pegó.
  * Si ok es true vienen `tipo` e `id`; si no, `motivo` (clave de MOTIVOS).
+ * Lo que se pega es lo que se reproduce: una lista (o un Mix) es una lista, un
+ * video solo es un video solo. En un Mix viene además `video`, el video con el que
+ * se lo pegó, por si YouTube no dejara reproducir el Mix.
  * @param {unknown} texto
- * @returns {{ok: boolean, tipo?: 'lista'|'video', id?: string, motivo?: keyof typeof MOTIVOS}}
+ * @returns {{ok: boolean, tipo?: 'lista'|'video', id?: string, video?: string, motivo?: keyof typeof MOTIVOS}}
  */
 export function analizarEnlace(texto) {
   if (typeof texto !== 'string') return { ok: false, motivo: 'vacio' };
@@ -78,23 +87,28 @@ export function analizarEnlace(texto) {
   const esCorto = HOSTS_CORTOS.has(host);
   if (!esLargo && !esCorto) return { ok: false, motivo: 'no-youtube' };
 
-  // Lista: el parámetro list= (también en watch?v=…&list=…, /playlist?list=…).
-  const lista = url.searchParams.get('list');
-  let mix = false;
-  if (lista !== null) {
-    if (noCompatible(lista)) mix = true;
-    else if (RE_LISTA.test(lista)) return { ok: true, tipo: 'lista', id: lista };
-  }
-
-  // Video suelto.
+  // Video: en sus formas habituales.
   const partes = url.pathname.split('/').filter(Boolean);
   let candidato = null;
   if (esCorto) candidato = partes[0];
   else if (partes[0] === 'watch') candidato = url.searchParams.get('v');
   else if (['embed', 'shorts', 'live', 'v'].includes(partes[0])) candidato = partes[1];
-  if (candidato && RE_VIDEO.test(candidato)) return { ok: true, tipo: 'video', id: candidato };
+  const video = candidato && RE_VIDEO.test(candidato) ? candidato : null;
 
-  return { ok: false, motivo: mix ? 'no-compatible' : 'sin-id' };
+  // Lista: el parámetro list= (también en watch?v=…&list=…, /playlist?list=…).
+  const lista = url.searchParams.get('list');
+  let deCuenta = false;
+  if (lista !== null) {
+    if (esDeCuenta(lista)) deCuenta = true;
+    else if (RE_LISTA.test(lista)) {
+      return esMix(lista) && video
+        ? { ok: true, tipo: 'lista', id: lista, video }
+        : { ok: true, tipo: 'lista', id: lista };
+    }
+  }
+
+  if (video) return { ok: true, tipo: 'video', id: video };
+  return { ok: false, motivo: deCuenta ? 'no-compatible' : 'sin-id' };
 }
 
 /** Recorta espacios, junta los repetidos y acota el largo. '' si no queda nada. */
@@ -119,15 +133,25 @@ export function urlBusqueda(termino) {
 
 /**
  * Deja un ítem guardado en su forma segura, o null si no sirve.
- * @returns {{tipo: 'lista'|'video', id: string, nombre: string} | null}
+ * Solo un Mix conserva `video` (el video con el que se lo pegó).
+ * @returns {{tipo: 'lista'|'video', id: string, nombre: string, video?: string} | null}
  */
 export function normalizarItem(item) {
   if (!item || typeof item !== 'object') return null;
   const { tipo, id } = item;
   const idValido =
     tipo === 'video' ? RE_VIDEO.test(id) : tipo === 'lista' ? RE_LISTA.test(id) : false;
-  if (!idValido || (tipo === 'lista' && noCompatible(id))) return null;
-  return { tipo, id, nombre: normalizarNombre(item.nombre) || nombrePorDefecto(tipo) };
+  if (!idValido || (tipo === 'lista' && esDeCuenta(id))) return null;
+  const salida = { tipo, id, nombre: normalizarNombre(item.nombre) || nombrePorDefecto(tipo) };
+  if (
+    tipo === 'lista' &&
+    esMix(id) &&
+    typeof item.video === 'string' &&
+    RE_VIDEO.test(item.video)
+  ) {
+    salida.video = item.video;
+  }
+  return salida;
 }
 
 /**
@@ -177,13 +201,43 @@ export function guardarListas(listas, storage = almacenamiento()) {
 }
 
 /**
- * Borra todo lo guardado.
+ * Borra las listas guardadas (las opciones de la app se conservan).
  * @param {Almacen | null} [storage]
  */
 export function borrarListas(storage = almacenamiento()) {
   if (!storage) return false;
   try {
     storage.removeItem(CLAVE_STORAGE);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Opciones de la app (solo preferencias, nada personal).
+ * `unBoton`: Play y Pausa en un mismo botón.
+ * @param {Almacen | null} [storage]
+ * @returns {{unBoton: boolean}}
+ */
+export function cargarOpciones(storage = almacenamiento()) {
+  if (!storage) return { unBoton: false };
+  try {
+    const dato = JSON.parse(storage.getItem(CLAVE_OPCIONES));
+    return { unBoton: !!dato && dato.v === 1 && dato.unBoton === true };
+  } catch {
+    return { unBoton: false };
+  }
+}
+
+/**
+ * @param {{unBoton: boolean}} opciones
+ * @param {Almacen | null} [storage]
+ */
+export function guardarOpciones(opciones, storage = almacenamiento()) {
+  if (!storage) return false;
+  try {
+    storage.setItem(CLAVE_OPCIONES, JSON.stringify({ v: 1, unBoton: opciones.unBoton === true }));
     return true;
   } catch {
     return false;

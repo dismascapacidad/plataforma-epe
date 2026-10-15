@@ -3,10 +3,13 @@
  * App EpE — Ver videos con pulsadores. Reproduce videos de YouTube con un
  * reproductor centrado y, debajo, solo lo imprescindible: dos botones con listas
  * de reproducción ya enlazadas y tres controles (Pausa, Play, Siguiente video).
+ * Opcional: Play y Pausa en un solo botón, cuyo ícono cambia con el estado del
+ * reproductor (muestra lo que pasa al pulsar: pausa si suena, play si no).
  *
  * Pensado para manejarse sin puntero, como el resto de las Apps EpE:
- * - Cinco acciones (lista 1, lista 2, pausa, play, siguiente) con una tecla cada
- *   una (A S D F G por defecto, reasignables), o barrido de 1 o 2 pulsadores, o la
+ * - Cinco acciones (lista 1, lista 2, pausa, play, siguiente; cuatro si Play y Pausa
+ *   comparten botón) con una tecla cada una (A S D F G por defecto, reasignables), o
+ *   barrido de 1 o 2 pulsadores, o la
  *   pantalla táctil como pulsador. Todo eso lo resuelven acceso.js y entrada.js.
  * - El dispositivo dis+capacidad se configura con el widget «Configurar
  *   dispositivo». No hay medición de tiempos, así que se admite «un botón, dos
@@ -34,6 +37,14 @@ var EpeVerVideos = (function () {
     { id: "pausa", etiqueta: "Pausa", tecla: "d" },
     { id: "play", etiqueta: "Play", tecla: "f" },
     { id: "siguiente", etiqueta: "Siguiente video", tecla: "g" },
+  ];
+  // Con Play y Pausa en un solo botón son cuatro acciones. Cada modo guarda sus
+  // propias teclas y su propio barrido (el panel se identifica por modo).
+  var ACCIONES_UN_BOTON = [
+    { id: "lista0", etiqueta: "Lista 1", tecla: "a" },
+    { id: "lista1", etiqueta: "Lista 2", tecla: "s" },
+    { id: "alternar", etiqueta: "Play / Pausa", tecla: "d" },
+    { id: "siguiente", etiqueta: "Siguiente video", tecla: "f" },
   ];
 
   var TEXTO_VACIA = "Enlazá tu video";
@@ -100,20 +111,23 @@ var EpeVerVideos = (function () {
     var btnsAccion = {
       pausa: root.querySelector('[data-vv-accion="pausa"]'),
       play: root.querySelector('[data-vv-accion="play"]'),
+      alternar: root.querySelector('[data-vv-accion="alternar"]'),
       siguiente: root.querySelector('[data-vv-accion="siguiente"]'),
     };
+    var elBotonera = root.querySelector(".epe-vv-botonera");
+    var chkUnBoton = root.querySelector("[data-vv-un-boton]");
+    var elPanelAcceso = root.querySelector("[data-acceso-panel]");
     var btnSalir = root.querySelector("[data-vv-salir]");
     var btnConfigurarDispositivo = root.querySelector("[data-configurar-dispositivo]");
     var btnRestaurarDispositivo = root.querySelector("[data-restaurar-dispositivo]");
     var enlacesVolverApps = Array.prototype.slice.call(root.querySelectorAll("[data-volver-apps]"));
 
-    var panel = EpeAcceso.crearPanel(root.querySelector("[data-acceso-panel]"), {
-      id: "ver-videos",
-      acciones: ACCIONES,
-      permitirBarrido: true,
-    });
-
     // ── Estado ───────────────────────────────────────────────────────
+    var opciones = L.cargarOpciones(); // { unBoton }
+    var acciones = opciones.unBoton ? ACCIONES_UN_BOTON : ACCIONES;
+    var panel = crearPanelDeAcceso();
+    var reproduciendo = false; // según el último estado que informó el reproductor
+    var soloVideo = false; // un Mix que YouTube no aceptó: suena solo su video
     var listas = L.cargarListas(); // [item|null, item|null]
     var avisosEnlace = [null, null]; // mensaje pasajero bajo cada enlace
     var cfg = null;
@@ -122,6 +136,40 @@ var EpeVerVideos = (function () {
     var promesaReproductor = null;
     var timerBorrar = null;
     var restaurarDispositivo = null; // función para volver el dispositivo a como estaba, o null
+
+    function crearPanelDeAcceso() {
+      return EpeAcceso.crearPanel(elPanelAcceso, {
+        id: opciones.unBoton ? "ver-videos-un-boton" : "ver-videos",
+        acciones: acciones,
+        permitirBarrido: true,
+      });
+    }
+
+    // Muestra los controles que corresponden al modo (Pausa y Play, o uno solo).
+    function aplicarModoControles() {
+      btnsAccion.pausa.hidden = opciones.unBoton;
+      btnsAccion.play.hidden = opciones.unBoton;
+      btnsAccion.alternar.hidden = !opciones.unBoton;
+      elBotonera.classList.toggle("es-un-boton", opciones.unBoton);
+      renderAlternar();
+    }
+
+    // El ícono muestra lo que pasa al pulsar: pausa mientras suena, play si no.
+    function renderAlternar() {
+      var btn = btnsAccion.alternar;
+      // Los <svg> no tienen la propiedad `hidden`: se usa el atributo.
+      btn.querySelector('[data-vv-icono="play"]').toggleAttribute("hidden", reproduciendo);
+      btn.querySelector('[data-vv-icono="pausa"]').toggleAttribute("hidden", !reproduciendo);
+      btn.setAttribute("aria-label", reproduciendo ? "Pausa" : "Play");
+    }
+
+    function cambiarModo() {
+      EpeTeclas.cancelarCaptura();
+      acciones = opciones.unBoton ? ACCIONES_UN_BOTON : ACCIONES;
+      elPanelAcceso.textContent = "";
+      panel = crearPanelDeAcceso();
+      aplicarModoControles();
+    }
 
     // ── Preparación ──────────────────────────────────────────────────
     function textoEstadoEnlace(i) {
@@ -173,6 +221,7 @@ var EpeVerVideos = (function () {
         }
         var nombre = L.normalizarNombre(inNombre.value) || L.nombrePorDefecto(r.tipo);
         listas[i] = { tipo: r.tipo, id: r.id, nombre: nombre };
+        if (r.video) listas[i].video = r.video; // Mix: video de respaldo
         inNombre.value = nombre;
         inEnlace.value = "";
         guardar();
@@ -271,12 +320,19 @@ var EpeVerVideos = (function () {
     }
 
     function alEstado(codigo) {
+      var E = EpeYoutube.ESTADO;
+      reproduciendo = codigo === E.REPRODUCIENDO || codigo === E.CARGANDO;
+      renderAlternar();
       var t = textoDeEstado(codigo);
       if (!t) return;
-      mensaje((nombreActual() ? nombreActual() + " · " : "") + t, null);
+      mensaje((nombreActual() ? nombreActual() + (soloVideo ? " (solo el video)" : "") + " · " : "") + t, null);
     }
 
     function alError(codigo, saltado, demasiados) {
+      if (demasiados || !saltado) {
+        reproduciendo = false;
+        renderAlternar();
+      }
       if (demasiados) {
         mensaje("Ningún video de esta lista se puede reproducir. Probá con otra.", "error");
         return;
@@ -286,7 +342,14 @@ var EpeVerVideos = (function () {
     }
 
     function alBloqueo() {
+      reproduciendo = false;
+      renderAlternar();
       mensaje("El navegador no dejó empezar solo: tocá Play.", "error");
+    }
+
+    function alRespaldo() {
+      soloVideo = true;
+      mensaje("YouTube no dejó usar esa lista: se reproduce solo el video.", "error");
     }
 
     // El reproductor se crea la primera vez que hace falta, no antes.
@@ -297,6 +360,7 @@ var EpeVerVideos = (function () {
           alEstado: alEstado,
           alError: alError,
           alBloqueo: alBloqueo,
+          alRespaldo: alRespaldo,
         }).then(function (ctrl) {
           elVacio.hidden = true;
           return ctrl;
@@ -319,6 +383,9 @@ var EpeVerVideos = (function () {
         return;
       }
       actual = i;
+      soloVideo = false;
+      reproduciendo = false;
+      renderAlternar();
       renderBotonera();
       mensaje(item.nombre + " · Cargando…", null);
       conReproductor(function (ctrl) {
@@ -343,6 +410,12 @@ var EpeVerVideos = (function () {
       conReproductor(function (ctrl) {
         ctrl.pausar();
       });
+    }
+
+    // Un solo botón: pausa si está sonando, y si no, reproduce.
+    function alternar() {
+      if (reproduciendo) pausar();
+      else reproducir();
     }
 
     function siguiente() {
@@ -375,6 +448,7 @@ var EpeVerVideos = (function () {
       else if (id === "lista1") elegirLista(1);
       else if (id === "pausa") pausar();
       else if (id === "play") reproducir();
+      else if (id === "alternar") alternar();
       else if (id === "siguiente") siguiente();
     }
 
@@ -386,15 +460,19 @@ var EpeVerVideos = (function () {
       btnsLista.forEach(function (el, i) {
         if (listas[i]) lista.push({ id: "lista" + i, el: el });
       });
-      lista.push({ id: "pausa", el: btnsAccion.pausa });
-      lista.push({ id: "play", el: btnsAccion.play });
+      if (opciones.unBoton) {
+        lista.push({ id: "alternar", el: btnsAccion.alternar });
+      } else {
+        lista.push({ id: "pausa", el: btnsAccion.pausa });
+        lista.push({ id: "play", el: btnsAccion.play });
+      }
       lista.push({ id: "siguiente", el: btnsAccion.siguiente });
       return lista;
     }
 
     function actualizarAyuda() {
       elAyuda.innerHTML = "";
-      EpeAcceso.resumenTeclas(cfg, ACCIONES).forEach(function (item) {
+      EpeAcceso.resumenTeclas(cfg, acciones).forEach(function (item) {
         var span = document.createElement("span");
         span.className = "epe-juego-ayuda-item";
         var kbd = document.createElement("kbd");
@@ -411,8 +489,9 @@ var EpeVerVideos = (function () {
     function actualizarChips() {
       var directo = cfg.modo === "directo";
       Array.prototype.forEach.call(root.querySelectorAll("[data-tecla-accion]"), function (chip) {
-        chip.hidden = !directo;
-        if (directo) chip.textContent = EpeTeclas.etiqueta(cfg.teclas[chip.getAttribute("data-tecla-accion")]);
+        var tecla = cfg.teclas[chip.getAttribute("data-tecla-accion")];
+        chip.hidden = !directo || !tecla;
+        if (directo && tecla) chip.textContent = EpeTeclas.etiqueta(tecla);
       });
     }
 
@@ -432,6 +511,8 @@ var EpeVerVideos = (function () {
       elConfig.hidden = true;
       elJuego.hidden = false;
       actual = null;
+      reproduciendo = false;
+      aplicarModoControles();
       renderBotonera();
       actualizarChips();
       actualizarAyuda();
@@ -450,6 +531,8 @@ var EpeVerVideos = (function () {
         );
       }
       actual = null;
+      reproduciendo = false;
+      renderAlternar();
       elJuego.hidden = true;
       elConfig.hidden = false;
       renderConfig();
@@ -461,7 +544,7 @@ var EpeVerVideos = (function () {
     // apretado "Empezar").
     function configurarDispositivo() {
       if (!window.EpeConfigurarDispositivo) return; // widget.js no cargó
-      var entradas = EpeAcceso.entradasNecesarias(panel.leer(), ACCIONES);
+      var entradas = EpeAcceso.entradasNecesarias(panel.leer(), acciones);
       window.EpeConfigurarDispositivo
         .abrir(entradas, { titulo: "Configurar dispositivo — Ver videos con pulsadores", combinar: true })
         .then(function (resultado) {
@@ -551,6 +634,14 @@ var EpeVerVideos = (function () {
       });
     });
 
+    chkUnBoton.checked = opciones.unBoton;
+    chkUnBoton.addEventListener("change", function () {
+      opciones.unBoton = chkUnBoton.checked;
+      L.guardarOpciones(opciones);
+      cambiarModo();
+    });
+
+    aplicarModoControles();
     cargarCampos();
     renderConfig();
     renderBotonera();

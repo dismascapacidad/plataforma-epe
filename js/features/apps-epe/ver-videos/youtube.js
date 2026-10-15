@@ -19,6 +19,9 @@
  *   prohíben bloquear su funcionalidad.
  * - Si un video no se puede reproducir (error 100/101/150…), en una lista se salta
  *   al siguiente (hasta MAX_ERRORES_SEGUIDOS veces seguidas, para no girar sin fin).
+ * - Un Mix (lista que arma YouTube solo) se carga como cualquier lista. Si YouTube no
+ *   lo deja reproducir antes de que suene el primer video, se reproduce solo el video
+ *   con el que se lo pegó (`item.video`) y se avisa con `alRespaldo`.
  *
  * Script clásico. Namespace: EpeYoutube.
  */
@@ -79,7 +82,7 @@ var EpeYoutube = (function () {
     });
   }
 
-  // opciones: { alEstado(codigo), alError(codigo, saltado), alBloqueo() }
+  // opciones: { alEstado(codigo), alError(codigo, saltado, demasiados), alBloqueo(), alRespaldo() }
   // Devuelve una promesa del controlador.
   function crear(contenedor, opciones) {
     return cargarApi().then(function (YT) {
@@ -99,13 +102,17 @@ var EpeYoutube = (function () {
         // `origin` solo existe con http(s): con file:// no hay origen que declarar.
         if (/^https?:$/.test(window.location.protocol)) variables.origin = window.location.origin;
 
-        var cargado = null; // { tipo, id } de lo que se pidió reproducir
+        var cargado = null; // { tipo, id, respaldo } de lo que se pidió reproducir
         var errores = 0;
+        var sono = false; // ¿ya sonó algún video desde el último cargar()?
         var bucleAplicado = false;
         var player = null;
 
         function alCambiarEstado(ev) {
-          if (ev.data === ESTADO.REPRODUCIENDO) errores = 0;
+          if (ev.data === ESTADO.REPRODUCIENDO) {
+            errores = 0;
+            sono = true;
+          }
           // Una lista tiene que dar la vuelta al llegar al final: así "Siguiente" nunca
           // se queda sin respuesta. Se pide una vez, cuando ya hay lista cargada.
           if (cargado && cargado.tipo === "lista" && !bucleAplicado && ev.data !== ESTADO.SIN_EMPEZAR) {
@@ -119,7 +126,24 @@ var EpeYoutube = (function () {
           if (opciones.alEstado) opciones.alEstado(ev.data);
         }
 
+        // Un Mix que no arranca: se reproduce solo el video con el que se lo pegó.
+        function probarRespaldo() {
+          if (!cargado || cargado.tipo !== "lista" || !cargado.respaldo || sono) return false;
+          var video = cargado.respaldo;
+          try {
+            player.loadVideoById(video);
+          } catch (e) {
+            return false;
+          }
+          cargado = { tipo: "video", id: video, respaldo: null };
+          errores = 0;
+          bucleAplicado = false;
+          if (opciones.alRespaldo) opciones.alRespaldo();
+          return true;
+        }
+
         function alFallar(ev) {
+          if (probarRespaldo()) return;
           errores++;
           var saltado = false;
           if (cargado && cargado.tipo === "lista" && ev.data !== 2 && errores <= MAX_ERRORES_SEGUIDOS) {
@@ -145,8 +169,9 @@ var EpeYoutube = (function () {
               protegerFoco(iframe);
               resolve({
                 cargar: function (item) {
-                  cargado = { tipo: item.tipo, id: item.id };
+                  cargado = { tipo: item.tipo, id: item.id, respaldo: item.video || null };
                   errores = 0;
+                  sono = false;
                   bucleAplicado = false;
                   if (item.tipo === "lista") {
                     player.loadPlaylist({ list: item.id, listType: "playlist", index: 0 });
