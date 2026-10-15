@@ -53,7 +53,8 @@
         <div class="epe-juego-modal" role="dialog" aria-modal="true" aria-labelledby="vv-titulo">
           <h1 id="vv-titulo">Ver videos con pulsadores</h1>
           <p class="epe-juego-intro">
-            Enlazá hasta dos listas de reproducción (o videos) de YouTube. En la pantalla cada una es un
+            Enlazá hasta dos listas de reproducción (o videos) de YouTube. Con una lista, Siguiente pasa al
+            próximo video; con un video solo, se reproduce ese video. En la pantalla cada una es un
             botón grande, y abajo hay Pausa, Play y Siguiente. Se maneja con el teclado, con pulsadores o
             tocando la pantalla.
           </p>
@@ -114,6 +115,10 @@
           </p>
 
           <div class="epe-vv-utiles">
+            <label class="epe-vv-opcion">
+              <input type="checkbox" data-vv-un-boton />
+              <span>Play y Pausa en un solo botón</span>
+            </label>
             <button class="epe-btn-ghost" type="button" data-configurar-dispositivo>
               Configurar dispositivo…
             </button>
@@ -165,6 +170,17 @@
                 <path d="M10 8.2v7.6L16.2 12z" fill="currentColor" />
               </svg>
               <kbd class="epe-tecla" data-tecla-accion="play"></kbd>
+            </button>
+            <button class="epe-vv-ctrl epe-juego-blanco" type="button" data-vv-accion="alternar" aria-label="Play" hidden>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-vv-icono="play">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M10 8.2v7.6L16.2 12z" fill="currentColor" />
+              </svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-vv-icono="pausa" hidden>
+                <circle cx="12" cy="12" r="10" />
+                <path d="M9.5 8v8M14.5 8v8" stroke-width="2.6" />
+              </svg>
+              <kbd class="epe-tecla" data-tecla-accion="alternar"></kbd>
             </button>
             <button class="epe-vv-ctrl epe-juego-blanco" type="button" data-vv-accion="siguiente" aria-label="Siguiente video">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

@@ -8,7 +8,11 @@ import {
   cargarListas,
   guardarListas,
   borrarListas,
+  cargarOpciones,
+  guardarOpciones,
+  esMix,
   CLAVE_STORAGE,
+  CLAVE_OPCIONES,
   LARGO_MAX_NOMBRE,
 } from '../../js/features/apps-epe/ver-videos/listas.js';
 
@@ -62,22 +66,57 @@ describe('analizarEnlace', () => {
     expect(analizarEnlace(`  https://youtu.be/${VIDEO}  `).ok).toBe(true);
   });
 
-  it('un Mix o una lista de la cuenta no sirve', () => {
-    expect(analizarEnlace('https://www.youtube.com/playlist?list=RDCLAK5uy_abcdefghijk')).toEqual({
-      ok: false,
-      motivo: 'no-compatible',
+  it('un Mix es una lista, y recuerda el video con el que se lo pegó', () => {
+    const r = analizarEnlace(
+      `https://www.youtube.com/watch?v=${VIDEO}&list=RD${VIDEO}&start_radio=1`,
+    );
+    expect(r).toEqual({ ok: true, tipo: 'lista', id: `RD${VIDEO}`, video: VIDEO });
+  });
+
+  it('el enlace de un Mix real', () => {
+    const r = analizarEnlace(
+      'https://www.youtube.com/watch?v=lIiaRvamZQc&list=RDEMVm3N6nT7G_H6yMFP_dGplQ&start_radio=1',
+    );
+    expect(r).toEqual({
+      ok: true,
+      tipo: 'lista',
+      id: 'RDEMVm3N6nT7G_H6yMFP_dGplQ',
+      video: 'lIiaRvamZQc',
     });
+  });
+
+  it('un Mix sin video (playlist?list=RD…) es una lista a secas', () => {
+    expect(analizarEnlace('https://www.youtube.com/playlist?list=RDCLAK5uy_abcdefghijk')).toEqual({
+      ok: true,
+      tipo: 'lista',
+      id: 'RDCLAK5uy_abcdefghijk',
+    });
+  });
+
+  it('una lista de la cuenta no sirve, salvo que haya un video', () => {
     expect(analizarEnlace('https://www.youtube.com/playlist?list=WL')).toEqual({
       ok: false,
       motivo: 'no-compatible',
     });
+    expect(analizarEnlace(`https://www.youtube.com/watch?v=${VIDEO}&list=LL`)).toEqual({
+      ok: true,
+      tipo: 'video',
+      id: VIDEO,
+    });
   });
 
-  it('video dentro de un Mix: se usa el video', () => {
-    const r = analizarEnlace(
-      `https://www.youtube.com/watch?v=${VIDEO}&list=RD${VIDEO}&start_radio=1`,
-    );
-    expect(r).toEqual({ ok: true, tipo: 'video', id: VIDEO });
+  it('un video solo es un video solo (aunque venga con otros parámetros)', () => {
+    expect(analizarEnlace(`https://youtu.be/${VIDEO}?si=abc&t=5`)).toEqual({
+      ok: true,
+      tipo: 'video',
+      id: VIDEO,
+    });
+  });
+
+  it('esMix', () => {
+    expect(esMix('RDEMVm3N6nT7G_H6yMFP_dGplQ')).toBe(true);
+    expect(esMix(LISTA)).toBe(false);
+    expect(esMix(undefined)).toBe(false);
   });
 
   it('rechaza lo que no es de YouTube', () => {
@@ -146,7 +185,21 @@ describe('normalizarItem', () => {
     expect(normalizarItem(null)).toBeNull();
     expect(normalizarItem({ tipo: 'otro', id: VIDEO })).toBeNull();
     expect(normalizarItem({ tipo: 'video', id: 'corto' })).toBeNull();
-    expect(normalizarItem({ tipo: 'lista', id: 'RDCLAK5uy_abcdefghijk' })).toBeNull();
+    expect(normalizarItem({ tipo: 'lista', id: 'WL' })).toBeNull();
+  });
+
+  it('un Mix conserva su video de respaldo; una lista común no', () => {
+    expect(
+      normalizarItem({ tipo: 'lista', id: `RD${VIDEO}`, nombre: 'Mix', video: VIDEO }),
+    ).toEqual({ tipo: 'lista', id: `RD${VIDEO}`, nombre: 'Mix', video: VIDEO });
+    expect(normalizarItem({ tipo: 'lista', id: LISTA, nombre: 'L', video: VIDEO })).toEqual({
+      tipo: 'lista',
+      id: LISTA,
+      nombre: 'L',
+    });
+    expect(
+      normalizarItem({ tipo: 'lista', id: `RD${VIDEO}`, nombre: 'Mix', video: '"><x' }),
+    ).toEqual({ tipo: 'lista', id: `RD${VIDEO}`, nombre: 'Mix' });
   });
 
   it('descarta campos de más', () => {
@@ -212,5 +265,55 @@ describe('guardado local', () => {
     guardarListas([{ tipo: 'video', id: VIDEO, nombre: 'v' }, null], s);
     expect(borrarListas(s)).toBe(true);
     expect(cargarListas(s)).toEqual([null, null]);
+  });
+});
+
+describe('opciones', () => {
+  it('por defecto, Play y Pausa van separados', () => {
+    expect(cargarOpciones(almacenFalso())).toEqual({ unBoton: false });
+    expect(cargarOpciones(null)).toEqual({ unBoton: false });
+  });
+
+  it('ida y vuelta', () => {
+    const s = almacenFalso();
+    expect(guardarOpciones({ unBoton: true }, s)).toBe(true);
+    expect(cargarOpciones(s)).toEqual({ unBoton: true });
+    guardarOpciones({ unBoton: false }, s);
+    expect(cargarOpciones(s)).toEqual({ unBoton: false });
+  });
+
+  it('lo corrupto o raro se ignora', () => {
+    expect(cargarOpciones(almacenFalso({ [CLAVE_OPCIONES]: '{no es json' }))).toEqual({
+      unBoton: false,
+    });
+    expect(
+      cargarOpciones(almacenFalso({ [CLAVE_OPCIONES]: JSON.stringify({ v: 1, unBoton: 'si' }) })),
+    ).toEqual({ unBoton: false });
+    expect(
+      cargarOpciones(almacenFalso({ [CLAVE_OPCIONES]: JSON.stringify({ v: 9, unBoton: true }) })),
+    ).toEqual({ unBoton: false });
+  });
+
+  it('sin almacenamiento o con uno roto no falla', () => {
+    const roto = {
+      getItem: () => {
+        throw new Error('bloqueado');
+      },
+      setItem: () => {
+        throw new Error('lleno');
+      },
+      removeItem: () => {},
+    };
+    expect(guardarOpciones({ unBoton: true }, null)).toBe(false);
+    expect(guardarOpciones({ unBoton: true }, roto)).toBe(false);
+    expect(cargarOpciones(roto)).toEqual({ unBoton: false });
+  });
+
+  it('borrar las listas no toca las opciones', () => {
+    const s = almacenFalso();
+    guardarOpciones({ unBoton: true }, s);
+    guardarListas([{ tipo: 'video', id: VIDEO, nombre: 'v' }, null], s);
+    borrarListas(s);
+    expect(cargarOpciones(s)).toEqual({ unBoton: true });
   });
 });
