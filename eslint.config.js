@@ -22,6 +22,7 @@ export default [
       'js/features/apps-epe/barrido/objetivos.js',
       'js/features/apps-epe/barrido/main.js',
       'js/features/apps-epe/vincular-imagen/arasaac.js',
+      'js/features/apps-epe/ver-videos/listas.js',
       'dev/**/*.js',
     ],
     languageOptions: {
