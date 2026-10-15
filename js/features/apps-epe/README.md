@@ -1,7 +1,8 @@
 # Apps EpE
 
 Cada app o juego propio vive en su subcarpeta (`barrido/`, `hanoi/`, `nback/`,
-`stroop/`, `simoneuro/`, `duracion-pulsacion/`, `comunicacion-cabeza/`), con
+`stroop/`, `simoneuro/`, `duracion-pulsacion/`, `comunicacion-cabeza/`,
+`ver-videos/`), con
 su página en `apps-epe/*.html` y sus estilos en `css/features/apps-epe/` o en
 los componentes compartidos. Lo común está en `_comun/` (`acceso.js`,
 `entrada.js`, `teclas.js`, voz).
@@ -21,6 +22,7 @@ cómo declararlo en una app nueva o en un recurso de terceros:
 | Stroop | sí | sí (avisa en el resumen) |
 | SimoNeuro | sí | sí (avisa en el resumen) |
 | Duración de pulsación | sí | no: mide el tiempo real de pulsación |
+| Ver videos con pulsadores | sí | sí |
 
 Piano, Lado Correcto y Vincular imagen-botón no usan barrido y por ahora no
 combinan; sumarlos es una línea en su llamada a `abrir`.

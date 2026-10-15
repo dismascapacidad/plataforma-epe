@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Ver videos con pulsadores — Apps EpE</title>
+    <link rel="icon" href="../assets/img/logo-epe.png" />
+
+    <script src="../js/core/theme-boot.js"></script>
+
+    <link rel="stylesheet" href="../css/base/reset.css" />
+    <link rel="stylesheet" href="../css/diseno/fonts.css" />
+    <link rel="stylesheet" href="../css/diseno/tokens.css" />
+    <link rel="stylesheet" href="../css/diseno/theme.css" />
+    <link rel="stylesheet" href="../css/base/plataforma.css" />
+    <link rel="stylesheet" href="../css/base/typography.css" />
+    <link rel="stylesheet" href="../css/components/buttons.css" />
+    <link rel="stylesheet" href="../css/components/atribucion.css" />
+    <link rel="stylesheet" href="../css/components/app-nav.css" />
+    <link rel="stylesheet" href="../css/components/juego-base.css" />
+    <link rel="stylesheet" href="../css/components/modal.css" />
+    <link rel="stylesheet" href="../css/features/apps-epe/ver-videos.css" />
+    <link rel="stylesheet" href="../css/features/configurar-dispositivo/widget.css" />
+    <link rel="stylesheet" href="../css/base/tactil.css" />
+  </head>
+  <body>
+    <div class="epe-juego-shell epe-vv-shell">
+      <header class="epe-juego-header">
+        <div class="epe-app-header-left">
+          <a class="epe-app-back" href="index.html" data-volver-apps>← Apps EpE</a>
+          <a href="../index.html"><img class="epe-logo-chip" src="../assets/img/logo-epe.png" alt="Equipar para Equipar" height="26" /></a>
+        </div>
+        <button
+          class="epe-theme-toggle"
+          type="button"
+          id="theme-toggle"
+          aria-pressed="false"
+          aria-label="Cambiar a modo oscuro"
+        >
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4" />
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+          </svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" />
+          </svg>
+        </button>
+      </header>
+
+      <!-- ── Preparación: modal. Se cierra con "Empezar" (hace falta al menos una
+           lista enlazada). Con Esc o "Salir" se vuelve acá. ── -->
+      <div class="epe-juego-overlay" data-juego-config>
+        <div class="epe-juego-modal" role="dialog" aria-modal="true" aria-labelledby="vv-titulo">
+          <h1 id="vv-titulo">Ver videos con pulsadores</h1>
+          <p class="epe-juego-intro">
+            Enlazá hasta dos listas de reproducción (o videos) de YouTube. En la pantalla cada una es un
+            botón grande, y abajo hay Pausa, Play y Siguiente. Se maneja con el teclado, con pulsadores o
+            tocando la pantalla.
+          </p>
+
+          <div class="epe-juego-columnas">
+            <div>
+              <div class="epe-juego-grupo epe-vv-grupo" data-vv-grupo="0">
+                <div class="epe-vv-grupo-cabeza">
+                  <h2 class="epe-juego-h2">Lista 1</h2>
+                  <button class="epe-btn-ghost epe-btn-sm" type="button" data-vv-quitar hidden>Quitar</button>
+                </div>
+                <input id="vv-nombre-0" class="epe-vv-input" type="text" maxlength="40" placeholder="Nombre del botón. Ej.: Canciones infantiles" aria-label="Nombre del botón de la lista 1" autocomplete="off" data-vv-nombre />
+                <form class="epe-vv-enlazar" data-vv-form>
+                  <div class="epe-vv-fila">
+                    <input id="vv-enlace-0" class="epe-vv-input" type="text" inputmode="url" placeholder="Pegá el enlace de YouTube" aria-label="Enlace de YouTube de la lista 1" autocomplete="off" spellcheck="false" data-vv-enlace />
+                    <button class="epe-btn-acc epe-btn-sm" type="submit">Enlazar</button>
+                  </div>
+                </form>
+                <p class="epe-vv-enlace-estado" data-vv-enlace-estado role="status"></p>
+              </div>
+
+              <div class="epe-juego-grupo epe-vv-grupo" data-vv-grupo="1">
+                <div class="epe-vv-grupo-cabeza">
+                  <h2 class="epe-juego-h2">Lista 2</h2>
+                  <button class="epe-btn-ghost epe-btn-sm" type="button" data-vv-quitar hidden>Quitar</button>
+                </div>
+                <input id="vv-nombre-1" class="epe-vv-input" type="text" maxlength="40" placeholder="Nombre del botón. Ej.: Cuentos" aria-label="Nombre del botón de la lista 2" autocomplete="off" data-vv-nombre />
+                <form class="epe-vv-enlazar" data-vv-form>
+                  <div class="epe-vv-fila">
+                    <input id="vv-enlace-1" class="epe-vv-input" type="text" inputmode="url" placeholder="Pegá el enlace de YouTube" aria-label="Enlace de YouTube de la lista 2" autocomplete="off" spellcheck="false" data-vv-enlace />
+                    <button class="epe-btn-acc epe-btn-sm" type="submit">Enlazar</button>
+                  </div>
+                </form>
+                <p class="epe-vv-enlace-estado" data-vv-enlace-estado role="status"></p>
+              </div>
+
+              <div class="epe-juego-grupo epe-vv-grupo">
+                <h2 class="epe-juego-h2">Buscar en YouTube</h2>
+                <form class="epe-vv-fila" data-vv-buscar>
+                  <input class="epe-vv-input" type="search" maxlength="80" placeholder="Ej.: canciones infantiles" autocomplete="off" aria-label="Buscar videos en YouTube" data-vv-busqueda />
+                  <button class="epe-btn-ghost epe-btn-sm" type="submit">Buscar</button>
+                </form>
+                <p class="epe-vv-nota">
+                  Se abre YouTube en otra pestaña: copiá el enlace y pegalo arriba. Escribí solo
+                  palabras clave, sin nombres ni datos de pacientes.
+                </p>
+              </div>
+            </div>
+            <div class="epe-juego-grupo" data-acceso-panel></div>
+          </div>
+
+          <p class="epe-vv-nota">
+            Las listas se guardan solo en este navegador. Al elegir una lista se carga el reproductor de
+            YouTube (Google), que recibe tu dirección IP.
+            <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener noreferrer">Términos de YouTube</a>
+            ·
+            <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Política de privacidad de Google</a>
+          </p>
+
+          <div class="epe-vv-utiles">
+            <button class="epe-btn-ghost" type="button" data-configurar-dispositivo>
+              Configurar dispositivo…
+            </button>
+            <button class="epe-btn-ghost" type="button" data-restaurar-dispositivo hidden>
+              Restaurar dispositivo
+            </button>
+            <button class="epe-btn-ghost" type="button" data-vv-borrar>Borrar mis listas</button>
+          </div>
+
+          <div class="epe-juego-pie">
+            <a class="epe-btn-ghost" href="index.html" data-volver-apps>Volver a Apps EpE</a>
+            <div data-atribucion="by"></div>
+            <button class="epe-btn-acc" type="button" data-juego-empezar disabled>Empezar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Pantalla: reproductor centrado, y abajo listas y controles ── -->
+      <main class="epe-juego-main">
+        <div class="epe-vv-juego" data-vv-juego hidden>
+          <div class="epe-vv-pantalla" data-vv-pantalla>
+            <p class="epe-vv-vacio" data-vv-vacio>Elegí una lista para empezar</p>
+          </div>
+
+          <p class="epe-vv-mensaje" data-vv-mensaje aria-live="polite"></p>
+
+          <div class="epe-vv-botonera">
+            <button class="epe-vv-lista epe-juego-blanco" type="button" data-vv-lista="0">
+              <span class="epe-vv-lista-marca" data-vv-marca aria-hidden="true">?</span>
+              <span class="epe-vv-lista-nombre" data-vv-nombre-boton>Enlazá tu video</span>
+              <kbd class="epe-tecla" data-tecla-accion="lista0"></kbd>
+            </button>
+            <button class="epe-vv-lista epe-juego-blanco" type="button" data-vv-lista="1">
+              <span class="epe-vv-lista-marca" data-vv-marca aria-hidden="true">?</span>
+              <span class="epe-vv-lista-nombre" data-vv-nombre-boton>Enlazá tu video</span>
+              <kbd class="epe-tecla" data-tecla-accion="lista1"></kbd>
+            </button>
+
+            <button class="epe-vv-ctrl epe-juego-blanco" type="button" data-vv-accion="pausa" aria-label="Pausa">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M9.5 8v8M14.5 8v8" stroke-width="2.6" />
+              </svg>
+              <kbd class="epe-tecla" data-tecla-accion="pausa"></kbd>
+            </button>
+            <button class="epe-vv-ctrl epe-juego-blanco" type="button" data-vv-accion="play" aria-label="Play">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M10 8.2v7.6L16.2 12z" fill="currentColor" />
+              </svg>
+              <kbd class="epe-tecla" data-tecla-accion="play"></kbd>
+            </button>
+            <button class="epe-vv-ctrl epe-juego-blanco" type="button" data-vv-accion="siguiente" aria-label="Siguiente video">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M8.5 8.2v7.6L14 12z" fill="currentColor" />
+                <path d="M16 8v8" stroke-width="2.6" />
+              </svg>
+              <kbd class="epe-tecla" data-tecla-accion="siguiente"></kbd>
+            </button>
+          </div>
+
+          <div class="epe-juego-acciones">
+            <button class="epe-btn-ghost" type="button" data-vv-salir>Salir <kbd class="epe-tecla">Esc</kbd></button>
+          </div>
+
+          <p class="epe-juego-ayuda" data-juego-ayuda></p>
+        </div>
+      </main>
+    </div>
+
+    <script src="../js/core/theme.js"></script>
+    <script src="../js/core/atribucion.js"></script>
+    <script src="../js/core/ajuste-modal.js"></script>
+    <script src="../js/core/modal.js"></script>
+    <script type="module" src="../js/features/configurar-dispositivo/widget.js"></script>
+    <script src="../js/features/apps-epe/_comun/teclas.js"></script>
+    <script src="../js/features/apps-epe/_comun/entrada.js"></script>
+    <script src="../js/features/apps-epe/_comun/acceso.js"></script>
+    <script src="../js/features/apps-epe/ver-videos/youtube.js"></script>
+    <script src="../js/features/apps-epe/ver-videos/ver-videos.js"></script>
+    <script>
+      EpeTheme.initThemeToggle(document.getElementById("theme-toggle"));
+      EpeVerVideos.init(document.querySelector(".epe-vv-shell"));
+    </script>
+  </body>
+</html>
