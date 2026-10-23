@@ -269,29 +269,35 @@ describe('guardado local', () => {
 });
 
 describe('opciones', () => {
-  it('por defecto, Play y Pausa van separados', () => {
-    expect(cargarOpciones(almacenFalso())).toEqual({ unBoton: false });
-    expect(cargarOpciones(null)).toEqual({ unBoton: false });
+  it('por defecto, Play y Pausa van separados y el video no está ampliado', () => {
+    expect(cargarOpciones(almacenFalso())).toEqual({ unBoton: false, ampliado: false });
+    expect(cargarOpciones(null)).toEqual({ unBoton: false, ampliado: false });
   });
 
   it('ida y vuelta', () => {
     const s = almacenFalso();
-    expect(guardarOpciones({ unBoton: true }, s)).toBe(true);
-    expect(cargarOpciones(s)).toEqual({ unBoton: true });
-    guardarOpciones({ unBoton: false }, s);
-    expect(cargarOpciones(s)).toEqual({ unBoton: false });
+    expect(guardarOpciones({ unBoton: true, ampliado: false }, s)).toBe(true);
+    expect(cargarOpciones(s)).toEqual({ unBoton: true, ampliado: false });
+    guardarOpciones({ unBoton: false, ampliado: true }, s);
+    expect(cargarOpciones(s)).toEqual({ unBoton: false, ampliado: true });
+  });
+
+  it('lo guardado antes de que existiera `ampliado` sigue valiendo', () => {
+    const s = almacenFalso({ [CLAVE_OPCIONES]: JSON.stringify({ v: 1, unBoton: true }) });
+    expect(cargarOpciones(s)).toEqual({ unBoton: true, ampliado: false });
   });
 
   it('lo corrupto o raro se ignora', () => {
-    expect(cargarOpciones(almacenFalso({ [CLAVE_OPCIONES]: '{no es json' }))).toEqual({
-      unBoton: false,
-    });
+    const vacio = { unBoton: false, ampliado: false };
+    expect(cargarOpciones(almacenFalso({ [CLAVE_OPCIONES]: '{no es json' }))).toEqual(vacio);
     expect(
-      cargarOpciones(almacenFalso({ [CLAVE_OPCIONES]: JSON.stringify({ v: 1, unBoton: 'si' }) })),
-    ).toEqual({ unBoton: false });
+      cargarOpciones(
+        almacenFalso({ [CLAVE_OPCIONES]: JSON.stringify({ v: 1, unBoton: 'si', ampliado: 1 }) }),
+      ),
+    ).toEqual(vacio);
     expect(
       cargarOpciones(almacenFalso({ [CLAVE_OPCIONES]: JSON.stringify({ v: 9, unBoton: true }) })),
-    ).toEqual({ unBoton: false });
+    ).toEqual(vacio);
   });
 
   it('sin almacenamiento o con uno roto no falla', () => {
@@ -304,16 +310,17 @@ describe('opciones', () => {
       },
       removeItem: () => {},
     };
-    expect(guardarOpciones({ unBoton: true }, null)).toBe(false);
-    expect(guardarOpciones({ unBoton: true }, roto)).toBe(false);
-    expect(cargarOpciones(roto)).toEqual({ unBoton: false });
+    const op = { unBoton: true, ampliado: true };
+    expect(guardarOpciones(op, null)).toBe(false);
+    expect(guardarOpciones(op, roto)).toBe(false);
+    expect(cargarOpciones(roto)).toEqual({ unBoton: false, ampliado: false });
   });
 
   it('borrar las listas no toca las opciones', () => {
     const s = almacenFalso();
-    guardarOpciones({ unBoton: true }, s);
+    guardarOpciones({ unBoton: true, ampliado: true }, s);
     guardarListas([{ tipo: 'video', id: VIDEO, nombre: 'v' }, null], s);
     borrarListas(s);
-    expect(cargarOpciones(s)).toEqual({ unBoton: true });
+    expect(cargarOpciones(s)).toEqual({ unBoton: true, ampliado: true });
   });
 });

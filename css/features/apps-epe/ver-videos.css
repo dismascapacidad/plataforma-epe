@@ -64,6 +64,19 @@
   color: var(--red);
 }
 
+/* ── Barra: la botonera y, ampliado, el botón Reducir ── */
+.epe-vv-barra {
+  width: 100%;
+  display: flex;
+  align-items: stretch;
+  gap: clamp(8px, 1.5vw, 14px);
+}
+
+.epe-vv-barra .epe-vv-botonera {
+  flex: 1;
+  min-width: 0;
+}
+
 /* ── Botonera: dos listas y tres controles, en una fila ── */
 .epe-vv-botonera {
   width: 100%;
@@ -240,6 +253,97 @@
   .epe-vv-mensaje {
     min-height: 16px;
     font-size: 12px;
+  }
+}
+
+/* ── Video ampliado ──
+   El reproductor ocupa casi toda la pantalla. Los botones NO van encima: las
+   políticas de YouTube no permiten poner nada delante del reproductor, así que
+   quedan en una barra compacta debajo. Cabecera, ayuda y Salir se ocultan; Esc
+   primero reduce. Reducir queda por encima de la capa táctil (z-index 6). */
+.epe-vv-reducir {
+  flex: 0 0 auto;
+  width: 56px;
+  min-height: 56px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.epe-vv-reducir svg {
+  width: 26px;
+  height: 26px;
+}
+
+body.epe-con-capa-toque .epe-vv-reducir {
+  position: relative;
+  z-index: 6;
+}
+
+.epe-vv-giro {
+  display: none;
+  text-align: center;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+.epe-vv-shell.is-ampliado .epe-juego-header,
+.epe-vv-shell.is-ampliado .epe-juego-acciones,
+.epe-vv-shell.is-ampliado .epe-juego-ayuda {
+  display: none;
+}
+
+.epe-vv-shell.is-ampliado .epe-juego-main {
+  padding: 8px 8px 8px;
+  justify-content: center;
+}
+
+.epe-vv-shell.is-ampliado .epe-vv-juego {
+  --vv-reserva: 100px;
+  max-width: none;
+  gap: 6px;
+}
+
+.epe-vv-shell.is-ampliado .epe-vv-mensaje {
+  min-height: 16px;
+  font-size: 12px;
+}
+
+.epe-vv-shell.is-ampliado .epe-vv-lista,
+.epe-vv-shell.is-ampliado .epe-vv-ctrl {
+  min-height: 56px;
+  padding: 6px 6px;
+  gap: 2px;
+}
+
+.epe-vv-shell.is-ampliado .epe-vv-lista-marca {
+  width: 22px;
+  height: 22px;
+  font-size: 20px;
+}
+
+.epe-vv-shell.is-ampliado .epe-vv-lista-nombre {
+  font-size: 12px;
+}
+
+.epe-vv-shell.is-ampliado .epe-vv-ctrl svg {
+  width: 30px;
+  height: 30px;
+}
+
+@media (max-width: 560px) {
+  /* Celular vertical: la barra ocupa dos filas. */
+  .epe-vv-shell.is-ampliado .epe-vv-juego {
+    --vv-reserva: 200px;
+  }
+}
+
+/* Vertical, el video es 16:9 y no crece más que el ancho: se sugiere girar. */
+@media (orientation: portrait) and (max-width: 900px) {
+  .epe-vv-shell.is-ampliado .epe-vv-giro {
+    display: block;
   }
 }
 

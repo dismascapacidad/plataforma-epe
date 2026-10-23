@@ -217,27 +217,41 @@ export function borrarListas(storage = almacenamiento()) {
 /**
  * Opciones de la app (solo preferencias, nada personal).
  * `unBoton`: Play y Pausa en un mismo botón.
+ * `ampliado`: el video ocupa casi toda la pantalla (la botonera queda en una barra aparte).
+ * @typedef {{unBoton: boolean, ampliado: boolean}} Opciones
+ */
+
+/**
  * @param {Almacen | null} [storage]
- * @returns {{unBoton: boolean}}
+ * @returns {Opciones}
  */
 export function cargarOpciones(storage = almacenamiento()) {
-  if (!storage) return { unBoton: false };
+  const base = { unBoton: false, ampliado: false };
+  if (!storage) return base;
   try {
     const dato = JSON.parse(storage.getItem(CLAVE_OPCIONES));
-    return { unBoton: !!dato && dato.v === 1 && dato.unBoton === true };
+    if (!dato || dato.v !== 1) return base;
+    return { unBoton: dato.unBoton === true, ampliado: dato.ampliado === true };
   } catch {
-    return { unBoton: false };
+    return base;
   }
 }
 
 /**
- * @param {{unBoton: boolean}} opciones
+ * @param {Opciones} opciones
  * @param {Almacen | null} [storage]
  */
 export function guardarOpciones(opciones, storage = almacenamiento()) {
   if (!storage) return false;
   try {
-    storage.setItem(CLAVE_OPCIONES, JSON.stringify({ v: 1, unBoton: opciones.unBoton === true }));
+    storage.setItem(
+      CLAVE_OPCIONES,
+      JSON.stringify({
+        v: 1,
+        unBoton: opciones.unBoton === true,
+        ampliado: opciones.ampliado === true,
+      }),
+    );
     return true;
   } catch {
     return false;
