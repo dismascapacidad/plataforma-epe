@@ -5,6 +5,11 @@
  * de reproducción ya enlazadas y tres controles (Pausa, Play, Siguiente video).
  * Opcional: Play y Pausa en un solo botón, cuyo ícono cambia con el estado del
  * reproductor (muestra lo que pasa al pulsar: pausa si suena, play si no).
+ * Ampliar: el video ocupa casi toda la pantalla (botón para quien acompaña, fuera
+ * del barrido). Es una ampliación de la propia página, no la pantalla completa de
+ * YouTube: con la nativa el teclado le llegaría al reproductor (otro origen) y los
+ * pulsadores dejarían de funcionar. Los botones quedan en una barra debajo, nunca
+ * encima del reproductor (políticas de YouTube).
  *
  * Pensado para manejarse sin puntero, como el resto de las Apps EpE:
  * - Cinco acciones (lista 1, lista 2, pausa, play, siguiente; cuatro si Play y Pausa
@@ -118,12 +123,14 @@ var EpeVerVideos = (function () {
     var chkUnBoton = root.querySelector("[data-vv-un-boton]");
     var elPanelAcceso = root.querySelector("[data-acceso-panel]");
     var btnSalir = root.querySelector("[data-vv-salir]");
+    var btnAmpliar = root.querySelector("[data-vv-ampliar]");
+    var btnReducir = root.querySelector("[data-vv-reducir]");
     var btnConfigurarDispositivo = root.querySelector("[data-configurar-dispositivo]");
     var btnRestaurarDispositivo = root.querySelector("[data-restaurar-dispositivo]");
     var enlacesVolverApps = Array.prototype.slice.call(root.querySelectorAll("[data-volver-apps]"));
 
     // ── Estado ───────────────────────────────────────────────────────
-    var opciones = L.cargarOpciones(); // { unBoton }
+    var opciones = L.cargarOpciones(); // { unBoton, ampliado }
     var acciones = opciones.unBoton ? ACCIONES_UN_BOTON : ACCIONES;
     var panel = crearPanelDeAcceso();
     var reproduciendo = false; // según el último estado que informó el reproductor
@@ -152,6 +159,23 @@ var EpeVerVideos = (function () {
       btnsAccion.alternar.hidden = !opciones.unBoton;
       elBotonera.classList.toggle("es-un-boton", opciones.unBoton);
       renderAlternar();
+    }
+
+    // Video ampliado: solo mientras se ve la pantalla de juego (la preparación no).
+    function aplicarAmpliado() {
+      var enJuego = !elJuego.hidden;
+      var ampliado = opciones.ampliado && enJuego;
+      root.classList.toggle("is-ampliado", ampliado);
+      btnReducir.hidden = !ampliado;
+    }
+
+    // Ampliar y Reducir son botones para quien acompaña: no entran al barrido.
+    // Tras el toque se quita el foco, así Espacio/Enter de un pulsador no lo repiten.
+    function ampliar(valor) {
+      opciones.ampliado = valor;
+      L.guardarOpciones(opciones);
+      aplicarAmpliado();
+      if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
     }
 
     // El ícono muestra lo que pasa al pulsar: pausa mientras suena, play si no.
@@ -505,11 +529,14 @@ var EpeVerVideos = (function () {
         getObjetivos: getObjetivos,
         alAccion: alAccion,
         alEscape: function () {
-          salirConfirmado(salirAConfig);
+          // Ampliado, Esc primero reduce; con el video normal, vuelve a la preparación.
+          if (opciones.ampliado) ampliar(false);
+          else salirConfirmado(salirAConfig);
         },
       });
       elConfig.hidden = true;
       elJuego.hidden = false;
+      aplicarAmpliado();
       actual = null;
       reproduciendo = false;
       aplicarModoControles();
@@ -535,6 +562,7 @@ var EpeVerVideos = (function () {
       renderAlternar();
       elJuego.hidden = true;
       elConfig.hidden = false;
+      aplicarAmpliado();
       renderConfig();
       if (!elEmpezar.disabled) elEmpezar.focus();
     }
@@ -620,6 +648,12 @@ var EpeVerVideos = (function () {
       });
     });
     elEmpezar.addEventListener("click", empezar);
+    btnAmpliar.addEventListener("click", function () {
+      ampliar(true);
+    });
+    btnReducir.addEventListener("click", function () {
+      ampliar(false);
+    });
     btnSalir.addEventListener("click", function () {
       salirConfirmado(salirAConfig);
     });
