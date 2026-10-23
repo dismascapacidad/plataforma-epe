@@ -248,7 +248,9 @@ var EpeAcceso = (function () {
       el(
         "p",
         "epe-acceso-ayuda",
-        "Para cambiar una tecla, hacé clic (o Enter) sobre ella y presioná la nueva. Esc cancela."
+        esTactil()
+          ? "Para cambiar una tecla, tocala y presioná la nueva en tu dispositivo o en el teclado en pantalla. Tocá afuera para cancelar."
+          : "Para cambiar una tecla, hacé clic (o Enter) sobre ella y presioná la nueva. Esc cancela."
       )
     );
 
@@ -376,6 +378,8 @@ var EpeAcceso = (function () {
       editando = clave;
       dibujarTeclas();
       enfocar(clave);
+      // El campo del teclado en pantalla va dentro de la fila editada.
+      var botonEditado = elTeclas.querySelector('[data-clave="' + clave + '"]');
       EpeTeclas.capturar(
         function (tecla) {
           asignar(clave, tecla);
@@ -387,7 +391,8 @@ var EpeAcceso = (function () {
           editando = null;
           dibujarTeclas();
           enfocar(clave);
-        }
+        },
+        { ancla: botonEditado ? botonEditado.parentNode : null }
       );
     }
 
