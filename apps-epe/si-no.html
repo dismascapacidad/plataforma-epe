@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Si-No con pulsadores — Apps EpE</title>
+    <link rel="icon" href="../assets/img/logo-epe.png" />
+
+    <script src="../js/core/theme-boot.js"></script>
+
+    <link rel="stylesheet" href="../css/base/reset.css" />
+    <link rel="stylesheet" href="../css/diseno/fonts.css" />
+    <link rel="stylesheet" href="../css/diseno/tokens.css" />
+    <link rel="stylesheet" href="../css/diseno/theme.css" />
+    <link rel="stylesheet" href="../css/base/plataforma.css" />
+    <link rel="stylesheet" href="../css/base/typography.css" />
+    <link rel="stylesheet" href="../css/components/buttons.css" />
+    <link rel="stylesheet" href="../css/components/atribucion.css" />
+    <link rel="stylesheet" href="../css/components/app-nav.css" />
+    <link rel="stylesheet" href="../css/components/juego-base.css" />
+    <link rel="stylesheet" href="../css/components/modal.css" />
+    <link rel="stylesheet" href="../css/components/selector-imagen.css" />
+    <link rel="stylesheet" href="../css/features/apps-epe/si-no.css" />
+    <link rel="stylesheet" href="../css/features/configurar-dispositivo/widget.css" />
+    <link rel="stylesheet" href="../vendor/tracky-mouse/tracky-mouse.css" />
+    <link rel="stylesheet" href="../css/base/tactil.css" />
+  </head>
+  <body>
+    <div class="epe-sn-shell" data-sn-raiz>
+      <header class="epe-sn-header">
+        <div class="epe-app-header-left">
+          <a class="epe-app-back" href="index.html" data-volver-apps>← Apps EpE</a>
+          <a href="../index.html"><img class="epe-logo-chip" src="../assets/img/logo-epe.png" alt="Equipar para Equipar" height="26" /></a>
+        </div>
+        <p class="epe-sn-aviso" data-sn-aviso role="status" aria-live="polite"></p>
+        <div class="epe-sn-header-der">
+          <span class="epe-sn-chip" data-sn-chip role="status" aria-live="polite" hidden></span>
+          <!-- Reemplaza a Esc en celulares y tablets: la configuración siempre se puede reabrir tocando. -->
+          <button class="epe-btn-ghost epe-btn-sm" type="button" data-sn-abrir-config hidden>Configuración</button>
+          <button
+            class="epe-theme-toggle"
+            type="button"
+            id="theme-toggle"
+            aria-pressed="false"
+            aria-label="Cambiar a modo oscuro"
+          >
+            <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="4" />
+              <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+            </svg>
+            <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" />
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- ── Configuración (modal principal, sin scroll). "Empezar" la cierra;
+           con la app iniciada se reabre con Escape o con el botón "Configuración". ── -->
+      <div class="epe-juego-overlay" data-sn-config>
+        <div class="epe-juego-modal" role="dialog" aria-modal="true" aria-labelledby="sn-titulo">
+          <h1 id="sn-titulo">Si-No con pulsadores</h1>
+          <p class="epe-juego-intro">
+            Dos casillas grandes (y una tercera si hace falta), cada una con imagen y texto. La persona
+            elige una y la app la dice en voz alta. Se puede responder con una tecla por casilla, con
+            barrido (con uno o dos pulsadores, o automático) o con seguimiento de cabeza.
+          </p>
+
+          <div class="epe-juego-columnas">
+            <div class="epe-juego-grupo">
+              <h2 class="epe-juego-h2">Casillas</h2>
+              <div class="epe-sn-editor" data-sn-editor></div>
+              <label class="epe-sn-check">
+                <input type="checkbox" data-sn-tercera />
+                Agregar una tercera casilla
+              </label>
+              <label class="epe-sn-check">
+                <input type="checkbox" data-sn-leer-resaltar />
+                En el barrido, leer cada casilla en voz alta al resaltarla
+              </label>
+              <p class="epe-sn-nota">
+                Los textos y las imágenes se guardan solo en este navegador. No escribas nombres ni
+                datos de pacientes.
+              </p>
+              <p class="epe-sn-nota" data-sn-error-imagen role="alert" hidden></p>
+              <p class="epe-sn-nota" data-sn-atrib-arasaac hidden></p>
+            </div>
+
+            <div class="epe-juego-grupo">
+              <h2 class="epe-juego-h2">Acceso de la persona</h2>
+              <div class="epe-sn-acceso-radios" role="radiogroup" aria-label="Forma de responder">
+                <label class="epe-sn-radio">
+                  <input type="radio" name="sn-acceso" value="pulsadores" checked />
+                  Teclas, pulsadores o toque en pantalla
+                </label>
+                <label class="epe-sn-radio">
+                  <input type="radio" name="sn-acceso" value="cabeza" />
+                  Seguimiento de cabeza
+                </label>
+              </div>
+
+              <div data-sn-sec-pulsadores>
+                <div data-sn-panel></div>
+              </div>
+
+              <div class="epe-sn-cabeza" data-sn-sec-cabeza hidden>
+                <div class="epe-sn-fila-botones">
+                  <button class="epe-btn-acc epe-btn-sm" type="button" data-sn-iniciar-cabeza>Iniciar seguimiento</button>
+                  <button class="epe-btn-ghost epe-btn-sm" type="button" data-sn-pausa hidden>Pausar</button>
+                  <button class="epe-btn-ghost epe-btn-sm" type="button" data-sn-abrir-camara>Cámara y sensibilidad…</button>
+                </div>
+                <p class="epe-sn-nota" data-sn-estado-cabeza>
+                  Pide permiso de cámara. Conviene buena luz de frente y la cara completa en cuadro. La
+                  imagen se procesa en este dispositivo: no se envía ni se guarda.
+                </p>
+                <label class="epe-sn-check">
+                  <input type="checkbox" data-sn-usar-mouse />
+                  Usar el mouse en lugar de la cabeza (para probar)
+                </label>
+                <div class="epe-sn-opciones">
+                  <label class="epe-sn-radio">
+                    <input type="radio" name="sn-seleccion" value="pulsador" checked />
+                    Cabeza + pulsador (tecla K o Espacio)
+                  </label>
+                  <label class="epe-sn-radio">
+                    <input type="radio" name="sn-seleccion" value="dwell" />
+                    Cabeza + permanencia (dwell)
+                  </label>
+                </div>
+                <div class="epe-sn-inline" data-sn-dwell-wrap hidden>
+                  <label for="sn-dwell">Permanencia</label>
+                  <select id="sn-dwell" data-sn-dwell>
+                    <option value="600">0,6 s</option>
+                    <option value="900">0,9 s</option>
+                    <option value="1200" selected>1,2 s</option>
+                    <option value="1800">1,8 s</option>
+                    <option value="2500">2,5 s</option>
+                  </select>
+                </div>
+                <label class="epe-sn-check" data-sn-descanso-wrap hidden>
+                  <input type="checkbox" data-sn-descanso checked />
+                  Franja de descanso abajo (el puntero puede reposar sin elegir)
+                </label>
+                <div class="epe-sn-inline">
+                  <label>Recentrar puntero</label>
+                  <output class="epe-sn-tecla" data-sn-recentrar-tecla></output>
+                  <button class="epe-btn-ghost epe-btn-sm" type="button" data-sn-asignar-recentrar>Asignar…</button>
+                  <button class="epe-btn-ghost epe-btn-sm" type="button" data-sn-quitar-recentrar>Quitar</button>
+                </div>
+                <p class="epe-sn-nota" data-sn-recentrar-aviso></p>
+              </div>
+
+              <div class="epe-sn-fila-botones">
+                <button class="epe-btn-ghost epe-btn-sm" type="button" data-configurar-dispositivo>
+                  Configurar dispositivo…
+                </button>
+                <button class="epe-btn-ghost epe-btn-sm" type="button" data-restaurar-dispositivo hidden>
+                  Restaurar dispositivo
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="epe-juego-pie">
+            <a class="epe-btn-ghost" href="index.html" data-volver-apps>Volver a Apps EpE</a>
+            <div data-atribucion="by"></div>
+            <button class="epe-btn-acc" type="button" data-sn-empezar>Empezar</button>
+          </div>
+          <p class="epe-sn-nota epe-sn-nota-alerta" data-sn-aviso-empezar role="alert"></p>
+        </div>
+      </div>
+
+      <!-- ── Modal secundario: cámara y sensibilidad. Se abre al terminar de iniciar
+           el seguimiento (el paso que sigue es encuadrar). La vista de cámara de
+           Tracky (fija en pantalla) se acomoda sobre el hueco. ── -->
+      <div class="epe-juego-overlay epe-sn-segundo" data-sn-modal-camara hidden>
+        <div class="epe-juego-modal" role="dialog" aria-modal="true" aria-labelledby="sn-cam-titulo">
+          <h1 id="sn-cam-titulo">Cámara y sensibilidad</h1>
+          <div class="epe-sn-vista-slot" data-sn-vista-slot>
+            La vista de cámara aparece acá al iniciar el seguimiento.
+          </div>
+          <div class="epe-juego-grupo">
+            <label for="sn-sens">Sensibilidad: <output data-sn-sens-out>—</output></label>
+            <input type="range" id="sn-sens" data-sn-sens min="0" max="100" step="1" value="50" disabled />
+            <div class="epe-sn-escala"><span>Más lento</span><span>Más rápido</span></div>
+            <p class="epe-sn-nota" data-sn-sens-aviso>Se habilita al iniciar el seguimiento.</p>
+            <label class="epe-sn-check">
+              <input type="checkbox" data-sn-ocultar checked />
+              Ocultar la vista de cámara mientras se usa la app
+            </label>
+          </div>
+          <div class="epe-juego-pie">
+            <button class="epe-btn-acc" type="button" data-sn-cerrar-camara>Listo</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vista de cámara de Tracky: vive fuera del modal para seguir andando cuando se cierra. -->
+      <div class="epe-sn-tracky-host" data-sn-tracky-host></div>
+      <!-- Aro que marca el centro un instante al recentrar. -->
+      <div class="epe-sn-centro" data-sn-centro hidden aria-hidden="true"></div>
+
+      <main class="epe-sn-cuerpo" data-sn-cuerpo hidden>
+        <div class="epe-sn-tablero" data-sn-tablero aria-label="Casillas de respuesta"></div>
+      </main>
+    </div>
+
+    <script src="../js/core/theme.js"></script>
+    <script src="../js/core/atribucion.js"></script>
+    <script src="../js/core/ajuste-modal.js"></script>
+    <script src="../js/core/modal.js"></script>
+    <script type="module" src="../js/features/configurar-dispositivo/widget.js"></script>
+    <script src="../js/features/apps-epe/_comun/teclas.js"></script>
+    <script src="../js/features/apps-epe/_comun/entrada.js"></script>
+    <script src="../js/features/apps-epe/_comun/acceso.js"></script>
+    <script type="module" src="../js/features/apps-epe/si-no/main.js"></script>
+    <script>
+      EpeTheme.initThemeToggle(document.getElementById("theme-toggle"));
+    </script>
+  </body>
+</html>

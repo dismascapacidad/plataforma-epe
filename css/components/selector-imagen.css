@@ -1,0 +1,103 @@
+/*
+  selector-imagen.css
+  Panel de búsqueda de pictogramas de ARASAAC (js/features/apps-epe/_comun/selector-imagen.js),
+  dentro del modal genérico EpeModal. Se muestran de a 12 (4 × 3) para que
+  entren sin scroll.
+*/
+
+.epe-modal-overlay {
+  z-index: 130; /* por encima de los modales de las apps y de la vista de cámara */
+}
+
+.epe-sel-ara {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.epe-sel-ara-form {
+  display: flex;
+  gap: 8px;
+}
+
+.epe-sel-input {
+  flex: 1 1 auto;
+  min-width: 100px;
+  border: 1px solid var(--tile-border);
+  background: var(--shell-bg);
+  color: var(--text-strong);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-size: 14px;
+}
+
+.epe-sel-ara-aviso,
+.epe-sel-ara-atrib {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-faint);
+}
+
+.epe-sel-ara-estado {
+  min-height: 1.3em;
+  font-size: 12.5px;
+  color: var(--text-dim);
+}
+
+.epe-sel-ara-grilla {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.epe-sel-ara-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 6px;
+  background: var(--shell-bg-2);
+  border: 2px solid var(--tile-border);
+  border-radius: var(--radius-md);
+  color: var(--text-strong);
+  font-size: 11.5px;
+  cursor: pointer;
+  min-height: 44px;
+}
+
+.epe-sel-ara-item:hover:not(:disabled),
+.epe-sel-ara-item:focus-visible {
+  border-color: var(--teal-600);
+}
+
+.epe-sel-ara-item img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: contain;
+  background: #fff;
+  border-radius: var(--radius-sm);
+}
+
+.epe-sel-ara-item span {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.epe-sel-ara-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.epe-sel-ara-nav[hidden] {
+  display: none;
+}
+
+@media (max-height: 760px) {
+  .epe-sel-ara-grilla {
+    width: min(100%, 400px);
+    margin-inline: auto;
+  }
+}
