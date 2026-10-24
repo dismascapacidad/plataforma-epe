@@ -23,6 +23,8 @@ export default [
       'js/features/apps-epe/barrido/main.js',
       'js/features/apps-epe/vincular-imagen/arasaac.js',
       'js/features/apps-epe/ver-videos/listas.js',
+      'js/features/apps-epe/si-no/**/*.js',
+      'js/features/apps-epe/_comun/selector-imagen.js',
       'dev/**/*.js',
     ],
     languageOptions: {

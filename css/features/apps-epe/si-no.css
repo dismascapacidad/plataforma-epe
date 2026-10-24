@@ -1,0 +1,463 @@
+/*
+  si-no.css
+  Si-No con pulsadores. Tablero de 2 o 3 casillas grandes + modales de
+  configuración. Prefijo epe-sn-. Sin scroll en pantallas ni modales (regla de
+  la plataforma: ver js/core/ajuste-modal.js).
+
+  Resaltado del barrido (epe-scan-actual, de juego-base.css: contorno ámbar
+  grueso + halo) reforzado acá con señales que NO dependen del color: borde
+  grueso, la casilla crece un poco y las demás se apagan. Sirve también con
+  poca agudeza visual, desde lejos o con daltonismo.
+*/
+
+.epe-sn-shell {
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--shell-bg);
+}
+
+/* `hidden` pierde contra cualquier display: flex/grid de una clase: se fuerza
+   (mismo criterio que vincular-imagen.css y juego-base.css). */
+.epe-sn-shell [hidden] {
+  display: none !important;
+}
+
+/* ── Encabezado ── */
+.epe-sn-header {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px clamp(16px, 4vw, 40px);
+}
+
+.epe-sn-header-der {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.epe-sn-aviso {
+  min-height: 1.3em;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.epe-sn-chip {
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--tile-border);
+  background: var(--tile-bg);
+  color: var(--text-dim);
+}
+.epe-sn-chip[data-calidad='ok'] {
+  border-color: var(--grn);
+  color: var(--grn);
+}
+.epe-sn-chip[data-calidad='pausa'],
+.epe-sn-chip[data-calidad='sin-cara'],
+.epe-sn-chip[data-calidad='sin-senial'] {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+/* Con la capa táctil del barrido puesta, el encabezado sigue tocándose
+   (el botón "Configuración" reemplaza a Esc en celulares y tablets). */
+body.epe-con-capa-toque .epe-sn-header {
+  position: relative;
+  z-index: 6;
+}
+
+/* ── Tablero ── */
+.epe-sn-cuerpo {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  padding: 0 clamp(18px, 3vw, 32px) clamp(18px, 2.5vw, 28px);
+}
+
+.epe-sn-tablero {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.epe-sn-celdas {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  gap: clamp(16px, 2.4vw, 28px);
+}
+
+.epe-sn-celda {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  padding: clamp(8px, 1.6vw, 18px);
+  overflow: hidden;
+  background: var(--tile-bg);
+  border: 4px solid var(--tile-border);
+  border-radius: var(--radius-lg);
+  color: var(--text-strong);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 0.12s ease,
+    opacity 0.12s ease,
+    border-color 0.12s ease,
+    background 0.12s ease;
+}
+
+/* Progreso de permanencia (dwell): relleno que crece de abajo hacia arriba. */
+.epe-sn-celda::before {
+  content: '';
+  position: absolute;
+  inset: auto 0 0 0;
+  height: calc(var(--p, 0) * 100%);
+  background: color-mix(in srgb, var(--teal-600) 38%, transparent);
+  pointer-events: none;
+}
+
+.epe-sn-imagen {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  /* Los pictogramas de ARASAAC son PNG transparentes de trazo negro: van sobre
+     blanco también en modo oscuro, si no el trazo se pierde. */
+  background: #fff;
+  overflow: hidden;
+}
+.epe-sn-imagen.sin-imagen {
+  display: none;
+}
+.epe-sn-imagen img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* entera, nunca recortada: un pictograma cortado puede cambiar de significado */
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.epe-sn-texto {
+  position: relative;
+  flex: 0 0 auto;
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 800;
+  line-height: 1.1;
+  font-size: clamp(28px, 7vw, 72px);
+  overflow-wrap: anywhere;
+}
+/* Sin imagen, el texto ocupa toda la casilla. */
+.epe-sn-celda:has(.sin-imagen) .epe-sn-texto {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(40px, 12vw, 140px);
+}
+
+/* Resaltado del barrido: ámbar + borde grueso + crece, y las demás se apagan. */
+.epe-sn-celda.epe-scan-actual {
+  border-color: var(--amb);
+  border-width: 10px;
+  transform: scale(1.02);
+  z-index: 1;
+}
+.epe-sn-celdas:has(.epe-scan-actual) .epe-sn-celda:not(.epe-scan-actual),
+.epe-sn-celdas:has(.is-bajo-puntero) .epe-sn-celda:not(.is-bajo-puntero) {
+  opacity: 0.45;
+}
+
+/* Cabeza: la casilla bajo el puntero. */
+.epe-sn-celda.is-bajo-puntero {
+  border-color: var(--teal-600);
+  border-width: 10px;
+  background: color-mix(in srgb, var(--teal-600) 18%, var(--tile-bg));
+  transform: scale(1.02);
+  z-index: 1;
+}
+
+/* Casilla elegida: confirmación inequívoca un momento. */
+.epe-sn-celda.is-elegida {
+  background: var(--teal-600);
+  border-color: var(--teal-700);
+  color: #fff;
+  opacity: 1 !important;
+}
+
+/* Franja de descanso (cabeza + permanencia): no es una casilla, no elige nada. */
+.epe-sn-descanso {
+  flex: 0 0 clamp(44px, 9vh, 90px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 12px;
+  font-size: clamp(12px, 1.6vw, 18px);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  border: 2px dashed var(--tile-border);
+  border-radius: var(--radius-sm);
+  background: var(--shell-bg-2);
+  user-select: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .epe-sn-celda {
+    transition: none;
+  }
+}
+
+/* ── Configuración ── */
+.epe-sn-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.epe-sn-editor-fila {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  align-items: center;
+  gap: 6px 8px;
+}
+
+.epe-sn-editor-fila .epe-sn-miniatura {
+  grid-row: span 2;
+}
+
+.epe-sn-editor-botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.epe-sn-miniatura {
+  flex: 0 0 auto;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-sm);
+  background: var(--shell-bg-2);
+  border: 1px solid var(--tile-border);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.epe-sn-miniatura img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #fff;
+}
+.epe-sn-miniatura span {
+  font-size: 8.5px;
+  text-align: center;
+  line-height: 1.15;
+  color: var(--text-faint);
+}
+
+.epe-sn-texto-input {
+  min-width: 0;
+  min-height: 36px;
+  border: 1px solid var(--tile-border);
+  background: var(--shell-bg);
+  color: var(--text-strong);
+  border-radius: var(--radius-sm);
+  padding: 6px 9px;
+  font-size: 13.5px;
+}
+
+.epe-sn-archivo {
+  display: none;
+}
+
+.epe-sn-check,
+.epe-sn-radio {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-strong);
+}
+.epe-sn-check input,
+.epe-sn-radio input {
+  accent-color: var(--teal-600);
+}
+
+.epe-sn-acceso-radios,
+.epe-sn-opciones {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.epe-sn-cabeza {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.epe-sn-fila-botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.epe-sn-inline {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-strong);
+}
+.epe-sn-inline select {
+  border: 1px solid var(--tile-border);
+  background: var(--shell-bg);
+  color: var(--text-strong);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+}
+
+.epe-sn-tecla {
+  min-width: 56px;
+  padding: 3px 10px;
+  text-align: center;
+  font-weight: 700;
+  border: 1px solid var(--tile-border);
+  border-bottom-width: 3px;
+  border-radius: 6px;
+  background: var(--shell-bg);
+}
+.epe-sn-tecla.is-capturando {
+  border-color: var(--amb);
+  background: var(--amb-dim);
+}
+
+.epe-sn-nota {
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--text-dim);
+}
+.epe-sn-nota.is-alerta,
+.epe-sn-nota-alerta,
+.epe-sn-nota[role='alert'] {
+  color: var(--red);
+}
+.epe-sn-nota-alerta:empty {
+  display: none;
+}
+
+.epe-sn-escala {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+/* ── Modal secundario (cámara) ── */
+.epe-sn-segundo {
+  z-index: 110;
+}
+
+.epe-sn-vista-slot {
+  height: min(300px, 42vh);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 12px;
+  font-size: 12px;
+  color: var(--text-faint);
+  border: 1px dashed var(--tile-border);
+  border-radius: var(--radius-md);
+}
+
+/* Vista de cámara de Tracky (fija en pantalla; se acomoda sobre el hueco del modal). */
+.epe-sn-tracky-host {
+  position: fixed;
+  z-index: 120;
+  right: 16px;
+  bottom: 16px;
+  width: min(360px, 92vw);
+  max-height: 70vh;
+  overflow: auto;
+  background: var(--tile-bg);
+  border: 1px solid var(--tile-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+}
+.epe-sn-tracky-host:empty {
+  display: none;
+}
+.epe-sn-tracky-host.oculto {
+  left: -10000px;
+  right: auto;
+  opacity: 0;
+  pointer-events: none;
+}
+/* La sensibilidad se mueve desde nuestro slider: los controles de Tracky van ocultos. */
+.epe-sn-tracky-host:not(.mostrar-ajustes) .tracky-mouse-controls {
+  display: none;
+}
+
+/* Aro que marca el centro un instante al recentrar. */
+.epe-sn-centro {
+  position: fixed;
+  z-index: 90;
+  left: 50%;
+  top: 50%;
+  width: 96px;
+  height: 96px;
+  margin: -48px 0 0 -48px;
+  border: 4px solid var(--teal-600);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: epe-sn-centro 0.7s ease-out forwards;
+}
+@keyframes epe-sn-centro {
+  from {
+    opacity: 1;
+    transform: scale(1.6);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .epe-sn-centro {
+    animation: none;
+    opacity: 0.8;
+  }
+}
+
+/* Celulares apaisados: encabezado más bajo para que las casillas ganen alto. */
+@media (max-height: 520px) {
+  .epe-sn-header {
+    padding-block: 6px;
+  }
+}
