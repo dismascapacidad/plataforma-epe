@@ -207,7 +207,8 @@ body.epe-con-capa-toque .epe-sn-header {
 
 /* Franja de descanso (cabeza + permanencia): no es una casilla, no elige nada. */
 .epe-sn-descanso {
-  flex: 0 0 clamp(44px, 9vh, 90px);
+  min-width: 0;
+  min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -222,6 +223,11 @@ body.epe-con-capa-toque .epe-sn-header {
   border-radius: var(--radius-sm);
   background: var(--shell-bg-2);
   user-select: none;
+}
+/* Franja vertical entre dos casillas: el texto va de costado. */
+.epe-sn-descanso.vertical {
+  writing-mode: vertical-rl;
+  padding: 12px 0;
 }
 
 @media (prefers-reduced-motion: reduce) {

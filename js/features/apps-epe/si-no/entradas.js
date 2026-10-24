@@ -91,3 +91,79 @@ export function distribucion(cantidad, ancho, alto) {
   if (apaisada) return { columnas: cantidad, filas: 1 };
   return { columnas: 1, filas: cantidad };
 }
+
+/**
+ * Reparto de las casillas (y del descanso) en la grilla del tablero. Las
+ * posiciones son líneas de CSS grid, desde 1.
+ *
+ * Sin descanso: casillas en fila (pantalla apaisada) o en columna (vertical).
+ *
+ * Con descanso (cabeza + permanencia):
+ * - 2 casillas apaisadas: el descanso es una franja VERTICAL entre las dos,
+ *   de alto completo, que mide el 30 % del ancho de una casilla.
+ * - 3 casillas apaisadas: las laterales ocupan todo el alto; la del medio mide
+ *   el 70 % de ese alto y el descanso el 30 % restante, debajo de ella.
+ * - En pantallas verticales las casillas se apilan y el descanso queda en una
+ *   franja horizontal entre ellas (con 3: debajo de la del medio).
+ *
+ * @param {number} cantidad 2 o 3
+ * @param {number} ancho
+ * @param {number} alto
+ * @param {boolean} conDescanso
+ * @returns {{columnas:string, filas:string,
+ *   celdas:{col:number, fila:number, filas:number}[],
+ *   descanso:{col:number, fila:number, vertical:boolean}|null}}
+ */
+export function reparto(cantidad, ancho, alto, conDescanso) {
+  const apaisada = distribucion(cantidad, ancho, alto).columnas > 1;
+  const f = (n) => `minmax(0, ${n}fr)`;
+  const celda = (col, fila, filas = 1) => ({ col, fila, filas });
+
+  if (!conDescanso) {
+    return apaisada
+      ? {
+          columnas: Array(cantidad).fill(f(1)).join(' '),
+          filas: f(1),
+          celdas: Array.from({ length: cantidad }, (_, i) => celda(i + 1, 1)),
+          descanso: null,
+        }
+      : {
+          columnas: f(1),
+          filas: Array(cantidad).fill(f(1)).join(' '),
+          celdas: Array.from({ length: cantidad }, (_, i) => celda(1, i + 1)),
+          descanso: null,
+        };
+  }
+
+  if (apaisada) {
+    if (cantidad === 2) {
+      return {
+        columnas: `${f(1)} ${f(0.3)} ${f(1)}`,
+        filas: f(1),
+        celdas: [celda(1, 1), celda(3, 1)],
+        descanso: { col: 2, fila: 1, vertical: true },
+      };
+    }
+    return {
+      columnas: `${f(1)} ${f(1)} ${f(1)}`,
+      filas: `${f(7)} ${f(3)}`,
+      celdas: [celda(1, 1, 2), celda(2, 1), celda(3, 1, 2)],
+      descanso: { col: 2, fila: 2, vertical: false },
+    };
+  }
+
+  if (cantidad === 2) {
+    return {
+      columnas: f(1),
+      filas: `${f(1)} ${f(0.3)} ${f(1)}`,
+      celdas: [celda(1, 1), celda(1, 3)],
+      descanso: { col: 1, fila: 2, vertical: false },
+    };
+  }
+  return {
+    columnas: f(1),
+    filas: `${f(1)} ${f(1)} ${f(0.3)} ${f(1)}`,
+    celdas: [celda(1, 1), celda(1, 2), celda(1, 4)],
+    descanso: { col: 1, fila: 3, vertical: false },
+  };
+}

@@ -1,13 +1,14 @@
 /**
  * tablero.js
  * El tablero de juego: dos o tres casillas grandes (imagen + texto) y, en el
- * modo cabeza con permanencia, una franja de descanso que no elige nada.
+ * modo cabeza con permanencia, un espacio de descanso que no elige nada
+ * (ver reparto() en entradas.js para su ubicación y medidas).
  *
  * Todo el texto del usuario se pone con textContent y la imagen solo si pasa
  * esImagenValida(): nunca innerHTML con datos del usuario.
  */
 import { esImagenValida } from './config.js';
-import { distribucion } from './entradas.js';
+import { reparto } from './entradas.js';
 
 const CLASE_BAJO_PUNTERO = 'is-bajo-puntero';
 const CLASE_ELEGIDA = 'is-elegida';
@@ -23,6 +24,7 @@ export function crearTablero(raiz) {
   let orden = [];
   let franja = /** @type {HTMLElement|null} */ (null);
   let cantidad = 0;
+  let conDescanso = false;
   const temporizadores = new Map();
 
   const zona = document.createElement('div');
@@ -31,9 +33,19 @@ export function crearTablero(raiz) {
 
   function acomodar() {
     if (!cantidad) return;
-    const { columnas, filas } = distribucion(cantidad, zona.clientWidth, zona.clientHeight);
-    zona.style.gridTemplateColumns = `repeat(${columnas}, minmax(0, 1fr))`;
-    zona.style.gridTemplateRows = `repeat(${filas}, minmax(0, 1fr))`;
+    const r = reparto(cantidad, zona.clientWidth, zona.clientHeight, conDescanso);
+    zona.style.gridTemplateColumns = r.columnas;
+    zona.style.gridTemplateRows = r.filas;
+    orden.forEach((el, i) => {
+      const c = r.celdas[i];
+      el.style.gridColumn = String(c.col);
+      el.style.gridRow = c.filas > 1 ? `${c.fila} / span ${c.filas}` : String(c.fila);
+    });
+    if (franja && r.descanso) {
+      franja.style.gridColumn = String(r.descanso.col);
+      franja.style.gridRow = String(r.descanso.fila);
+      franja.classList.toggle('vertical', r.descanso.vertical);
+    }
   }
 
   if (typeof ResizeObserver !== 'undefined') new ResizeObserver(acomodar).observe(zona);
@@ -47,11 +59,9 @@ export function crearTablero(raiz) {
     celdaEls.clear();
     temporizadores.forEach((t) => clearTimeout(t));
     temporizadores.clear();
-    if (franja) {
-      franja.remove();
-      franja = null;
-    }
+    franja = null;
     cantidad = celdas.length;
+    conDescanso = franjaDescanso && cantidad > 0;
     orden = [];
     celdas.forEach((c, i) => {
       const b = document.createElement('button');
@@ -83,12 +93,13 @@ export function crearTablero(raiz) {
       celdaEls.set(c.id, b);
       orden.push(b);
     });
-    if (franjaDescanso) {
+    if (conDescanso) {
       franja = document.createElement('div');
       franja.className = 'epe-sn-descanso';
       franja.setAttribute('aria-hidden', 'true');
-      franja.textContent = 'Descanso: acá el puntero no elige nada';
-      raiz.appendChild(franja);
+      franja.title = 'Descanso: acá el puntero no elige nada';
+      franja.textContent = 'Descanso';
+      zona.appendChild(franja);
     }
     acomodar();
   }

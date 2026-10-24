@@ -1,6 +1,6 @@
 /**
  * main.js
- * App EpE — Si-No con pulsadores: un tablero de dos casillas (y una tercera
+ * App EpE — Si-No con pulsadores o cabeza: un tablero de dos casillas (y una tercera
  * opcional), cada una con imagen y texto. La persona elige una y la app dice
  * el texto en voz alta.
  *
@@ -434,7 +434,7 @@ function iniciar(raiz) {
   el.btnDispositivo.addEventListener('click', () => {
     if (!G.EpeConfigurarDispositivo) return; // widget.js no cargó
     G.EpeConfigurarDispositivo.abrir(entradasDispositivo(), {
-      titulo: 'Configurar dispositivo — Si-No con pulsadores',
+      titulo: 'Configurar dispositivo — Si-No con pulsadores o cabeza',
       // Con pocos botones, un mismo botón puede dar dos eventos (toque y pulsación larga).
       combinar: config.acceso === 'pulsadores',
     }).then((r) => {
