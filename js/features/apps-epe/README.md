@@ -23,7 +23,7 @@ cómo declararlo en una app nueva o en un recurso de terceros:
 | SimoNeuro | sí | sí (avisa en el resumen) |
 | Duración de pulsación | sí | no: mide el tiempo real de pulsación |
 | Ver videos con pulsadores | sí | sí |
-| Si-No con pulsadores | sí | sí en teclas y barrido; no en el modo cabeza |
+| Si-No con pulsadores o cabeza | sí | sí en teclas y barrido; no en el modo cabeza |
 
 Piano, Lado Correcto y Vincular imagen-botón no usan barrido y por ahora no
 combinan; sumarlos es una línea en su llamada a `abrir`.
