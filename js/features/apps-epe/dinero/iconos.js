@@ -1,4 +1,4 @@
-/* Dibujos en SVG: billetes y monedas ilustrativos, y los productos. Nada se descarga de afuera. */
+/* Dibujos en SVG: billetes ilustrativos, y los productos. Nada se descarga de afuera. */
 (function (root) {
   'use strict';
 
@@ -75,27 +75,8 @@
     return svg;
   }
 
-  function moneda(valor) {
-    var d = buscar(Datos.MONEDAS, valor);
-    var id = 'mg' + (++contador);
-    var r = d.diametro / 2;
-    var svg = s('svg', {
-      viewBox: '0 0 100 100', role: 'img', class: 'moneda',
-      'aria-label': EpeI18n.t('a11y.moneda', { valor: EpeI18n.dinero(valor) }), focusable: 'false'
-    });
-    svg.appendChild(degradado(id, d.fondo, d.fondo2));
-    svg.appendChild(s('circle', { cx: 50, cy: 50, r: r, fill: 'url(#' + id + ')', stroke: 'rgba(0,0,0,.4)', 'stroke-width': 2 }));
-    svg.appendChild(s('circle', { cx: 50, cy: 50, r: r - 5, fill: 'none', stroke: d.texto, 'stroke-opacity': '.45', 'stroke-width': 1.5 }));
-    var n = String(valor);
-    svg.appendChild(s('text', {
-      x: 50, y: 50 + (n.length > 1 ? 9 : 11), 'text-anchor': 'middle', 'font-size': n.length > 1 ? 26 : 32,
-      fill: d.texto, 'font-family': 'DM Sans, system-ui, sans-serif', 'font-weight': 800
-    }, n));
-    return svg;
-  }
-
   function dinero(valor) {
-    return buscar(Datos.MONEDAS, valor) && !buscar(Datos.BILLETES, valor) ? moneda(valor) : billete(valor);
+    return billete(valor);
   }
 
   var DIBUJOS = {
@@ -284,5 +265,5 @@
 
   function medio(clave) { return objeto(MEDIO_OBJETO[clave] || clave); }
 
-  root.EpeIconos = { billete: billete, moneda: moneda, dinero: dinero, producto: producto, objeto: objeto, medio: medio };
+  root.EpeIconos = { billete: billete, dinero: dinero, producto: producto, objeto: objeto, medio: medio };
 })(window);

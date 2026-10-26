@@ -1,4 +1,4 @@
-/* Módulo 1: reconocer billetes. Se pide un valor y se toca el billete (o la moneda) correcto.
+/* Módulo 1: reconocer billetes. Se pide un valor y se toca el billete correcto.
    Sin tiempo límite. Si se equivoca, esa opción se apaga (queda una menos) y a los 2 errores se marca la correcta. */
 (function (root) {
   'use strict';
@@ -18,8 +18,7 @@
     app.pantalla.appendChild(contenedor);
 
     function consigna(r, hablada) {
-      var tipo = L.esMoneda(r.objetivo) ? 'moneda' : 'billete';
-      return t('rec.consigna.' + tipo, { valor: hablada ? EpeI18n.dineroHablado(r.objetivo) : EpeI18n.dinero(r.objetivo) });
+      return t('rec.consigna.billete', { valor: hablada ? EpeI18n.dineroHablado(r.objetivo) : EpeI18n.dinero(r.objetivo) });
     }
 
     function mostrar() {
@@ -35,10 +34,9 @@
       }
 
       var botones = r.opciones.map(function (v) {
-        var esMoneda = L.esMoneda(v);
         var b = h('button', {
           class: 'opcion', type: 'button', 'data-scan': '', 'data-valor': v, 'data-voz': EpeI18n.dineroHablado(v),
-          'aria-label': t(esMoneda ? 'a11y.moneda' : 'a11y.billete', { valor: EpeI18n.dinero(v) })
+          'aria-label': t('a11y.billete', { valor: EpeI18n.dinero(v) })
         }, EpeIconos.dinero(v));
         b.addEventListener('click', function () { elegir(v, b); });
         return b;
