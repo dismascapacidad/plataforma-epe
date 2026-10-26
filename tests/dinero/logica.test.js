@@ -175,3 +175,16 @@ test('todos los billetes están en todos los niveles de reconocer y de pagar', f
     });
   });
 });
+
+test('solo hay billetes en circulación: no hay monedas en los datos ni en los ejercicios', function () {
+  const BILLETES = [50, 100, 200, 500, 1000, 2000, 10000, 20000];
+  assert.strictEqual(D.MONEDAS, undefined);
+  [1, 2, 3].forEach(function (n) {
+    assert.deepStrictEqual(L.NIVELES_RECONOCER[n].pool.slice().sort((a, b) => a - b), BILLETES);
+    L.generarReconocer(n, 10, L.crearRng(n)).forEach(function (r) {
+      r.opciones.forEach(function (v) {
+        assert.ok(BILLETES.indexOf(v) !== -1, 'valor que no es billete: ' + v);
+      });
+    });
+  });
+});

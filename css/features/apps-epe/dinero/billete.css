@@ -1,6 +1,5 @@
-/* Billetes y monedas, estados de ejercicio. El resaltado del barrido es el de la plataforma (.epe-scan-actual). */
-.billete, .moneda { display: block; width: 100%; height: auto; }
-.moneda { max-width: 190px; margin-inline: auto; }
+/* Billetes, estados de ejercicio. El resaltado del barrido es el de la plataforma (.epe-scan-actual). */
+.billete { display: block; width: 100%; height: auto; }
 
 /* Ayuda: ring que late (queda fijo si se reduce el movimiento) */
 .pista {

@@ -1,5 +1,5 @@
 /* Datos de la práctica con dinero.
-   Billetes y monedas: los dibujos son ILUSTRATIVOS (no reproducen los reales) y se usan solo si falta la foto del billete (imágenes: BCRA).
+   Billetes (los 8 en circulación): los dibujos son ILUSTRATIVOS (no reproducen los reales) y se usan solo si falta la foto del billete (imágenes: BCRA).
    Los valores y los precios son de práctica y se editan acá, en un solo lugar. */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();
@@ -16,14 +16,6 @@
     { valor: 2000, fondo: '#b94a1f', fondo2: '#e57f55', texto: '#ffffff' },
     { valor: 10000, fondo: '#9a2f5f', fondo2: '#cf6592', texto: '#ffffff' },
     { valor: 20000, fondo: '#343c58', fondo2: '#626d8c', texto: '#ffffff' }
-  ];
-
-  // Diámetro relativo (el tamaño ayuda a distinguirlas, como en la vida real).
-  var MONEDAS = [
-    { valor: 1, diametro: 58, fondo: '#a8794a', fondo2: '#d3a574', texto: '#2a1a0a' },
-    { valor: 2, diametro: 64, fondo: '#b8923a', fondo2: '#e6c777', texto: '#2a2008' },
-    { valor: 5, diametro: 70, fondo: '#8f98a2', fondo2: '#cfd5db', texto: '#1c2128' },
-    { valor: 10, diametro: 78, fondo: '#7f8a94', fondo2: '#c2cad2', texto: '#161b20' }
   ];
 
   // Productos de práctica. Los precios son ejemplos, no precios de comercios.
@@ -46,5 +38,5 @@
     { id: 'pollo', nombre: 'un pollo', precio: 12000, icono: 'carne' }
   ];
 
-  return { BILLETES: BILLETES, MONEDAS: MONEDAS, PRODUCTOS: PRODUCTOS };
+  return { BILLETES: BILLETES, PRODUCTOS: PRODUCTOS };
 });

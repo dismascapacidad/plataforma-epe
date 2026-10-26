@@ -61,7 +61,6 @@
 
       'ej.progreso': 'Ejercicio {n} de {total}',
       'rec.consigna.billete': 'Tocá el billete de {valor}',
-      'rec.consigna.moneda': 'Tocá la moneda de {valor}',
       'rec.bien': '¡Muy bien!',
       'rec.otra': 'Probá de nuevo.',
       'rec.pista': 'Mirá el que está marcado.',
@@ -423,11 +422,9 @@
       'res.inicio': 'Inicio',
 
       'a11y.billete': 'Billete de práctica de {valor}',
-      'a11y.moneda': 'Moneda de práctica de {valor}',
       'a11y.pila': 'Billetes de {valor}. Tocá o arrastrá al mostrador.',
       'a11y.marcado': 'marcado',
       'a11y.billete.texto': 'BILLETE DE PRÁCTICA',
-      'a11y.moneda.texto': 'PRÁCTICA'
     }
   });
 

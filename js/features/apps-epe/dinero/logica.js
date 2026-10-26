@@ -6,14 +6,13 @@
   'use strict';
 
   var VALORES_BILLETES = Datos.BILLETES.map(function (b) { return b.valor; });
-  var VALORES_MONEDAS = Datos.MONEDAS.map(function (m) { return m.valor; });
 
   // Todos los billetes aparecen en todos los niveles: lo que sube de nivel es la cantidad de opciones (reconocer)
-  // y el precio del producto (pagar). Las monedas se suman recién en el nivel 3 de reconocer.
+  // y el precio del producto (pagar). Solo hay billetes: los 8 que circulan.
   var NIVELES_RECONOCER = {
     1: { pool: VALORES_BILLETES.slice(), opciones: 2 },
     2: { pool: VALORES_BILLETES.slice(), opciones: 3 },
-    3: { pool: VALORES_BILLETES.concat(VALORES_MONEDAS), opciones: 4 }
+    3: { pool: VALORES_BILLETES.slice(), opciones: 4 }
   };
 
   var NIVELES_PAGAR = {
@@ -58,8 +57,6 @@
     }
     return res;
   }
-
-  function esMoneda(valor) { return VALORES_MONEDAS.indexOf(valor) !== -1 && VALORES_BILLETES.indexOf(valor) === -1; }
 
   function generarReconocer(nivel, cantidad, rng) {
     var cfg = NIVELES_RECONOCER[nivel] || NIVELES_RECONOCER[1];
@@ -155,7 +152,6 @@
     crearRng: crearRng,
     mezclar: mezclar,
     sorteoSinRepetir: sorteoSinRepetir,
-    esMoneda: esMoneda,
     generarReconocer: generarReconocer,
     generarPagar: generarPagar,
     descomponer: descomponer,
