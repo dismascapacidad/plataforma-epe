@@ -96,6 +96,11 @@ var EpeAcceso = (function () {
     var claveStorage = "epe-acceso-" + opciones.id;
     var acciones = opciones.acciones;
     var permitirBarrido = opciones.permitirBarrido !== false;
+    // Opcional (apps con muchos elementos en pantalla, donde "una tecla por acción"
+    // no tiene sentido): opciones.directo = { sinTeclas: true, titulo, detalle }.
+    // El primer modo pasa a ser "usar la pantalla tal cual" (tocar, arrastrar, mouse
+    // o teclado), con ese título y detalle, y no muestra la lista de teclas.
+    var directoSinTeclas = opciones.directo && opciones.directo.sinTeclas === true ? opciones.directo : null;
 
     var estado = cargar();
     var editando = null; // clave de la tecla que se está asignando ("accion:<id>", "avanzar", "seleccionar")
@@ -171,7 +176,11 @@ var EpeAcceso = (function () {
     if (permitirBarrido) {
       contenedor.appendChild(el("h2", "epe-juego-h2", "Cómo vas a responder"));
       elModos = el("div", "epe-acceso-modos");
-      MODOS.forEach(function (m) {
+      MODOS.forEach(function (modoBase) {
+        var m =
+          modoBase.valor === "directo" && directoSinTeclas
+            ? { valor: "directo", titulo: directoSinTeclas.titulo, detalle: directoSinTeclas.detalle }
+            : modoBase;
         var label = el("label", "epe-acceso-modo");
         var radio = el("input");
         radio.type = "radio";
@@ -242,17 +251,17 @@ var EpeAcceso = (function () {
       contenedor.appendChild(elToque);
     }
 
-    contenedor.appendChild(el("h2", "epe-juego-h2", "Teclas"));
+    var elTeclasTitulo = el("h2", "epe-juego-h2", "Teclas");
+    contenedor.appendChild(elTeclasTitulo);
     contenedor.appendChild(elTeclas);
-    contenedor.appendChild(
-      el(
+    var elTeclasAyuda = el(
         "p",
         "epe-acceso-ayuda",
         esTactil()
           ? "Para cambiar una tecla, tocala y presioná la nueva en tu dispositivo o en el teclado en pantalla. Tocá afuera para cancelar."
           : "Para cambiar una tecla, hacé clic (o Enter) sobre ella y presioná la nueva. Esc cancela."
-      )
     );
+    contenedor.appendChild(elTeclasAyuda);
 
     function actualizarVelocidad() {
       if (elVelocidad) elVelocidad.hidden = estado.modo !== "auto";
@@ -359,6 +368,10 @@ var EpeAcceso = (function () {
 
     function dibujarTeclas() {
       elTeclas.innerHTML = "";
+      var sinLista = !!directoSinTeclas && estado.modo === "directo";
+      elTeclasTitulo.hidden = sinLista;
+      elTeclasAyuda.hidden = sinLista;
+      if (sinLista) return;
       if (estado.modo === "directo") {
         acciones.forEach(function (a) {
           elTeclas.appendChild(filaTecla("accion:" + a.id, a.etiqueta, estado.teclas[a.id]));

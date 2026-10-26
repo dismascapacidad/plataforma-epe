@@ -1,0 +1,228 @@
+/* Módulo "Ir al súper": tira de pasos, ordenar, y mini-súper con lista y changuito. Sin scroll. */
+
+.ej-super {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto auto auto;
+  grid-template-areas: "barra" "escena" "instruccion" "aviso" "acciones";
+  gap: 12px;
+}
+.ej-super .aviso { grid-area: aviso; min-height: 46px; font-size: 19px; }
+.ej-super .instruccion-caja { grid-area: instruccion; }
+
+.sp-escena {
+  grid-area: escena;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px;
+  border: 3px dashed var(--linea-fuerte);
+  border-radius: 24px;
+  background: var(--superficie-2);
+  overflow: hidden;
+}
+.nivel-3 .sp-escena { flex-direction: row; align-items: stretch; justify-content: center; gap: 16px; }
+
+/* Pasos como fichas */
+.sp-tira { display: flex; align-items: center; justify-content: center; gap: 8px; max-width: 100%; }
+.sp-flecha { font-size: 28px; font-weight: 800; color: var(--tinta-suave); }
+.sp-ficha {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 4px;
+  width: clamp(92px, 14vw, 156px);
+  padding: 8px 6px;
+  border: 3px solid var(--linea);
+  border-radius: 18px;
+  background: var(--superficie);
+  text-align: center;
+}
+.sp-ficha svg { width: clamp(40px, 9vh, 72px); height: auto; }
+.sp-ficha-txt { font-size: clamp(13px, 1.7vw, 18px); font-weight: 700; line-height: 1.15; }
+.sp-ficha.hecho, .sp-ficha.acierto { border-color: var(--ok); background: var(--ok-suave); }
+.sp-ranura { min-height: clamp(110px, 18vh, 150px); border-style: dashed; border-color: var(--acento); }
+.sp-interrogante { font-size: 56px; font-weight: 800; color: var(--acento); line-height: 1; }
+
+/* Nivel 2: casilleros numerados */
+.sp-slots { list-style: none; margin: 0; padding: 0; width: 100%; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; border-radius: 20px; transition: box-shadow .15s ease; }
+.sp-slots.zona-activa { box-shadow: 0 0 0 6px var(--acento); }
+.sp-slot { position: relative; flex: 1 1 0; min-width: 0; max-width: 190px; min-height: clamp(110px, 20vh, 160px); display: grid; place-items: center; padding: 22px 4px 4px; border: 3px dashed var(--linea-fuerte); border-radius: 18px; background: var(--superficie); }
+.sp-slot-num { position: absolute; top: 3px; left: 10px; font-size: 22px; font-weight: 800; color: var(--tinta-suave); }
+.sp-slot.lleno { border-style: solid; border-color: var(--ok); background: var(--ok-suave); }
+.sp-ficha.colocada { width: 100%; border: 0; background: transparent; padding: 0; }
+
+/* Botones para elegir */
+.sp-acciones { grid-area: acciones; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+.sp-acciones:empty { display: none; }
+.sp-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  align-content: center;
+  gap: 4px;
+  min-width: clamp(120px, 19vw, 200px);
+  min-height: 96px;
+  padding: 8px 12px;
+  border: 4px solid var(--linea);
+  border-radius: 22px;
+  background: var(--superficie);
+  box-shadow: var(--sombra);
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: border-color .15s ease, background-color .15s ease, opacity .15s ease;
+}
+.sp-card svg { width: clamp(40px, 8vh, 64px); height: auto; }
+.sp-card-txt { font-size: clamp(17px, 2.2vw, 22px); font-weight: 800; text-align: center; line-height: 1.15; }
+.sp-card:hover { border-color: var(--acento); }
+.sp-card.acierto { border-color: var(--ok); background: var(--ok-suave); }
+.sp-card.acierto::after { content: "✓"; position: absolute; top: 4px; right: 10px; color: var(--ok); font-size: 26px; font-weight: 800; }
+.sp-card.descartada { opacity: .45; border-style: dashed; }
+.sp-card.descartada::after { content: "✕"; position: absolute; top: 4px; right: 10px; color: var(--error); font-weight: 800; }
+.sp-card.arrastrable { touch-action: none; cursor: grab; }
+.sp-card.arrastrable.arrastrando { opacity: .45; }
+.sp-card.total { min-width: clamp(130px, 22vw, 210px); }
+.sp-total-num { font-size: clamp(26px, 4vw, 36px); font-weight: 800; font-variant-numeric: tabular-nums; }
+.sp-precio { font-size: 17px; font-weight: 800; color: var(--acento); font-variant-numeric: tabular-nums; }
+.sp-hint { font-size: 15px; font-weight: 600; color: var(--tinta-suave); text-align: center; }
+.sp-hint:empty { display: none; }
+
+/* Nivel 3: lista y changuito */
+.sp-card-info { flex: 1 1 0; min-width: 0; max-width: 400px; display: flex; flex-direction: column; gap: 6px; padding: 12px 16px; border: 3px solid var(--linea-fuerte); border-radius: 20px; background: var(--superficie); overflow: hidden; }
+.sp-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.sp-lista-item, .sp-carro-item { display: flex; align-items: center; gap: 10px; padding: 4px 8px; border-radius: 12px; font-size: clamp(17px, 2.2vw, 22px); font-weight: 700; }
+.sp-carro-items { display: grid; gap: 6px; align-content: start; }
+.sp-lista-item.actual { background: var(--acento-suave); outline: 3px solid var(--acento); }
+.sp-lista-item.hecho .sp-lista-nombre { text-decoration: line-through; color: var(--tinta-suave); }
+.sp-lista-item.hecho::after { content: "✓"; margin-left: auto; color: var(--ok); font-weight: 800; }
+.sp-lista-icono svg { width: 36px; height: 36px; display: block; }
+.sp-carro-item .sp-precio { margin-left: auto; font-size: clamp(17px, 2.2vw, 22px); }
+.sp-vacio { color: var(--tinta-suave); font-size: 16px; }
+
+/* ---------- Inicio con 4 tarjetas: dos columnas (o cuatro si hay poco alto) ---------- */
+@media (min-width: 721px) {
+  .inicio { gap: 12px; }
+  .tarjetas { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .tarjeta { padding: 12px 16px 14px; gap: 6px; }
+  .tarjeta-arte { height: clamp(70px, 13vh, 150px); }
+  .tarjeta-desc { font-size: 16px; }
+  .tarjeta-accion { font-size: 16px; margin-top: 0; }
+  .icono-medio { width: clamp(34px, 6vh, 56px); padding: 5px; border-radius: 12px; }
+  .iconos-medios { grid-template-columns: repeat(4, auto); }
+}
+@media (min-width: 721px) and (max-height: 480px) {
+  .tarjetas { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  .tarjeta { padding: 8px 10px; gap: 4px; }
+  .tarjeta-arte { height: 64px; margin: 0; }
+  .tarjeta-titulo { font-size: 17px; }
+  .tarjeta-desc, .tarjeta-accion { display: none; }
+  .abanico { width: 92%; }
+  .icono-medio { width: 28px; padding: 3px; border-radius: 8px; }
+  .iconos-medios { gap: 3px; }
+  .pronto-titulo, .pronto-item { font-size: 12px; padding-block: 2px; }
+  .nota { font-size: 12px; }
+}
+
+/* ---------- Apilado: pantalla angosta o vertical ---------- */
+@media (max-width: 720px), (max-aspect-ratio: 1 / 1) {
+  .ej-super { gap: 10px; }
+  .sp-escena { padding: 8px; gap: 6px; }
+  .sp-tira { gap: 4px; }
+  .sp-flecha { font-size: 20px; }
+  .sp-ficha { width: clamp(70px, 24vw, 110px); padding: 6px 4px; }
+  .sp-ficha svg { width: clamp(34px, 6vh, 52px); }
+  .sp-ficha-txt { font-size: 12px; }
+  .sp-ranura { min-height: 96px; }
+  .sp-slots { gap: 6px; }
+  .sp-slot { flex: 0 0 calc(50% - 3px); min-height: 84px; padding-top: 16px; }
+  .sp-slot-num { font-size: 16px; left: 6px; }
+  .sp-acciones { gap: 8px; }
+  .sp-card { flex: 1 1 calc(50% - 8px); min-width: 0; min-height: 70px; padding: 6px 8px; border-width: 3px; border-radius: 16px; }
+  .sp-card svg { width: clamp(30px, 5.5vh, 44px); }
+  .sp-card-txt { font-size: 15px; }
+  .nivel-3 .sp-escena { gap: 8px; }
+  .sp-card-info { padding: 8px 10px; }
+  .sp-lista-item, .sp-carro-item { font-size: 15px; padding: 2px 6px; gap: 6px; }
+  .sp-lista-icono svg { width: 26px; height: 26px; }
+  .sp-carro-item .sp-precio { font-size: 15px; }
+  .sp-precio { font-size: 14px; }
+  .sp-card.total { flex-basis: calc(33% - 8px); }
+  .sp-total-num { font-size: 20px; }
+  .ej-super .instruccion { font-size: 21px; }
+}
+
+/* ---------- Celular apaisado: poco alto ---------- */
+@media (max-height: 480px) {
+  .ej-super { gap: 6px; }
+  .sp-escena { padding: 6px; gap: 4px; border-width: 2px; }
+  .sp-ficha { width: clamp(84px, 14vw, 120px); padding: 4px; gap: 2px; border-width: 2px; }
+  .sp-ficha svg { width: 34px; }
+  .sp-ficha-txt { font-size: 12px; }
+  .sp-ranura { min-height: 0; }
+  .sp-interrogante { font-size: 34px; }
+  .sp-flecha { font-size: 18px; }
+  .sp-slots { flex-wrap: nowrap; gap: 6px; }
+  .sp-slot { flex: 1 1 0; min-height: 70px; padding-top: 14px; }
+  .sp-slot-num { font-size: 14px; top: 1px; left: 6px; }
+  .sp-card { min-width: 0; flex: 1 1 0; min-height: 52px; padding: 4px 6px; border-width: 3px; gap: 0; }
+  .sp-card svg { width: 28px; }
+  .sp-card-txt { font-size: 13px; }
+  .sp-precio { font-size: 12px; }
+  .sp-card.total { min-height: 44px; }
+  .sp-total-num { font-size: 18px; }
+  .sp-hint { display: none; }
+  .ej-super .instruccion { font-size: 17px; }
+  .ej-super .aviso { min-height: 32px; font-size: 15px; padding: 2px 12px; }
+  .sp-card-info { padding: 4px 8px; gap: 2px; }
+  .sp-card-info .zona-titulo { font-size: 11px; }
+  .sp-lista { gap: 2px; }
+  .sp-lista-item, .sp-carro-item { font-size: 13px; padding: 0 4px; }
+  .sp-lista-icono svg { width: 20px; height: 20px; }
+}
+
+/* Inicio en celular vertical: cuatro tarjetas compactas para que entren sin desplazarse */
+@media (max-width: 720px) {
+  .inicio { gap: 8px; }
+  .tarjetas { gap: 8px; }
+  .tarjeta { padding: 8px 12px; gap: 2px 12px; }
+  .tarjeta-arte { flex-basis: 36%; height: 72px; }
+  .tarjeta-titulo { font-size: 20px; }
+  .tarjeta-desc { font-size: 14px; line-height: 1.25; }
+  .iconos-medios { grid-template-columns: repeat(4, auto); gap: 3px; }
+  .icono-medio { width: 28px; padding: 3px; border-radius: 8px; }
+  .arte-producto { width: 44px; height: 44px; padding: 5px; right: 6px; bottom: 4px; }
+  .pronto-titulo { font-size: 12px; }
+  .pronto-item { font-size: 13px; padding: 2px 10px; }
+  .nota { font-size: 12px; }
+}
+
+/* Tableta vertical: hay lugar, así que todo se ve más grande que en el celular */
+@media (min-width: 721px) and (max-aspect-ratio: 1 / 1) {
+  .sp-escena { gap: 16px; }
+  .sp-tira { gap: 10px; }
+  .sp-flecha { font-size: 30px; }
+  .sp-ficha { width: clamp(130px, 18vw, 170px); padding: 10px 8px; }
+  .sp-ficha svg { width: clamp(52px, 8vh, 84px); }
+  .sp-ficha-txt { font-size: 18px; }
+  .sp-ranura { min-height: 190px; }
+  .sp-slots { flex-wrap: nowrap; gap: 10px; }
+  .sp-slot { flex: 1 1 0; min-height: 190px; padding-top: 26px; }
+  .sp-slot-num { font-size: 24px; }
+  .sp-card { flex: 0 1 auto; min-width: clamp(160px, 24vw, 220px); min-height: 110px; padding: 10px 14px; border-width: 4px; border-radius: 22px; }
+  .sp-card svg { width: clamp(48px, 7vh, 72px); }
+  .sp-card-txt { font-size: 21px; }
+  .sp-card.total { flex: 0 1 auto; }
+  .sp-total-num { font-size: 32px; }
+  .sp-precio { font-size: 18px; }
+  .sp-card-info { padding: 16px 20px; max-width: 360px; }
+  .sp-lista-item, .sp-carro-item { font-size: 22px; padding: 6px 10px; gap: 10px; }
+  .sp-lista-icono svg { width: 38px; height: 38px; }
+  .sp-carro-item .sp-precio { font-size: 22px; }
+  .ej-super .instruccion { font-size: 30px; }
+}

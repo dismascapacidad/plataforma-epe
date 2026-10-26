@@ -1,0 +1,55 @@
+/*
+  roles.css — Aprendo con dinero
+  Los roles de color de esta app, armados sobre los tokens de la plataforma
+  (css/diseno/tokens.css y theme.css). Lo que existe en la plataforma se toma de
+  ahí; solo lo que no existe (estados con contraste ya verificado para texto) es
+  propio de la app. Se define sobre body.epe-dinero, así llega a toda la página.
+*/
+
+.epe-dinero {
+  --fuente: var(--font-display);
+  --radio-m: 18px;
+  --radio-l: 26px;
+  --alto-toque: 56px;
+
+  --fondo: var(--shell-bg);
+  --superficie: var(--surf);
+  --superficie-2: var(--surf-2);
+  --tinta: var(--txt);
+  --tinta-suave: var(--txt-2);
+  --linea: var(--bdr);
+  --linea-fuerte: #9fb1b6;
+  --acento: var(--teal-700);
+  --acento-hover: color-mix(in srgb, var(--teal-700) 78%, #000);
+  --acento-tinta: #ffffff;
+  --acento-suave: var(--teal-100);
+  --foco: #0b4f9c;
+  --ok: #1f7a46;
+  --ok-suave: #e1f4e8;
+  --error: #b3392c;
+  --error-suave: #fbe6e3;
+  --info-suave: #e8eefb;
+  --sombra: 0 1px 2px rgba(23, 26, 40, 0.08), 0 8px 24px rgba(23, 26, 40, 0.08);
+  --velo: rgba(15, 18, 32, 0.55);
+}
+
+[data-theme="dark"] .epe-dinero {
+  --superficie: var(--shell-bg-2);
+  --superficie-2: var(--navy-600);
+  --tinta: var(--txt-on-navy);
+  --tinta-suave: #b4bccd;
+  --linea: rgba(255, 255, 255, 0.16);
+  --linea-fuerte: rgba(255, 255, 255, 0.38);
+  --acento: var(--teal-500);
+  --acento-hover: color-mix(in srgb, var(--teal-500) 80%, #fff);
+  --acento-tinta: #06201f;
+  --acento-suave: color-mix(in srgb, var(--teal-500) 20%, var(--navy-800));
+  --foco: #8cc2ff;
+  --ok: #6fd29a;
+  --ok-suave: #15332a;
+  --error: #ff9b8f;
+  --error-suave: #3b1f24;
+  --info-suave: #1b2748;
+  --sombra: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
+  --velo: rgba(5, 7, 16, 0.7);
+}

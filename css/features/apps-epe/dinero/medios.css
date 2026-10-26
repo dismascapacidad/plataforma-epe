@@ -1,0 +1,461 @@
+/* Módulo "¿Cómo pago?": cartel del comercio, lo que llevás, el celular o posnet de práctica, y los pasos. Sin scroll. */
+
+.ej-medios {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto auto auto;
+  grid-template-areas: "barra barra" "escena panel" "instruccion instruccion" "aviso aviso" "acciones acciones";
+  gap: 12px;
+}
+.ej-medios .aviso { grid-area: aviso; min-height: 46px; font-size: 19px; }
+
+/* ---------- Cartel del comercio ---------- */
+.cartel {
+  grid-area: escena;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  padding: 12px 16px;
+  border: 3px solid var(--linea-fuerte);
+  border-radius: 24px;
+  background: var(--superficie);
+  box-shadow: var(--sombra);
+  overflow: hidden;
+  transition: border-color .15s ease, background-color .15s ease;
+}
+.cartel.acierto { border-color: var(--ok); background: var(--ok-suave); }
+.cartel-cab { display: flex; align-items: center; gap: 10px; }
+.cartel-logo { width: 40px; height: 40px; flex: none; }
+.cartel-logo svg, .cartel-arte svg { width: 100%; height: 100%; }
+.cartel-nombre { font-size: clamp(20px, 2.4vw, 26px); font-weight: 800; letter-spacing: -.01em; line-height: 1.1; }
+.cartel-producto { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-radius: 16px; background: var(--acento-suave); }
+.cartel-arte { width: 46px; height: 46px; flex: none; }
+.cartel-datos { display: grid; gap: 0; min-width: 0; flex: 1; }
+.cartel-consigna { font-size: 17px; font-weight: 700; }
+.cartel-precio { display: flex; align-items: baseline; gap: 8px; }
+.cartel-precio strong { font-size: clamp(28px, 4vh, 38px); font-weight: 800; line-height: 1.1; color: var(--acento); font-variant-numeric: tabular-nums; }
+.cartel-acepta { display: grid; gap: 4px; }
+.cartel-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.cartel-chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 12px 3px 6px; border: 2px solid var(--linea-fuerte); border-radius: 999px; font-size: 16px; font-weight: 700; background: var(--superficie-2); }
+.cartel-chip svg { width: 28px; height: 28px; }
+.cartel-alias { font-size: 17px; }
+.cartel-alias strong { font-weight: 800; letter-spacing: .01em; overflow-wrap: anywhere; }
+.cartel-clave { font-size: 17px; }
+.cartel-clave strong { font-weight: 800; letter-spacing: .2em; font-variant-numeric: tabular-nums; }
+.qr-cartel {
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border: 3px dashed var(--linea-fuerte);
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--tinta-suave);
+  transition: border-color .15s ease, background-color .15s ease;
+}
+.qr-cartel svg { width: clamp(64px, 11vh, 96px); height: auto; border-radius: 6px; }
+.qr-cartel.zona-activa { border-style: solid; border-color: var(--acento); background: var(--acento-suave); }
+
+/* ---------- Panel (lo que llevás / el dispositivo) ---------- */
+.panel {
+  grid-area: panel;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 0;
+  padding: 12px;
+  border: 3px dashed var(--linea-fuerte);
+  border-radius: 24px;
+  background: var(--superficie-2);
+  overflow: hidden;
+}
+.panel-lleva .zona-titulo { align-self: flex-start; }
+.lleva-lista { flex: 1; min-height: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px 22px; }
+.lleva-item { display: grid; justify-items: center; gap: 4px; max-width: 150px; text-align: center; font-size: 16px; font-weight: 700; }
+.lleva-item svg { width: clamp(64px, 12vh, 96px); height: auto; }
+
+.dispositivo { display: flex; flex-direction: column; align-items: center; gap: 8px; max-height: 100%; min-height: 0; transition: box-shadow .15s ease; }
+.dispositivo.zona-activa { box-shadow: 0 0 0 6px var(--acento); }
+
+/* Celular de práctica: la pantalla es siempre clara */
+.dispositivo.celular { width: min(100%, 300px); height: 100%; max-height: 100%; padding: 8px 8px 6px; border-radius: 26px; background: #2b2f3a; gap: 0; }
+.cel-barra { align-self: stretch; padding: 7px 10px; border-radius: 16px 16px 0 0; background: #127b72; color: #fff; font-size: 15px; font-weight: 800; text-align: center; }
+.cel-cuerpo { flex: 1; min-height: 0; align-self: stretch; display: flex; flex-direction: column; justify-content: center; gap: 8px; padding: 10px 12px; background: #f1faf8; color: #14302d; overflow: hidden; }
+.dispositivo.celular .cel-barra + .cel-cuerpo { border-radius: 0 0 16px 16px; }
+.dispositivo.celular > .cel-cuerpo:first-child { border-radius: 16px; }
+.cel-pie { margin-top: 4px; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #aab3bf; }
+.cel-fila { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 6px 0; border-bottom: 1px solid #cfe3df; }
+.cel-etq { font-size: 13px; font-weight: 700; color: #4a6360; }
+.cel-val { font-size: 17px; font-weight: 800; text-align: right; overflow-wrap: anywhere; }
+.cel-campo { padding: 10px 12px; border: 2px dashed #9fb8b4; border-radius: 10px; font-size: 15px; color: #6c8480; background: #fff; }
+.cel-grande { font-size: 32px; font-weight: 800; font-variant-numeric: tabular-nums; color: #127b72; }
+.cel-titulo { font-size: 19px; font-weight: 800; text-align: center; }
+.cel-ok { align-self: center; display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; background: #1f8a4c; color: #fff; font-size: 30px; font-weight: 800; }
+.cel-inicio, .cel-menu { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.cel-inicio { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.cel-tile { display: grid; justify-items: center; align-content: center; gap: 4px; min-height: 64px; padding: 8px; border-radius: 16px; background: #dcebe8; }
+.cel-tile.gris { background: #e6ecee; }
+.cel-tile svg { width: 38px; height: 38px; }
+.cel-tile-txt { font-size: 14px; font-weight: 800; text-align: center; line-height: 1.1; }
+.cel-tile.app { background: #127b72; color: #fff; }
+.cel-app-logo { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 10px; background: #fff; color: #127b72; font-weight: 800; font-size: 16px; }
+.cel-tile.resaltar { outline: 4px solid #e0852b; outline-offset: 2px; animation: latido 1.3s ease-in-out infinite; }
+@keyframes latido { 50% { outline-offset: 5px; } }
+.cel-camara { display: grid; justify-items: center; gap: 8px; }
+.cel-visor { width: 70%; aspect-ratio: 1; border-radius: 14px; background: linear-gradient(135deg, #2b3b3a, #4a6360); border: 4px solid #fff; box-shadow: inset 0 0 0 6px rgba(255, 255, 255, .15); }
+.cel-msg { font-size: 14px; font-weight: 700; text-align: center; }
+
+/* Posnet de práctica */
+.dispositivo.posnet { width: min(100%, 240px); padding: 12px; border-radius: 20px; background: #2b2f3a; gap: 10px; }
+.posnet-pantalla { align-self: stretch; display: grid; gap: 4px; padding: 10px; border-radius: 10px; background: #cfe9e5; color: #0e3b36; text-align: center; }
+.posnet-etq { font-size: 13px; font-weight: 800; letter-spacing: .1em; }
+.posnet-monto { font-size: 30px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.05; }
+.posnet-msg { font-size: 15px; font-weight: 700; }
+.posnet-chico { font-size: 11px; font-weight: 600; opacity: .8; }
+.posnet-ok { font-size: 24px; font-weight: 800; color: #14663a; }
+.posnet-teclas { display: grid; grid-template-columns: repeat(3, 26px); gap: 6px; }
+.posnet-teclas span { height: 14px; border-radius: 4px; background: #8b93a1; }
+.pin { display: flex; justify-content: center; gap: 10px; padding: 6px 0; }
+.pin-punto { width: 16px; height: 16px; border-radius: 50%; border: 3px solid #0e3b36; transition: background-color .12s ease; }
+.pin-punto.lleno { background: #0e3b36; }
+.barra-espera { height: 12px; border-radius: 6px; background: #a9cdc8; overflow: hidden; }
+.barra-espera span { display: block; height: 100%; width: 0; background: #127b72; animation: llenar 1.8s linear forwards; }
+@keyframes llenar { to { width: 100%; } }
+
+/* Vendedor */
+.dispositivo.vendedor { gap: 10px; }
+.vendedor-arte { width: clamp(70px, 16vh, 120px); aspect-ratio: 1; }
+.vendedor-arte svg { width: 100%; height: 100%; }
+.burbuja { position: relative; max-width: 260px; padding: 10px 16px; border: 3px solid var(--linea-fuerte); border-radius: 18px; background: var(--superficie); font-size: 19px; font-weight: 700; text-align: center; }
+.burbuja:empty { display: none; }
+.feliz .burbuja { border-color: var(--ok); background: var(--ok-suave); }
+
+/* Efectivo y ticket */
+.dispositivo.billetera { gap: 6px; }
+.ef-precio { font-size: clamp(30px, 6vh, 44px); font-weight: 800; color: var(--acento); font-variant-numeric: tabular-nums; line-height: 1.05; }
+.mini-billetes { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.mini-billete { width: clamp(64px, 9vw, 96px); }
+.ef-icono svg { width: clamp(64px, 12vh, 96px); height: auto; }
+.ef-texto { font-size: 18px; font-weight: 700; text-align: center; max-width: 280px; }
+.dispositivo.ticket { flex-direction: row; gap: 14px; }
+.ticket-arte svg { width: clamp(60px, 12vh, 90px); height: auto; }
+.ticket-datos { display: grid; gap: 2px; }
+.ticket-linea { font-size: 18px; font-weight: 800; }
+
+/* ---------- Consigna y paso ---------- */
+.instruccion-caja { grid-area: instruccion; display: grid; justify-items: center; gap: 2px; }
+.paso-num { font-size: 14px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--tinta-suave); }
+.paso-num:empty { display: none; }
+.instruccion { font-size: clamp(22px, 3.2vw, 32px); font-weight: 800; letter-spacing: -.01em; line-height: 1.15; text-align: center; text-wrap: balance; }
+
+/* ---------- Botones de cada paso ---------- */
+.medios-acciones { grid-area: acciones; display: grid; gap: 12px; justify-content: center; align-content: start; }
+.medios-acciones:empty { display: none; }
+.medios-acciones > .btn-grande { min-width: min(520px, 92vw); }
+.medios-acciones.dos { grid-template-columns: repeat(2, minmax(0, 300px)); }
+.medios-acciones.dos > .btn-grande { min-width: 0; }
+.btn-grande { min-height: 64px; padding: 0 28px; font-size: 22px; }
+
+.opciones-medios { justify-content: stretch; }
+.opciones-medios.n-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.opciones-medios.n-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.opciones-medios.n-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.medio-card {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 4px;
+  min-height: 92px;
+  padding: 8px 10px;
+  border: 4px solid var(--linea);
+  border-radius: 22px;
+  background: var(--superficie);
+  box-shadow: var(--sombra);
+  transition: border-color .15s ease, background-color .15s ease, opacity .15s ease;
+}
+.medio-card svg { width: clamp(40px, 8vh, 60px); height: clamp(40px, 8vh, 60px); }
+.medio-nombre { font-size: 20px; font-weight: 800; }
+.medio-card:hover { border-color: var(--acento); }
+.medio-card.acierto { border-color: var(--ok); background: var(--ok-suave); }
+.medio-card.descartada { opacity: .45; border-style: dashed; }
+.medio-card.descartada::after, .opcion-texto.descartada::after, .btn.descartada::after { content: "✕"; color: var(--error); font-weight: 800; }
+.opcion-texto.descartada::after { position: absolute; top: 6px; right: 12px; font-size: 22px; }
+.btn.descartada::after { margin-left: 8px; }
+.medio-card.descartada::after { position: absolute; top: 4px; right: 10px; }
+.medio-card.acierto::after { content: "✓"; position: absolute; top: 4px; right: 10px; color: var(--ok); font-size: 26px; font-weight: 800; }
+
+.opciones-texto { justify-content: stretch; }
+.opciones-texto.n-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.opciones-texto.n-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.opcion-texto {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 76px;
+  padding: 8px 12px;
+  border: 4px solid var(--linea);
+  border-radius: 20px;
+  background: var(--superficie);
+  box-shadow: var(--sombra);
+  font-size: clamp(20px, 2.6vw, 28px);
+  text-align: center;
+  overflow-wrap: anywhere;
+  transition: border-color .15s ease, opacity .15s ease;
+}
+.opcion-texto:hover { border-color: var(--acento); }
+.opcion-texto.descartada { opacity: .45; border-style: dashed; }
+
+.objeto-arrastrable {
+  justify-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 76px;
+  padding: 8px 26px 8px 16px;
+  border: 4px solid var(--linea-fuerte);
+  border-radius: 22px;
+  background: var(--superficie);
+  box-shadow: 3px 4px 0 var(--linea), 6px 8px 0 var(--superficie-2);
+  touch-action: none;
+  cursor: grab;
+}
+.objeto-arrastrable svg { width: 60px; height: 60px; }
+.objeto-arrastrable:hover { border-color: var(--acento); }
+.objeto-arrastrable.arrastrando { opacity: .45; }
+.objeto-txt { font-size: 22px; font-weight: 800; }
+.hint-arrastre { text-align: center; font-size: 15px; font-weight: 600; color: var(--tinta-suave); }
+
+/* ---------- Apilado: pantalla angosta o vertical ---------- */
+@media (max-width: 720px), (max-aspect-ratio: 1 / 1) {
+  .ej-medios {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr) auto auto auto;
+    grid-template-areas: "barra" "escena" "panel" "instruccion" "aviso" "acciones";
+    gap: 10px;
+  }
+  .cartel { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 6px 12px; padding: 10px 14px; }
+  .cartel-cab, .cartel-producto, .cartel-acepta { grid-column: 1; }
+  .cartel-alias, .cartel-clave { grid-column: 1; font-size: 15px; }
+  .qr-cartel { grid-column: 2; grid-row: 1 / span 4; flex-direction: column; gap: 4px; align-self: center; }
+  .cartel:not(:has(.qr-cartel)) { grid-template-columns: minmax(0, 1fr); }
+  .cartel-producto { padding: 4px 10px; }
+  .cartel-arte { width: 36px; height: 36px; }
+  .cartel-consigna { font-size: 15px; }
+  .cartel-precio { gap: 6px; }
+  .cartel-precio { flex-direction: column; align-items: flex-start; gap: 0; }
+  .cartel-precio strong { font-size: 26px; }
+  .cartel-precio .precio-etiqueta { font-size: 11px; }
+  .cartel-producto { min-width: 0; overflow: hidden; }
+  .cartel-chip { font-size: 14px; padding: 2px 10px 2px 4px; }
+  .cartel-chip svg { width: 22px; height: 22px; }
+  .panel { padding: 8px; }
+  .lleva-lista { flex-wrap: nowrap; gap: 8px; }
+  .lleva-item { font-size: 14px; }
+  .lleva-item svg { width: 54px; }
+  .opciones-medios.n-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .medio-card { min-height: 72px; }
+  .opciones-texto.n-3 { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .opcion-texto { min-height: 56px; }
+  .medios-acciones.dos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .medios-acciones > .btn-grande { min-width: 0; width: 100%; }
+  .btn-grande { min-height: 56px; padding: 0 16px; font-size: 19px; }
+  .instruccion { font-size: 21px; }
+  .qr-cartel svg { width: 64px; }
+}
+
+/* ---------- Celular apaisado: poco alto ---------- */
+@media (max-height: 480px) {
+  .ej-medios { gap: 6px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto auto auto; grid-template-areas: "barra barra" "escena panel" "instruccion instruccion" "aviso aviso" "acciones acciones"; }
+  .cartel { display: flex; padding: 6px 10px; gap: 4px; }
+  .cartel-cab { gap: 6px; }
+  .cartel-logo { width: 24px; height: 24px; }
+  .cartel-nombre { font-size: 16px; }
+  .cartel-consigna { display: none; }
+  .cartel-producto { padding: 2px 8px; gap: 8px; }
+  .cartel-arte { width: 28px; height: 28px; }
+  .cartel-precio strong { font-size: 22px; }
+  .cartel-acepta .zona-titulo { display: none; }
+  .cartel-chips { gap: 4px; }
+  .cartel-chip { font-size: 12px; padding: 1px 8px 1px 3px; }
+  .cartel-chip svg { width: 18px; height: 18px; }
+  .cartel-alias, .cartel-clave { font-size: 12px; }
+  .qr-cartel { padding: 3px 6px; gap: 6px; font-size: 10px; }
+  .qr-cartel svg { width: 44px; }
+  .panel { padding: 6px; gap: 4px; }
+  .lleva-item svg { width: 40px; }
+  .lleva-item { font-size: 12px; }
+  .dispositivo.celular { width: min(100%, 240px); padding: 5px 5px 3px; border-radius: 18px; }
+  .cel-barra { padding: 3px 8px; font-size: 12px; }
+  .cel-cuerpo { padding: 4px 8px; gap: 4px; }
+  .cel-pie { display: none; }
+  .cel-fila { padding: 2px 0; }
+  .cel-val { font-size: 14px; }
+  .cel-etq { font-size: 11px; }
+  .cel-campo { padding: 4px 8px; font-size: 13px; }
+  .cel-grande { font-size: 24px; }
+  .cel-tile { min-height: 40px; padding: 4px; gap: 0; }
+  .cel-tile svg, .cel-app-logo { width: 22px; height: 22px; font-size: 11px; }
+  .cel-tile-txt { font-size: 11px; }
+  .cel-inicio, .cel-menu { gap: 5px; }
+  .cel-ok { width: 30px; height: 30px; font-size: 18px; }
+  .cel-titulo { font-size: 14px; }
+  .cel-visor { width: 42%; }
+  .cel-msg { font-size: 11px; }
+  .dispositivo.posnet { width: 100%; max-width: 190px; padding: 6px; gap: 4px; }
+  .posnet-pantalla { padding: 4px; gap: 1px; }
+  .posnet-monto { font-size: 20px; }
+  .posnet-msg { font-size: 12px; }
+  .posnet-chico { display: none; }
+  .posnet-ok { font-size: 17px; }
+  .posnet-teclas { grid-template-columns: repeat(3, 20px); gap: 3px; }
+  .posnet-teclas span { height: 8px; }
+  .vendedor-arte { width: 52px; }
+  .burbuja { font-size: 14px; padding: 4px 10px; }
+  .ef-precio { font-size: 24px; }
+  .mini-billete { width: 52px; }
+  .ef-icono svg { width: 44px; }
+  .ef-texto { font-size: 13px; }
+  .ticket-arte svg { width: 44px; }
+  .ticket-linea { font-size: 14px; }
+  .instruccion { font-size: 17px; }
+  .paso-num { display: none; }
+  .btn-grande { min-height: 46px; font-size: 17px; }
+  .medio-card { min-height: 54px; padding: 4px; gap: 0; border-width: 3px; }
+  .medio-card svg { width: 28px; height: 28px; }
+  .medio-nombre { font-size: 14px; }
+  .opcion-texto { min-height: 46px; font-size: 16px; border-width: 3px; }
+  .opciones-texto.n-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .objeto-arrastrable { min-height: 46px; padding: 4px 16px 4px 10px; gap: 8px; }
+  .objeto-arrastrable svg { width: 34px; height: 34px; }
+  .objeto-txt { font-size: 16px; }
+  .hint-arrastre { display: none; }
+  .medios-acciones { gap: 6px; }
+}
+
+
+/* ---------- Clave de práctica en la ventana de inicio ---------- */
+.clave-practica { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; padding: 10px 14px; border: 2px dashed var(--linea-fuerte); border-radius: 16px; background: var(--acento-suave); }
+.clave-titulo { font-size: 16px; font-weight: 800; }
+.clave-digitos { display: flex; gap: 6px; }
+.clave-digito { display: grid; place-items: center; width: 40px; height: 48px; border-radius: 10px; background: var(--superficie); border: 2px solid var(--acento); font-size: 28px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--acento); }
+.clave-aviso { flex: 1 1 200px; font-size: 14px; font-weight: 600; color: var(--tinta-suave); }
+@media (max-height: 480px) {
+  .clave-practica { padding: 4px 10px; gap: 2px 10px; }
+  .clave-digito { width: 28px; height: 32px; font-size: 20px; }
+  .clave-titulo, .clave-aviso { font-size: 12px; }
+}
+
+/* ---------- Modo "Hago los gestos": botones dentro del dispositivo, teclado, billetera ---------- */
+.cel-boton, .cel-tile, .billete-btn, .ticket-btn, .tarjeta-saliente, .tecla {
+  font: inherit; cursor: pointer; touch-action: manipulation;
+  transition: transform .1s ease, box-shadow .15s ease, background-color .15s ease, opacity .15s ease;
+}
+button.cel-tile { border: 0; color: #14302d; }
+button.cel-tile.app { color: #fff; }
+button.cel-tile:hover, .cel-boton:hover { box-shadow: 0 0 0 4px #e0852b; }
+.cel-botones { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 4px; }
+.cel-boton { min-height: 48px; padding: 6px 10px; border: 0; border-radius: 12px; background: #127b72; color: #fff; font-size: 17px; font-weight: 800; }
+.cel-boton.sec { background: #dcebe8; color: #14302d; }
+.cel-boton:only-child { grid-column: 1 / -1; }
+.cel-visor.leido { background: linear-gradient(135deg, #1f8a4c, #3fae6c); }
+.cel-app-logo.gris { background: #fff; color: #5b6b69; }
+.cel-campo { min-height: 40px; }
+.cel-campo:not(.vacio) { border-style: solid; border-color: #127b72; color: #14302d; font-weight: 800; font-size: 17px; }
+
+/* Teclado numérico */
+.teclado { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; align-self: stretch; }
+.tecla { min-height: 44px; border: 0; border-radius: 10px; background: #fff; color: #14302d; font-size: 22px; font-weight: 800; box-shadow: 0 2px 0 #b9cfcb; }
+.tecla:active { transform: translateY(2px); box-shadow: none; }
+.tecla.accion { background: #e6ecee; font-size: 20px; }
+.tecla.ok { background: #127b72; color: #fff; font-size: 17px; }
+.tecla:disabled { opacity: .4; cursor: default; }
+.tecla.guia { outline: 4px solid #e0852b; outline-offset: 1px; animation: latido 1.3s ease-in-out infinite; }
+.posnet.con-teclado .tecla { background: #c9ced6; box-shadow: 0 2px 0 #7e8794; }
+.posnet.con-teclado .tecla.ok { background: #1f8a4c; }
+.posnet.con-teclado .teclado { width: 100%; max-width: 220px; }
+.pin-punto.bien { background: #1f8a4c; border-color: #1f8a4c; }
+.pin-punto.mal { border-color: #c2362f; background: #c2362f; }
+.posnet-chico.mal { color: #c2362f; opacity: 1; font-weight: 800; }
+.posnet-chico.bien { color: #14663a; opacity: 1; font-weight: 800; }
+.dispositivo.celular.con-teclado .cel-cuerpo { justify-content: flex-start; gap: 6px; }
+
+/* Billetera y vuelto */
+.billetes-fila { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.billete-btn { width: clamp(78px, 11vw, 120px); padding: 3px; border: 3px solid var(--linea); border-radius: 12px; background: var(--superficie); }
+.billete-btn svg { display: block; width: 100%; height: auto; }
+.billete-btn:hover { border-color: var(--acento); }
+.billete-btn.sacado { opacity: .25; border-style: dashed; }
+.ef-sacaste { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.ticket-btn { display: flex; align-items: center; gap: 14px; padding: 10px 16px; border: 3px solid var(--linea); border-radius: 18px; background: var(--superficie); }
+.ticket-btn:hover { border-color: var(--acento); }
+.ticket-btn .ticket-datos { text-align: left; }
+
+/* Tarjeta que sale del posnet */
+.tarjeta-saliente { display: inline-flex; align-items: center; gap: 10px; padding: 6px 16px; border: 3px solid #e0852b; border-radius: 14px; background: #fff; color: #14302d; font-weight: 800; animation: latido 1.3s ease-in-out infinite; }
+.tarjeta-saliente svg { width: 54px; height: 36px; }
+
+/* Alias por partes */
+.medios-acciones.partes { grid-template-columns: repeat(2, minmax(0, 1fr)) auto; align-items: end; max-width: 100%; }
+.parte-grupo { display: grid; gap: 4px; }
+.parte-fila { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.opcion-texto.parte { min-height: 60px; font-size: clamp(16px, 2.2vw, 22px); }
+.opcion-texto.parte[aria-pressed="true"] { border-color: var(--ok); background: var(--ok-suave); }
+.medios-acciones.partes .btn { min-height: 60px; padding: 0 20px; font-size: 19px; }
+
+.opcion-texto.acierto { border-color: var(--ok); background: var(--ok-suave); }
+.pista { outline: 4px solid #e0852b; outline-offset: 2px; animation: latido 1.3s ease-in-out infinite; }
+
+@media (max-width: 720px), (max-aspect-ratio: 1 / 1) {
+  .medios-acciones.partes { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .parte-fila { gap: 6px; }
+  .opcion-texto.parte { min-height: 46px; padding: 4px 6px; }
+  .medios-acciones.partes .btn { min-height: 48px; }
+  .tecla { min-height: 38px; font-size: 20px; }
+  .billete-btn { width: clamp(64px, 20vw, 96px); }
+}
+
+@media (max-height: 480px) {
+  .tecla { min-height: 26px; font-size: 16px; border-radius: 6px; }
+  .tecla.ok { font-size: 13px; }
+  .teclado { gap: 3px; }
+  .cel-boton { min-height: 30px; font-size: 14px; padding: 2px 6px; }
+  .billete-btn { width: 64px; padding: 1px; border-width: 2px; }
+  .ef-sacaste { font-size: 14px; }
+  .tarjeta-saliente { padding: 2px 10px; }
+  .tarjeta-saliente svg { width: 36px; height: 24px; }
+  .opcion-texto.parte { min-height: 34px; font-size: 14px; padding: 2px 4px; }
+  .medios-acciones.partes { gap: 4px; }
+  .medios-acciones.partes .btn { min-height: 34px; font-size: 15px; }
+  .parte-fila { gap: 4px; }
+  .parte-grupo .zona-titulo { display: none; }
+}
+
+/* Modal angosto (celular vertical): el bloque de la clave más compacto para que todo entre sin scroll */
+@media (max-width: 480px) and (min-height: 481px) {
+  .clave-practica { padding: 6px 10px; gap: 2px 10px; }
+  .clave-digito { width: 30px; height: 36px; font-size: 22px; }
+  .clave-titulo { font-size: 14px; }
+  .clave-aviso { flex-basis: 100%; font-size: 12px; }
+}
+
+/* Celular apaisado: el posnet con teclado tiene que entrar completo en media pantalla */
+@media (max-height: 480px) {
+  .dispositivo.posnet.con-teclado { max-width: 170px; padding: 4px; gap: 3px; }
+  .posnet.con-teclado .posnet-pantalla { padding: 2px 4px; gap: 0; }
+  .posnet.con-teclado .posnet-msg { font-size: 11px; line-height: 1.1; }
+  .posnet.con-teclado .pin { padding: 1px 0; gap: 6px; }
+  .posnet.con-teclado .pin-punto { width: 10px; height: 10px; border-width: 2px; }
+  .posnet.con-teclado .tecla { min-height: 20px; font-size: 13px; border-radius: 4px; box-shadow: none; }
+  .posnet.con-teclado .teclado { gap: 2px; }
+  .dispositivo.celular.con-teclado .cel-cuerpo { gap: 2px; padding: 3px 8px; }
+  .dispositivo.celular.con-teclado .cel-etq { display: none; }
+  .dispositivo.celular.con-teclado .cel-fila { display: none; }
+  .dispositivo.celular.con-teclado .cel-campo { min-height: 24px; padding: 2px 8px; }
+  .dispositivo.celular.con-teclado .tecla { min-height: 20px; font-size: 13px; }
+}

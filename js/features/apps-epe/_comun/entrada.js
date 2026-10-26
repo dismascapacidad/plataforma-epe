@@ -258,6 +258,12 @@ var EpeEntrada = (function () {
       refrescar: function () {
         if (barrido && activo) resaltar();
       },
+      // Vuelve a la primera opción y reinicia el tiempo (barrido automático), como
+      // después de una selección. La app lo pide cuando cambian las opciones sin que
+      // se haya elegido nada (por ejemplo, tras un error).
+      reiniciar: function () {
+        if (barrido && activo) reiniciarRecorrido();
+      },
     };
   }
 

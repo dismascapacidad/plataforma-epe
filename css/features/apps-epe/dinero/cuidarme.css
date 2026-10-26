@@ -1,0 +1,142 @@
+/* Módulo "Cuidarme al pagar": situación, tres opciones y regla. Sin scroll. */
+
+.ej-cuidarme {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto auto auto;
+  grid-template-areas: "barra" "escena" "instruccion" "aviso" "acciones";
+  gap: 12px;
+}
+.ej-cuidarme .aviso { grid-area: aviso; min-height: 64px; font-size: 18px; font-weight: 600; text-align: left; }
+.ej-cuidarme .instruccion-caja { grid-area: instruccion; }
+.cu-aviso-titulo { font-weight: 800; }
+
+.cu-escena {
+  grid-area: escena;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(14px, 3vw, 32px);
+  padding: 12px clamp(14px, 3vw, 32px);
+  border: 3px dashed var(--linea-fuerte);
+  border-radius: 24px;
+  background: var(--superficie-2);
+  overflow: hidden;
+}
+.cu-dibujo { flex: 0 0 auto; padding: 10px; border-radius: 22px; background: var(--superficie); box-shadow: var(--sombra); }
+.cu-dibujo svg { display: block; width: clamp(64px, 22vh, 220px); height: auto; }
+.cu-texto { min-width: 0; max-width: 620px; display: grid; gap: 6px; }
+.cu-quien { font-size: clamp(14px, 1.6vw, 18px); font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--tinta-suave); }
+.cu-dice { font-size: clamp(20px, 4.2vh, 40px); font-weight: 700; line-height: 1.2; text-wrap: balance; }
+
+.cu-acciones { grid-area: acciones; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: stretch; }
+.cu-acciones.con-regla { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+.cu-op {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 96px;
+  padding: 10px 14px;
+  border: 4px solid var(--linea);
+  border-radius: 22px;
+  background: var(--superficie);
+  box-shadow: var(--sombra);
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: border-color .15s ease, background-color .15s ease, opacity .15s ease;
+}
+.cu-op:hover { border-color: var(--acento); }
+.cu-op-num { flex: 0 0 auto; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--acento-suave); color: var(--acento); font-weight: 800; font-size: 18px; }
+.cu-op-txt { font-size: clamp(16px, 1.9vw, 21px); font-weight: 700; line-height: 1.2; }
+.cu-op.acierto { border-color: var(--ok); background: var(--ok-suave); }
+.cu-op.descartada { opacity: .45; border-style: dashed; }
+.cu-op.descartada::after { content: "✕"; position: absolute; top: 4px; right: 10px; color: var(--error); font-weight: 800; }
+
+.cu-regla { display: flex; align-items: center; gap: 14px; min-width: 0; padding: 10px 16px; border: 3px solid var(--ok); border-radius: 20px; background: var(--superficie); }
+.cu-regla-ico svg { display: block; width: clamp(44px, 9vh, 72px); height: auto; }
+.cu-regla-txt { min-width: 0; display: grid; gap: 2px; }
+.cu-regla-rotulo { font-size: 13px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--tinta-suave); }
+.cu-regla-nombre { font-size: clamp(20px, 2.6vw, 28px); font-weight: 800; line-height: 1.1; }
+.cu-regla-sub { font-size: clamp(15px, 1.7vw, 19px); font-weight: 600; color: var(--tinta-suave); line-height: 1.2; }
+.cu-seguir { min-height: 64px; padding: 0 32px; font-size: 22px; }
+
+/* Inicio con 5 tarjetas */
+.iconos-3 { grid-template-columns: repeat(3, auto); }
+@media (min-width: 721px) {
+  .tarjetas { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (min-width: 721px) and (max-aspect-ratio: 1 / 1) {
+  .tarjetas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 721px) and (max-height: 480px) {
+  .tarjetas { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+
+/* ---------- Apilado: pantalla angosta o vertical ---------- */
+@media (max-width: 720px), (max-aspect-ratio: 1 / 1) {
+  .ej-cuidarme { gap: 10px; }
+  .cu-escena { padding: 8px 12px; gap: 12px; }
+  .cu-acciones { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .cu-acciones.con-regla { grid-template-columns: minmax(0, 1fr); }
+  .cu-op { min-height: 60px; padding: 6px 12px; border-width: 3px; border-radius: 16px; }
+  .cu-op-num { width: 28px; height: 28px; font-size: 15px; }
+  .cu-op-txt { font-size: 16px; }
+  .cu-dice { font-size: 19px; }
+  .cu-quien { font-size: 12px; }
+  .cu-seguir { min-height: 52px; }
+  .cu-regla { padding: 6px 12px; }
+  .ej-cuidarme .aviso { min-height: 56px; font-size: 15px; padding: 4px 10px; }
+  .ej-cuidarme .instruccion { font-size: 21px; }
+}
+
+/* ---------- Celular apaisado: poco alto ---------- */
+@media (max-height: 480px) {
+  .ej-cuidarme { gap: 6px; }
+  .cu-escena { padding: 6px 12px; border-width: 2px; gap: 12px; }
+  .cu-dibujo { padding: 6px; border-radius: 14px; }
+  .cu-dibujo svg { width: 52px; }
+  .cu-dice { font-size: 17px; }
+  .cu-quien { font-size: 11px; }
+  .cu-acciones { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .cu-acciones.con-regla { grid-template-columns: minmax(0, 1fr) auto; }
+  .cu-op { min-height: 52px; padding: 4px 8px; gap: 8px; border-width: 3px; }
+  .cu-op-num { width: 24px; height: 24px; font-size: 13px; }
+  .cu-op-txt { font-size: 13px; }
+  .cu-regla-ico svg { width: 36px; }
+  .cu-regla-rotulo { display: none; }
+  .cu-regla-nombre { font-size: 17px; }
+  .cu-regla-sub { font-size: 13px; }
+  .cu-seguir { min-height: 44px; padding: 0 20px; font-size: 18px; }
+  .sp-hint { display: none; }
+  .ej-cuidarme .instruccion { font-size: 17px; }
+  .ej-cuidarme .aviso { min-height: 40px; font-size: 13px; padding: 2px 10px; }
+}
+
+/* Tableta vertical: más grande */
+@media (min-width: 721px) and (max-aspect-ratio: 1 / 1) {
+  .cu-dibujo svg { width: clamp(110px, 16vh, 190px); }
+  .cu-dice { font-size: 32px; }
+  .cu-quien { font-size: 18px; }
+  .cu-op { min-height: 96px; }
+  .cu-op-txt { font-size: 22px; }
+  .cu-op-num { width: 40px; height: 40px; font-size: 20px; }
+  .cu-acciones.con-regla { grid-template-columns: minmax(0, 1fr) auto; }
+  .ej-cuidarme .aviso { min-height: 80px; font-size: 20px; }
+  .ej-cuidarme .instruccion { font-size: 30px; }
+}
+
+/* Celular apaisado angosto (p. ej. 667×375): las 5 tarjetas del inicio van en una fila, sin desplazarse. */
+@media (min-width: 560px) and (max-width: 720px) and (max-height: 480px) {
+  .tarjetas { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+  .tarjeta { flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 6px; padding: 8px 8px 10px; }
+  .tarjeta-arte { flex: none; height: 74px; }
+  .tarjeta-titulo { flex: none; font-size: 15px; }
+  .tarjeta-desc { display: none; }
+  .tarjeta .iconos-medios { gap: 3px; }
+  .tarjeta .icono-medio { width: 26px; padding: 3px; border-radius: 8px; }
+}
