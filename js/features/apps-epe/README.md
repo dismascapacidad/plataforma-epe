@@ -2,7 +2,7 @@
 
 Cada app o juego propio vive en su subcarpeta (`barrido/`, `hanoi/`, `nback/`,
 `stroop/`, `simoneuro/`, `duracion-pulsacion/`, `comunicacion-cabeza/`,
-`ver-videos/`, `si-no/`), con
+`ver-videos/`, `si-no/`, `dinero/`), con
 su página en `apps-epe/*.html` y sus estilos en `css/features/apps-epe/` o en
 los componentes compartidos. Lo común está en `_comun/` (`acceso.js`,
 `entrada.js`, `teclas.js`, voz).
@@ -24,6 +24,7 @@ cómo declararlo en una app nueva o en un recurso de terceros:
 | Duración de pulsación | sí | no: mide el tiempo real de pulsación |
 | Ver videos con pulsadores | sí | sí |
 | Si-No con pulsadores o cabeza | sí | sí en teclas y barrido; no en el modo cabeza |
+| Aprendo con dinero | sí | sí (barrido automático y dirigido; sin modo de teclas directas) |
 
 Piano, Lado Correcto y Vincular imagen-botón no usan barrido y por ahora no
 combinan; sumarlos es una línea en su llamada a `abrir`.

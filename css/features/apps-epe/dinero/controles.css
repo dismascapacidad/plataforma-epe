@@ -1,0 +1,186 @@
+/* Botones, chips y ventana modal. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: var(--alto-toque);
+  padding: 0 24px;
+  border-radius: 16px;
+  border: 2px solid transparent;
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: .005em;
+  transition: transform .12s ease, background-color .12s ease, border-color .12s ease;
+}
+.btn:active { transform: scale(.98); }
+
+.btn-primario { background: var(--acento); color: var(--acento-tinta); }
+.btn-primario:hover { background: var(--acento-hover); }
+
+.btn-secundario { background: var(--superficie); border-color: var(--linea-fuerte); color: var(--tinta); }
+.btn-secundario:hover { border-color: var(--acento); }
+.btn-secundario:disabled { opacity: .45; border-color: var(--linea); }
+
+.btn-fantasma { background: transparent; border-color: var(--linea); color: var(--tinta); padding: 0 18px; }
+.btn-fantasma:hover { border-color: var(--acento); }
+
+.btn-icono {
+  display: inline-grid;
+  place-items: center;
+  width: var(--alto-toque);
+  height: var(--alto-toque);
+  border-radius: 16px;
+  border: 2px solid var(--linea);
+  background: var(--superficie);
+  color: var(--tinta);
+}
+.btn-icono:hover { border-color: var(--acento); }
+
+.icono { width: 24px; height: 24px; flex: none; }
+
+/* Opciones elegibles de la ventana de configuración */
+.fila { display: grid; gap: 8px; min-width: 0; }
+.fila-titulo { font-size: 15px; font-weight: 700; color: var(--tinta-suave); letter-spacing: .04em; text-transform: uppercase; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  flex: 1 1 auto;
+  min-height: 52px;
+  padding: 0 16px;
+  border-radius: 14px;
+  border: 2px solid var(--linea-fuerte);
+  background: var(--superficie);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--tinta);
+}
+.chip:hover { border-color: var(--acento); }
+.chip[aria-pressed="true"] { background: var(--acento); border-color: var(--acento); color: var(--acento-tinta); }
+.chip[aria-pressed="true"]::before { content: "✓ "; }
+
+/* Ventana modal: todo entra sin desplazarse */
+.modal-fondo {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  background: var(--velo);
+  padding: max(12px, env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px)) max(12px, env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
+}
+.modal {
+  width: min(720px, 100%);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 22px 24px 16px;
+  border-radius: var(--radio-l);
+  background: var(--superficie);
+  box-shadow: var(--sombra);
+  overflow-x: hidden;
+  overflow-y: auto;   /* red de seguridad: si en una pantalla muy chica no entra todo, el botón Empezar sigue alcanzable */
+}
+.modal-cabecera h2 { font-size: 28px; font-weight: 800; letter-spacing: -.01em; }
+.modal-cabecera h2:focus { outline: none; }
+.modal-sub { color: var(--tinta-suave); font-size: 17px; }
+.config-grilla { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 20px; }
+.config-grilla > .fila:first-child { grid-column: 1 / -1; }
+.config-hint { min-height: 2.8em; padding: 10px 14px; border-radius: 12px; background: var(--info-suave); font-size: 16px; }
+.config-fuente { font-size: 13px; color: var(--tinta-suave); text-align: center; }
+.modal-botones { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+@media (max-width: 640px) {
+  .config-grilla { grid-template-columns: minmax(0, 1fr); }
+  .modal { padding: 18px 16px 14px; }
+}
+@media (max-height: 700px) {
+  .modal { gap: 10px; padding-top: 16px; padding-bottom: 12px; }
+  .modal-cabecera h2 { font-size: 24px; }
+  .chip { min-height: 46px; }
+  .config-hint { min-height: 0; padding: 6px 12px; font-size: 15px; }
+  .btn { min-height: 52px; }
+}
+
+/* Celular vertical: más compacto para que entre todo (incluida la clave de práctica) sin desplazarse */
+@media (max-width: 640px) and (min-height: 481px) {
+  .modal { gap: 8px; padding-top: 12px; padding-bottom: 10px; }
+  .modal-sub { display: none; }
+  .config-grilla { gap: 6px 12px; }
+  .config-grilla .fila { gap: 4px; }
+  .fila-titulo { font-size: 13px; }
+  .chip { min-height: 38px; font-size: 16px; }
+  .btn { min-height: 48px; }
+}
+/* Celular apaisado: tres columnas y todo más bajo */
+@media (max-height: 480px) {
+  .modal { width: min(820px, 100%); gap: 6px; padding: 8px 14px 8px; }
+  .modal-cabecera h2 { font-size: 20px; }
+  .modal-sub { display: none; }
+  .config-grilla { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px 12px; }
+  .config-grilla .fila { gap: 2px; }
+  .fila-titulo { font-size: 11px; }
+  .chip { min-height: 32px; padding: 0 8px; font-size: 14px; }
+  .config-hint { display: none; }
+  .config-fuente { font-size: 11px; line-height: 1.1; }
+  .btn { min-height: 40px; font-size: 16px; }
+  .modal-botones { gap: 8px; }
+}
+
+/* Celular apaisado chico (p. ej. 667×375): botones un poco más bajos para que todo entre */
+@media (max-height: 400px) {
+  .config-grilla { gap: 2px 10px; }
+  .fila-titulo { font-size: 10px; }
+  .modal .clave-practica { padding: 3px 10px; gap: 0 10px; }
+  .modal .clave-digito { width: 24px; height: 26px; font-size: 16px; }
+  .modal .clave-titulo, .modal .clave-aviso { font-size: 12px; }
+  .modal { gap: 4px; padding-top: 6px; padding-bottom: 6px; }
+  .modal-cabecera h2 { font-size: 18px; }
+  .chip { min-height: 26px; padding: 0 6px; font-size: 13px; }
+  .btn { min-height: 32px; font-size: 15px; }
+  .config-fuente { font-size: 10px; }
+}
+
+/* ── Ventana de opciones: la fila "Cómo respondés" resume el acceso elegido; el panel de la plataforma vive en una ventana aparte ── */
+.acceso-fila { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.acceso-resumen { flex: 1 1 200px; min-width: 0; font-size: 17px; font-weight: 600; }
+.acceso-fila .btn { min-height: 48px; }
+
+/* Ventana de acceso (segunda ventana): el panel de la plataforma, el botón del dispositivo y "Listo" */
+.modal-acceso { width: min(760px, 100%); }
+.config-acceso-caja { display: grid; gap: 10px; align-content: start; min-width: 0; padding: 10px 14px; border: 1px solid var(--linea); border-radius: 14px; background: var(--superficie-2); }
+.config-dispositivo { display: flex; flex-wrap: wrap; gap: 8px; }
+.modal-botones.uno { grid-template-columns: 1fr; }
+
+/* Si el modal no entra ni achicado (ver ajuste-modal.js), los botones quedan siempre a la vista. */
+.epe-modal-con-scroll .modal-botones {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  padding-top: 8px;
+  background: var(--superficie);
+}
+
+@media (max-width: 640px), (max-height: 480px) {
+  .acceso-resumen { font-size: 15px; }
+  .acceso-fila .btn { min-height: 40px; }
+  .modal-acceso .epe-acceso-modo-texto small,
+  .modal-acceso .epe-acceso-ayuda,
+  .modal-acceso .epe-acceso-toque-detalle { display: none; }
+  .modal-acceso .epe-acceso-modo { padding: 6px 8px; }
+  .modal-acceso .epe-acceso-toque-filtros { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .modal-acceso .epe-acceso-teclas { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; }
+  .config-acceso-caja { padding: 8px 12px; gap: 6px; }
+}
+/* Celular apaisado: los modos a un lado y lo demás (pantalla táctil, teclas) al otro. */
+@media (max-height: 480px) and (min-width: 600px) {
+  .modal-acceso { gap: 4px; padding: 8px 14px; }
+  .modal-acceso .config-acceso { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 2px 12px; align-items: start; }
+  .modal-acceso .config-acceso > .epe-juego-h2 { grid-column: 1 / -1; margin-bottom: 2px; font-size: 10.5px; }
+  .modal-acceso .config-acceso > .epe-juego-h2:nth-of-type(2) { grid-column: 2; margin-bottom: 0; }
+  .modal-acceso .epe-acceso-modos { display: flex; flex-direction: column; gap: 4px; grid-column: 1; grid-row: 2 / span 6; }
+  .modal-acceso .epe-acceso-toque { margin-top: 0; gap: 4px; }
+  .modal-acceso .epe-acceso-velocidad { margin-top: 0; }
+  .modal-acceso .epe-acceso-toque-check { font-size: 13px; }
+  .config-dispositivo .epe-btn-ghost { min-height: 32px; padding: 4px 12px; }
+}

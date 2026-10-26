@@ -1,0 +1,358 @@
+/* Pantallas de la práctica con dinero: inicio, ejercicios y resumen. */
+
+/* ---------- Inicio ---------- */
+.inicio { height: 100%; display: flex; flex-direction: column; justify-content: center; gap: 18px; }
+.tarjetas { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+
+.tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 18px 18px;
+  text-align: left;
+  border: 2px solid var(--linea);
+  border-radius: var(--radio-l);
+  background: var(--superficie);
+  box-shadow: var(--sombra);
+  transition: border-color .15s ease, transform .15s ease;
+}
+.tarjeta:hover { border-color: var(--acento); }
+.tarjeta:active { transform: scale(.992); }
+.tarjeta-arte {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: clamp(120px, 26vh, 200px);
+  margin-bottom: 4px;
+  border-radius: var(--radio-m);
+  background: var(--acento-suave);
+  overflow: hidden;
+}
+.tarjeta-titulo { font-size: clamp(22px, 2.8vw, 28px); font-weight: 800; letter-spacing: -.01em; }
+.tarjeta-desc { font-size: 18px; color: var(--tinta-suave); }
+.tarjeta-accion { display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; font-weight: 800; font-size: 18px; color: var(--acento); }
+
+.abanico { position: relative; width: min(82%, 330px); aspect-ratio: 2 / 1; }
+.abanico-hoja { position: absolute; left: 50%; top: 50%; width: 62%; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .25)); }
+.abanico-hoja.a0 { transform: translate(-102%, -48%) rotate(-10deg); z-index: 1; }
+.abanico-hoja.a1 { transform: translate(-50%, -56%); z-index: 3; }
+.abanico-hoja.a2 { transform: translate(2%, -48%) rotate(10deg); z-index: 2; }
+.abanico.duo .abanico-hoja.a0 { transform: translate(-90%, -50%) rotate(-7deg); z-index: 2; }
+.abanico.duo .abanico-hoja.a1 { transform: translate(-12%, -50%) rotate(6deg); z-index: 3; }
+.iconos-medios { display: grid; grid-template-columns: repeat(2, auto); gap: 8px; }
+.icono-medio { display: grid; place-items: center; width: clamp(44px, 8vh, 64px); aspect-ratio: 1; padding: 6px; border-radius: 16px; background: var(--superficie); box-shadow: var(--sombra); }
+.icono-medio svg { width: 100%; height: 100%; }
+.arte-producto { position: absolute; right: 12px; bottom: 10px; width: 62px; height: 62px; padding: 8px; border-radius: 16px; background: var(--superficie); box-shadow: var(--sombra); }
+.arte-producto svg { width: 100%; height: 100%; }
+
+.pronto { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 10px; }
+.pronto-titulo { font-size: 14px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--tinta-suave); }
+.pronto-lista { display: flex; flex-wrap: wrap; gap: 8px; }
+.pronto-item { padding: 6px 14px; border: 2px dashed var(--linea-fuerte); border-radius: 999px; font-size: 15px; font-weight: 600; color: var(--tinta-suave); }
+.nota { text-align: center; font-size: 15px; color: var(--tinta-suave); }
+
+/* ---------- Ejercicios (común) ---------- */
+.ej { height: 100%; display: flex; flex-direction: column; gap: 14px; min-height: 0; }
+.ej-barra { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; grid-area: barra; }
+.progreso { display: grid; justify-items: center; gap: 8px; min-width: 0; }
+.progreso-texto { font-size: 16px; font-weight: 700; color: var(--tinta-suave); text-align: center; }
+.puntos { display: flex; flex-wrap: wrap; justify-content: center; gap: 7px; }
+.punto { width: 13px; height: 13px; border-radius: 50%; border: 3px solid var(--linea-fuerte); }
+.punto.hecho { background: var(--acento); border-color: var(--acento); }
+.punto.actual { border-color: var(--acento); background: var(--acento-suave); transform: scale(1.25); }
+
+.consigna { font-size: clamp(26px, 4.6vw, 42px); font-weight: 800; letter-spacing: -.015em; line-height: 1.12; text-align: center; text-wrap: balance; }
+
+.aviso {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 6px 16px;
+  border: 2px solid transparent;
+  border-radius: 14px;
+  font-size: 21px;
+  font-weight: 700;
+  text-align: center;
+}
+.aviso:empty { visibility: hidden; }
+.aviso.ok { background: var(--ok-suave); border-color: var(--ok); }
+.aviso.error { background: var(--error-suave); border-color: var(--error); }
+.aviso.info { background: var(--info-suave); border-color: var(--linea-fuerte); }
+.aviso.ok::before { content: "✓"; color: var(--ok); font-size: 26px; }
+.aviso.error::before { content: "!"; color: var(--error); font-size: 26px; }
+.aviso.info::before { content: "i"; display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; border: 2px solid currentColor; font-size: 16px; font-style: italic; }
+
+/* ---------- Reconocer ---------- */
+.opciones { flex: 1; min-height: 0; display: grid; gap: 16px; align-content: center; }
+.opciones.n-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.opciones.n-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.opciones.n-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+.opcion {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  padding: clamp(12px, 2.4vw, 26px);
+  border: 4px solid var(--linea);
+  border-radius: 26px;
+  background: var(--superficie);
+  box-shadow: var(--sombra);
+  transition: border-color .15s ease, background-color .15s ease, opacity .15s ease;
+}
+.opcion svg { max-height: 34vh; }
+.opcion:hover { border-color: var(--acento); }
+.opcion.acierto { border-color: var(--ok); background: var(--ok-suave); }
+.opcion.acierto::after, .opcion.descartada::after {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--fondo);
+}
+.opcion.acierto::after { content: "✓"; background: var(--ok); }
+.opcion.descartada { opacity: .45; border-style: dashed; }
+.opcion.descartada::after { content: "✕"; background: var(--error); }
+
+/* ---------- Pagar ---------- */
+.ej-pagar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  grid-template-areas: "barra barra" "producto mostrador" "billetera billetera" "acciones acciones";
+  gap: 14px;
+}
+
+.producto {
+  grid-area: producto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 0;
+  padding: 16px;
+  border: 2px solid var(--linea);
+  border-radius: 24px;
+  background: var(--superficie);
+  box-shadow: var(--sombra);
+  text-align: center;
+}
+.producto-arte { width: clamp(72px, 14vh, 120px); aspect-ratio: 1; padding: 10px; border-radius: 22px; background: var(--acento-suave); }
+.producto-arte svg { width: 100%; height: 100%; }
+.producto .consigna { font-size: clamp(22px, 3vw, 30px); }
+.precio { display: grid; gap: 0; justify-items: center; }
+.precio-etiqueta { font-size: 14px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--tinta-suave); }
+.precio strong { font-size: clamp(38px, 6vh, 56px); font-weight: 800; line-height: 1.05; letter-spacing: -.02em; color: var(--acento); font-variant-numeric: tabular-nums; }
+
+.zona-titulo { font-size: 14px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--tinta-suave); }
+
+.mostrador {
+  grid-area: mostrador;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  padding: 14px 16px;
+  border: 3px dashed var(--linea-fuerte);
+  border-radius: 24px;
+  background: var(--superficie-2);
+  transition: background-color .15s ease, border-color .15s ease;
+}
+.mostrador.zona-activa { border-style: solid; border-color: var(--acento); background: var(--acento-suave); }
+.mostrador.acierto { border-style: solid; border-color: var(--ok); background: var(--ok-suave); }
+.soltar { flex: 1; display: grid; place-items: center; text-align: center; font-size: 19px; font-weight: 600; color: var(--tinta-suave); }
+.mostrador-billetes { flex: 1; min-height: 0; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 10px; overflow: hidden; }
+.mostrador-billetes:empty { display: none; }
+
+.billete-puesto {
+  position: relative;
+  width: clamp(100px, 17vw, 190px);
+  padding: 0;
+  border: 3px solid transparent;
+  border-radius: 12px;
+  background: none;
+  animation: aparecer .22s ease-out;
+}
+.billete-puesto::after {
+  content: "×";
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--superficie);
+  border: 2px solid var(--linea-fuerte);
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1;
+}
+@keyframes aparecer { from { transform: scale(.7); opacity: 0; } }
+
+.medidor { height: 14px; border-radius: 8px; background: var(--linea); overflow: hidden; }
+.medidor span { display: block; height: 100%; width: 0; border-radius: 8px; background: var(--acento); transition: width .25s ease; }
+.medidor.sobra span { background: var(--ok); } /* pasarse no es error: se da vuelto */
+.medidor.justo span { background: var(--ok); }
+.mostrador-total { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+/* Vuelto: tras pagar de más, el mostrador muestra lo pagado en chico y el vuelto en grande. */
+.vuelto { min-height: 0; overflow: hidden; display: grid; gap: 8px; padding: 10px 14px; border-radius: 16px; background: var(--superficie); border: 3px solid var(--ok); animation: aparecer .3s ease-out; }
+.vuelto[hidden] { display: none; }
+.vuelto-titulo { display: flex; align-items: baseline; gap: 8px; font-size: 20px; font-weight: 700; }
+.vuelto-titulo strong { font-size: 34px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--ok); }
+.vuelto-billetes { display: flex; flex-wrap: wrap; gap: 8px; }
+.vuelto-billete { width: clamp(64px, 11vw, 120px); animation: none; }
+.vuelto-billete::after { display: none; }
+.mostrador.con-vuelto .mostrador-billetes { flex: 0 0 auto; }
+.mostrador.con-vuelto .mostrador-billetes .billete-puesto { width: clamp(56px, 8vw, 96px); pointer-events: none; }
+.mostrador.con-vuelto .mostrador-billetes .billete-puesto::after { display: none; }
+.mostrador.con-vuelto .medidor, .mostrador.con-vuelto .mostrador-total { display: none; }
+
+.billetera { grid-area: billetera; display: grid; gap: 8px; }
+.pilas { display: grid; gap: 16px; padding-right: 8px; padding-bottom: 8px; }
+.pilas.n-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.pilas.n-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.pilas.n-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.pilas.n-6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.pilas.n-8 { grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 10px; }
+.pila {
+  padding: 8px;
+  border: 3px solid var(--linea);
+  border-radius: 16px;
+  background: var(--superficie);
+  box-shadow: 3px 4px 0 var(--linea), 6px 8px 0 var(--superficie-2);
+  touch-action: none;
+  cursor: grab;
+}
+.pila:hover { border-color: var(--acento); }
+.pila.arrastrando { opacity: .45; }
+
+.acciones { grid-area: acciones; display: grid; gap: 10px; }
+.acciones-botones { display: grid; grid-template-columns: 1fr 1fr 1.5fr; gap: 12px; }
+.ej-pagar .aviso { min-height: 46px; font-size: 19px; }
+
+/* ---------- Resumen ---------- */
+.resumen { height: 100%; display: grid; place-items: center; }
+.resumen-tarjeta { width: min(680px, 100%); display: grid; gap: 22px; padding: clamp(20px, 4vw, 34px); border: 2px solid var(--linea); border-radius: var(--radio-l); background: var(--superficie); box-shadow: var(--sombra); }
+.resumen-titulo { font-size: clamp(30px, 5vw, 44px); font-weight: 800; letter-spacing: -.02em; text-align: center; }
+.datos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.dato { padding: 14px 16px; border-radius: 18px; background: var(--acento-suave); text-align: center; }
+.dato-valor { font-size: clamp(30px, 5vw, 42px); font-weight: 800; line-height: 1.1; color: var(--acento); font-variant-numeric: tabular-nums; }
+.dato-etiqueta { margin-top: 2px; font-size: 16px; font-weight: 600; color: var(--tinta-suave); }
+.resumen-botones { display: grid; gap: 10px; }
+
+/* ---------- Pagar apilado: pantalla angosta o vertical (iPad parado) ---------- */
+@media (max-width: 720px), (max-aspect-ratio: 1 / 1) {
+  .ej-pagar {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+    grid-template-areas: "barra" "producto" "mostrador" "billetera" "acciones";
+    gap: 12px;
+  }
+  .producto { flex-direction: row; justify-content: flex-start; text-align: left; padding: 12px 16px; gap: 16px; }
+  .producto-arte { width: 72px; }
+  .producto-texto { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 16px; flex: 1; }
+  .precio { justify-items: end; }
+  .pilas.n-5, .pilas.n-6 { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  .pilas.n-8 { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+}
+
+/* ---------- Pantallas angostas ---------- */
+@media (max-width: 720px) {
+  .tarjetas { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .tarjeta { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 4px 14px; padding: 12px 14px; }
+  .tarjeta-arte { flex: 0 0 38%; height: 104px; margin: 0; }
+  .tarjeta-titulo { flex: 1 1 50%; font-size: 22px; }
+  .tarjeta-desc { flex: 1 1 100%; font-size: 16px; }
+  .tarjeta-accion { display: none; }
+
+  .opciones.n-3 { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .opciones.n-3 .opcion svg { max-height: 16vh; }
+  .btn-fantasma span { display: none; }
+  .btn-fantasma { padding: 0 14px; }
+
+  .producto-arte { width: 64px; }
+  .pilas.n-5, .pilas.n-6 { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .pilas.n-8 { gap: 8px; }
+  .acciones-botones { grid-template-columns: 1fr 1fr; }
+  .acciones-botones .btn-primario { grid-column: 1 / -1; }
+}
+
+/* ---------- Celular apaisado: poco alto ---------- */
+@media (max-height: 480px) {
+  #app { min-height: 340px; }
+  body { padding-block: 8px; }
+  .cabecera, .pie { display: none; }
+  .ej { gap: 8px; }
+  .puntos { display: none; }
+  .btn, .btn-icono { min-height: 46px; height: auto; }
+  .consigna { font-size: 24px; }
+  .aviso, .ej-pagar .aviso { min-height: 36px; font-size: 17px; padding: 2px 12px; }
+  .opcion svg { max-height: 21vh; width: auto; max-width: 100%; }
+  .opcion { padding: 6px 10px; }
+  .ej-pagar { gap: 8px; }
+  .producto { flex-direction: row; justify-content: flex-start; padding: 8px 12px; gap: 12px; text-align: left; }
+  .producto-arte { width: 52px; padding: 6px; }
+  .producto .consigna { font-size: 20px; }
+  .precio strong { font-size: 30px; }
+  .mostrador { padding: 8px 12px; gap: 6px; }
+  .billete-puesto { width: 92px; }
+  .mostrador-total { font-size: 17px; }
+  .vuelto { padding: 6px 10px; gap: 4px; }
+  .vuelto-titulo { font-size: 16px; }
+  .vuelto-titulo strong { font-size: 24px; }
+  .vuelto-billete { width: 46px; }
+  .vuelto-billetes { flex-wrap: nowrap; }
+  .mostrador.con-vuelto .mostrador-billetes { display: none; }
+  .mostrador.con-vuelto .zona-titulo { display: none; }
+  .pila { padding: 5px; }
+  .pilas { gap: 10px; }
+  /* Resumen compacto en celular apaisado */
+  .resumen-tarjeta { gap: 10px; padding: 12px 16px; }
+  .resumen-titulo { font-size: 26px; }
+  .datos { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  .dato { padding: 6px 8px; }
+  .dato-valor { font-size: 24px; }
+  .dato-etiqueta { font-size: 12px; }
+  .resumen-botones { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .billetera { gap: 4px; }
+}
+
+/* ---------- Pagar en celular grande apaisado o tableta chica (480-720 px de ancho, hasta 560 de alto) ----------
+   Producto y mostrador a la izquierda, uno sobre otro; la billetera a la derecha en dos columnas (entran los 8 billetes
+   con zonas de toque grandes) y las acciones abajo en una fila. */
+@media (min-width: 480px) and (max-width: 720px) and (max-height: 560px) {
+  .ej-pagar {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+    grid-template-areas: "barra barra" "producto billetera" "mostrador billetera" "acciones acciones";
+    gap: 6px 10px;
+  }
+  .producto { padding: 6px 10px; gap: 8px; }
+  .producto-arte { width: 40px; padding: 4px; }
+  .producto-texto { flex-direction: column; align-items: flex-start; gap: 0; }
+  .precio { justify-items: start; }
+  .precio strong { font-size: 26px; }
+  .mostrador { padding: 6px 10px; gap: 4px; }
+  .mostrador .medidor { display: none; }
+  .billete-puesto { width: 64px; }
+  .billetera { align-content: stretch; grid-template-rows: auto minmax(0, 1fr); min-height: 0; }
+  .pilas, .pilas.n-5, .pilas.n-6, .pilas.n-8 { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: minmax(0, 1fr); gap: 6px; min-height: 0; }
+  .billetera .zona-titulo { display: none; }
+  .billetera { grid-template-rows: minmax(0, 1fr); }
+  .pila { display: flex; align-items: center; justify-content: center; padding: 3px; min-height: 0; overflow: hidden; border-radius: 12px; box-shadow: 2px 3px 0 var(--linea); }
+  .pila .billete { width: auto; height: auto; max-width: 100%; max-height: 100%; }
+  .acciones-botones { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .acciones-botones .btn-primario { grid-column: auto; }
+}

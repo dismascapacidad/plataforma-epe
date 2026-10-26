@@ -1,0 +1,26 @@
+/* Billetes y monedas, estados de ejercicio. El resaltado del barrido es el de la plataforma (.epe-scan-actual). */
+.billete, .moneda { display: block; width: 100%; height: auto; }
+.moneda { max-width: 190px; margin-inline: auto; }
+
+/* Ayuda: ring que late (queda fijo si se reduce el movimiento) */
+.pista {
+  border-color: var(--acento) !important;
+  box-shadow: 0 0 0 7px var(--acento-suave), 0 0 0 10px var(--acento);
+  animation: pulso 1.1s ease-in-out infinite;
+}
+@keyframes pulso {
+  50% { box-shadow: 0 0 0 11px var(--acento-suave), 0 0 0 14px var(--acento); }
+}
+
+/* Billete que se arrastra */
+.fantasma {
+  position: fixed;
+  left: -999px;
+  top: -999px;
+  z-index: 100;
+  width: var(--ancho, 140px);
+  pointer-events: none;
+  transform: translate(-50%, -55%) rotate(-4deg) scale(1.06);
+  filter: drop-shadow(0 14px 18px rgba(0, 0, 0, .4));
+}
+.fantasma svg { width: 100%; height: auto; display: block; }
