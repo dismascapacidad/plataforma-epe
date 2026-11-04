@@ -73,6 +73,7 @@ var EpeAppsTerceros = (function () {
     "https://elbuhoboo.com/juegos-educativos/animalitos/": "../assets/img/terceros/buho-animalitos.webp",
     "https://elbuhoboo.com/juegos-educativos/formitas/": "../assets/img/terceros/buho-formitas.webp",
     "https://elbuhoboo.com/juegos-educativos/completar-panda/": "../assets/img/terceros/buho-completar.webp",
+    "https://nogalespt.app/comunicador/": "../assets/img/terceros/comunicador-nogalespt.webp",
   };
 
   // Clave tolerante: sin protocolo, sin "www." y sin "/" final, en minúsculas,
